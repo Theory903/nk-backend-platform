@@ -1,7 +1,6 @@
 import os
 from pathlib import Path
 import shlex
-import subprocess
 from typing import Any
 
 import yaml

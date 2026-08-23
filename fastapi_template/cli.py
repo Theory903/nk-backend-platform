@@ -78,7 +78,8 @@ api_menu = SingularMenuModel(
             user_view="REST API",
             description=(
                 "Choose this option if you want to create a service with {name}.\n"
-                "It's more suitable for {generic} web-services or services without databases.".format(
+                "It's more suitable for {generic} web-services "
+                "or services without databases.".format(
                     name=colored("REST API", color="green"),
                     generic=colored("generic", color="cyan", attrs=["underline"]),
                 )
@@ -639,11 +640,11 @@ def handle_cli(
 
         for menu in menus:
             if menu.need_ask(context):
-                context = menu.ask(context)
-                if context is None:
+                result = menu.ask(context)
+                if result is None:
                     print("Project generation stopped. Goodbye!")
                     return
-                context = BuilderContext(**context.dict())
+                context = BuilderContext(**result.dict())
 
             context = BuilderContext(**menu.after_ask(context=context).dict())
 

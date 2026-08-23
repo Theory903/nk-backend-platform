@@ -171,7 +171,7 @@ class SingularMenuModel(BaseMenuModel):
                 )
 
         if chosen_entry == SKIP_ENTRY:
-            return
+            return None
 
         setattr(context, self.code, chosen_entry.code)
 
