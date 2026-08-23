@@ -59,6 +59,6 @@ def test_expansion_never_overrides_explicit_choices() -> None:
     assert expanded.orm == "beanie"
 
 
-def test_expansion_leaves_unset_values_unset() -> None:
+def test_expansion_leaves_non_core_values_unset() -> None:
     ctx = expand_profile("minimal", BuilderContext())
-    assert ctx.dict().get("db") is None
+    assert ctx.dict().get("enable_kafka") is None

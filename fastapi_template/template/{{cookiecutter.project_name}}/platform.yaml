@@ -1,0 +1,28 @@
+project: "{{ cookiecutter.project_name }}"
+profile: "{{ cookiecutter.profile }}"
+
+providers:
+  api_type: {{ cookiecutter.api_type }}
+  database: {{ cookiecutter.db_info.name }}
+  orm: {{ cookiecutter.orm }}
+  ci: {{ cookiecutter.ci_type }}
+
+modules:
+  redis: {{ cookiecutter.enable_redis }}
+  rabbitmq: {{ cookiecutter.enable_rmq }}
+  kafka: {{ cookiecutter.enable_kafka }}
+  nats: {{ cookiecutter.enable_nats }}
+  taskiq: {{ cookiecutter.enable_taskiq }}
+  users: {{ cookiecutter.add_users }}
+  llm: {{ cookiecutter.enable_llm }}
+  vector: {{ cookiecutter.enable_vector }}
+  rag_traditional: {{ cookiecutter.enable_rag_traditional }}
+  agents: {{ cookiecutter.enable_agents }}
+  graphrag: {{ cookiecutter.enable_graphrag }}
+  audit: {{ cookiecutter.enable_audit }}
+  idempotency: {{ cookiecutter.enable_idempotency }}
+
+observability:
+  prometheus: {{ cookiecutter.prometheus_enabled }}
+  opentelemetry: {{ cookiecutter.otlp_enabled }}
+  sentry: {{ cookiecutter.sentry_enabled }}

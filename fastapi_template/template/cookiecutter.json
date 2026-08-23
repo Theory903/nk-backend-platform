@@ -68,6 +68,30 @@
     "jwt_auth": {
         "type": "bool"
     },
+    "profile": {
+        "type": "string"
+    },
+    "enable_llm": {
+        "type": "bool"
+    },
+    "enable_vector": {
+        "type": "bool"
+    },
+    "enable_rag_traditional": {
+        "type": "bool"
+    },
+    "enable_agents": {
+        "type": "bool"
+    },
+    "enable_graphrag": {
+        "type": "bool"
+    },
+    "enable_audit": {
+        "type": "bool"
+    },
+    "enable_idempotency": {
+        "type": "bool"
+    },
     "_extensions": [
         "cookiecutter.extensions.RandomStringExtension"
     ],

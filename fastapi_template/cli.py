@@ -3,7 +3,7 @@ import shutil
 from importlib.metadata import version
 from typing import Any, Callable, List, Optional
 
-from click import Command, Option
+from click import Choice, Command, Option
 from prompt_toolkit import prompt
 from prompt_toolkit.document import Document
 from prompt_toolkit.validation import ValidationError, Validator
@@ -18,6 +18,7 @@ from fastapi_template.input_model import (
     MultiselectMenuModel,
     SingularMenuModel,
 )
+from fastapi_template.profiles import PROFILES, expand_profile
 
 
 class SnakeCaseValidator(Validator):
@@ -581,6 +582,84 @@ features_menu = MultiselectMenuModel(
                 )
             ),
         ),
+        MenuEntry(
+            code="enable_llm",
+            cli_name="llm",
+            user_view="Add LLM provider support",
+            description=(
+                "{what} abstraction over model providers.\n"
+                "Your code calls one interface; providers stay swappable.".format(
+                    what=colored("LLM provider", color="green")
+                )
+            ),
+        ),
+        MenuEntry(
+            code="enable_vector",
+            cli_name="vector",
+            user_view="Add vector storage support",
+            description=(
+                "{what} embeddings storage and similarity search.\n"
+                "Backed by pgvector when PostgreSQL is selected.".format(
+                    what=colored("Vector storage", color="green")
+                )
+            ),
+        ),
+        MenuEntry(
+            code="enable_rag_traditional",
+            cli_name="rag-traditional",
+            user_view="Add traditional RAG pipeline",
+            description=(
+                "{what}: embed, store, retrieve, generate.\n"
+                "Requires {vector} support.".format(
+                    what=colored("Traditional RAG", color="green"),
+                    vector=colored("vector", color="cyan"),
+                )
+            ),
+        ),
+        MenuEntry(
+            code="enable_agents",
+            cli_name="agents",
+            user_view="Add agent runtime",
+            description=(
+                "{what} with tools, budgets, guardrails and human-in-the-loop.\n"
+                "Includes agentic RAG loop over the retrieval stack.".format(
+                    what=colored("Agent runtime", color="green")
+                )
+            ),
+        ),
+        MenuEntry(
+            code="enable_graphrag",
+            cli_name="graphrag",
+            user_view="Add GraphRAG retrieval",
+            description=(
+                "{what} mode: knowledge-graph augmented retrieval\n"
+                "routed alongside traditional RAG.".format(
+                    what=colored("GraphRAG", color="green")
+                )
+            ),
+        ),
+        MenuEntry(
+            code="enable_audit",
+            cli_name="audit",
+            user_view="Add audit trail module",
+            description=(
+                "{what} of security-relevant events.\n"
+                "Append-only records for compliance workflows.".format(
+                    what=colored("Audit trail", color="green")
+                )
+            ),
+        ),
+        MenuEntry(
+            code="enable_idempotency",
+            cli_name="idempotency",
+            user_view="Add idempotency-key middleware",
+            description=(
+                "{what} replay protection for API mutations.\n"
+                "Stripe-style key semantics for safe retries.".format(
+                    what=colored("Idempotency", color="green")
+                )
+            ),
+        ),
     ],
 )
 
@@ -638,6 +717,9 @@ def handle_cli(
                 validator=SnakeCaseValidator(),
             )
 
+        if context.profile:
+            context = expand_profile(context.profile, context)
+
         for menu in menus:
             if menu.need_ask(context):
                 result = menu.ask(context)
@@ -684,6 +766,12 @@ def run_command(callback: Callable[[BuilderContext], None]) -> None:
                 ["--quiet"],
                 is_flag=True,
                 help="Do not ask for features during generation",
+            ),
+            Option(
+                ["--profile", "profile"],
+                type=Choice(list(PROFILES.keys()), case_sensitive=False),
+                default=None,
+                help="Apply a preset bundle of features",
             ),
         ],
         callback=handle_cli(

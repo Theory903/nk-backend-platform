@@ -3,11 +3,16 @@ from typing import Any
 from fastapi_template.input_model import BuilderContext
 
 _MINIMAL: dict[str, Any] = {
+    "api_type": "rest",
+    "ci_type": "none",
+    "db": "none",
+    "orm": "none",
     "enable_routers": True,
 }
 
 _SAAS: dict[str, Any] = {
     **_MINIMAL,
+    "ci_type": "github",
     "db": "postgresql",
     "orm": "sqlalchemy",
     "enable_redis": True,
