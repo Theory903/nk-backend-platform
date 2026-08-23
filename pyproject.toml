@@ -63,3 +63,19 @@ testpaths = ["fastapi_template/tests"]
 retries = 3
 retry_delay = 2
 cumulative_timing = true
+
+[tool.ruff]
+line-length = 100
+extend-exclude = ["fastapi_template/template"]
+
+[tool.ruff.lint]
+select = ["E", "F"]
+
+[tool.mypy]
+python_version = "3.11"
+files = ["fastapi_template"]
+exclude = "fastapi_template/template"
+check_untyped_defs = true
+ignore_missing_imports = true
+warn_unused_ignores = true
+no_implicit_optional = true
