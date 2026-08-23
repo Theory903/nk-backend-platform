@@ -1,6 +1,7 @@
 import logging
 
 from fastapi import FastAPI
+from {{cookiecutter.project_name}}.core.errors import register_problem_handlers
 from {{cookiecutter.project_name}}.settings import settings
 from {{cookiecutter.project_name}}.web.api.router import api_router
 
@@ -89,6 +90,7 @@ def get_app() -> FastAPI:
 
     # Main router for the API.
     app.include_router(router=api_router, prefix="/api")
+    register_problem_handlers(app)
     {%- if cookiecutter.api_type == 'graphql' %}
     # Graphql router
     app.include_router(router=gql_router, prefix="/graphql")
