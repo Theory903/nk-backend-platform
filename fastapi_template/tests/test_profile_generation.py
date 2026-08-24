@@ -84,8 +84,14 @@ def test_agentic_profile_generates_manifest() -> None:
     assert manifest["modules"]["llm"] is True
     assert manifest["modules"]["kafka"] is False
 
+    assert Path("smoke_agentic/smoke_agentic/data/protocols.py").exists()
+    assert Path(
+        "smoke_agentic/smoke_agentic/data/adapters/sqlalchemy/repository.py",
+    ).exists()
+    assert not Path("smoke_agentic/smoke_agentic/data/adapters/mongo").exists()
 
-def test_minimal_profile_keeps_database_unset_in_manifest() -> None:
+
+def test_minimal_profile_ships_no_data_layer() -> None:
     ctx = _fully_scripted_context("minimal", "smoke_minimal_solo")
     ctx = _run_pipeline(ctx)
     generate_project(ctx)
@@ -93,6 +99,7 @@ def test_minimal_profile_keeps_database_unset_in_manifest() -> None:
     manifest = yaml.safe_load(Path("smoke_minimal_solo/platform.yaml").read_text())
     assert manifest["modules"]["agents"] is False
     assert manifest["providers"]["database"] == "none"
+    assert not Path("smoke_minimal_solo/smoke_minimal_solo/data").exists()
 
 
 def test_every_profile_generates_without_prompts() -> None:

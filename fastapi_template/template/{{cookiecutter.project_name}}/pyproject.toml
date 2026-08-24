@@ -138,6 +138,9 @@ dependencies = [
 {%- if cookiecutter.enable_taskiq == "True" %}
   "taskiq >=0.12.0,<1",
   "taskiq-fastapi >=0.3.6,<1",
+{%- if cookiecutter.otlp_enabled == "True" %}
+  "psutil >=7.0.0,<8",
+{%- endif %}
 {%- if cookiecutter.enable_redis == "True" %}
   "taskiq-redis >=1.1.2,<2",
 {%- endif %}

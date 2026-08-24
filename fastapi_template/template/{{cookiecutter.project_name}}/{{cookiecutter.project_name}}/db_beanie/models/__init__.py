@@ -3,6 +3,9 @@
 {%- if cookiecutter.add_dummy == "True" %}
 from {{cookiecutter.project_name}}.db.models.dummy_model import DummyModel
 {%- endif %}
+{%- if cookiecutter.orm == "beanie" %}
+from {{cookiecutter.project_name}}.data.adapters.mongo.documents import RecordDocument
+{%- endif %}
 
 from beanie import Document
 from collections.abc import Sequence
@@ -12,5 +15,8 @@ def load_all_models() -> Sequence[type[Document]]:
     return [
 {%- if cookiecutter.add_dummy == "True" %}
         DummyModel,
+{%- endif %}
+{%- if cookiecutter.orm == "beanie" %}
+        RecordDocument,
 {%- endif %}
     ]

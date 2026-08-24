@@ -18,6 +18,12 @@ def delete_resource(resource: Path):
         shutil.rmtree(resource)
 
 
+def remove_empty_dirs(root: Path = Path(".")) -> None:
+    for path in sorted(root.rglob("*"), key=lambda p: len(p.parts), reverse=True):
+        if path.is_dir() and not any(path.iterdir()):
+            path.rmdir()
+
+
 def delete_resources_for_disabled_features():
     with CONDITIONAL_MANIFEST.open("rb") as manifest_file:
         manifest = tomllib.load(manifest_file)
@@ -34,6 +40,7 @@ def delete_resources_for_disabled_features():
                 print(text)
                 for resource in resources:
                     delete_resource(Path(resource))
+    remove_empty_dirs()
     delete_resource(CONDITIONAL_MANIFEST)
     cprint("cleanup complete!", color="green")
 

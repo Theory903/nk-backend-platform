@@ -229,6 +229,32 @@ enabled = "{{cookiecutter.enable_taskiq}}"
 resources = ["{{cookiecutter.project_name}}/tkq.py"]
 
 [[features]]
+name = "Universal data layer"
+enabled = "{{cookiecutter.orm in ['sqlalchemy', 'beanie']}}"
+resources = [
+  "{{cookiecutter.project_name}}/data/__init__.py",
+  "{{cookiecutter.project_name}}/data/models.py",
+  "{{cookiecutter.project_name}}/data/protocols.py",
+  "tests/test_data_repository.py",
+]
+
+[[features]]
+name = "Data adapter SQLAlchemy"
+enabled = "{{cookiecutter.orm == 'sqlalchemy'}}"
+resources = [
+  "{{cookiecutter.project_name}}/data/adapters/__init__.py",
+  "{{cookiecutter.project_name}}/data/adapters/sqlalchemy",
+]
+
+[[features]]
+name = "Data adapter Beanie"
+enabled = "{{cookiecutter.orm == 'beanie'}}"
+resources = [
+  "{{cookiecutter.project_name}}/data/adapters/__init__.py",
+  "{{cookiecutter.project_name}}/data/adapters/mongo",
+]
+
+[[features]]
 name = "Gunicorn support"
 enabled = "{{cookiecutter.gunicorn}}"
 resources = ["{{cookiecutter.project_name}}/gunicorn_runner.py"]
