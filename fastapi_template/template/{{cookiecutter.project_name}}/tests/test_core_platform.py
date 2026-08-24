@@ -1,7 +1,7 @@
 from {{cookiecutter.project_name}}.core.platform import get_platform_config
 
 
-def test_platform_manifest_loads() -> None:
+async def test_platform_manifest_loads() -> None:
     """
     The generated platform.yaml parses into a typed config.
     """
@@ -12,7 +12,7 @@ def test_platform_manifest_loads() -> None:
     assert config.module_enabled("agents") is {{ cookiecutter.enable_agents }}
 
 
-def test_module_lookup_defaults_to_disabled() -> None:
+async def test_module_lookup_defaults_to_disabled() -> None:
     """
     Unknown modules report disabled instead of raising.
     """

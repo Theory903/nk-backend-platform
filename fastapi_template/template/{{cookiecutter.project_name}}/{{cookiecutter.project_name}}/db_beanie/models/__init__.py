@@ -5,6 +5,7 @@ from {{cookiecutter.project_name}}.db.models.dummy_model import DummyModel
 {%- endif %}
 {%- if cookiecutter.orm == "beanie" %}
 from {{cookiecutter.project_name}}.data.adapters.mongo.documents import RecordDocument
+from {{cookiecutter.project_name}}.data.adapters.mongo.outbox import OutboxDocument
 {%- endif %}
 
 from beanie import Document
@@ -18,5 +19,6 @@ def load_all_models() -> Sequence[type[Document]]:
 {%- endif %}
 {%- if cookiecutter.orm == "beanie" %}
         RecordDocument,
+        OutboxDocument,
 {%- endif %}
     ]

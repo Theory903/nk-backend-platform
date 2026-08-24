@@ -255,6 +255,11 @@ resources = [
 ]
 
 [[features]]
+name = "Transactional outbox"
+enabled = "{{cookiecutter.orm in ['sqlalchemy', 'beanie']}}"
+resources = ["tests/test_outbox_relay.py"]
+
+[[features]]
 name = "Gunicorn support"
 enabled = "{{cookiecutter.gunicorn}}"
 resources = ["{{cookiecutter.project_name}}/gunicorn_runner.py"]

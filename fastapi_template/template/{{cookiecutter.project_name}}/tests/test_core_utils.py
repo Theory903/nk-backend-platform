@@ -4,7 +4,7 @@ from {{cookiecutter.project_name}}.core.identifiers import new_id
 from {{cookiecutter.project_name}}.core.time import utcnow
 
 
-def test_new_id_uses_prefix_and_is_unique() -> None:
+async def test_new_id_uses_prefix_and_is_unique() -> None:
     """
     Identifiers carry their domain prefix and never collide.
     """
@@ -16,7 +16,7 @@ def test_new_id_uses_prefix_and_is_unique() -> None:
     assert first != second
 
 
-def test_utcnow_is_timezone_aware() -> None:
+async def test_utcnow_is_timezone_aware() -> None:
     """
     Timestamps are always timezone-aware UTC.
     """
