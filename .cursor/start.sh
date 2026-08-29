@@ -8,8 +8,9 @@ if sudo docker info >/dev/null 2>&1; then
   echo "==> Docker daemon already running"
 else
   echo "==> Starting Docker daemon"
-  sudo mkdir -p /var/log
-  sudo nohup dockerd >/var/log/dockerd.log 2>&1 &
+  # Run the redirect inside the root shell: a redirect written by the
+  # unprivileged login shell cannot create a file under root-owned /var/log.
+  sudo sh -c 'nohup dockerd >/var/log/dockerd.log 2>&1 &'
   for _ in $(seq 1 30); do
     if sudo docker info >/dev/null 2>&1; then
       break
