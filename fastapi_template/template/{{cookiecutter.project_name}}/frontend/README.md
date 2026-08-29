@@ -1,32 +1,31 @@
-# React API documentation
+# API Studio
 
-The React documentation application served at `/api/docs`, `/api/swagger`, and
-`/api/redoc`.
+This React application powers the generated project's branded documentation
+surfaces: `/api/docs`, `/api/swagger`, and `/api/redoc`.
 
 Built with [Vite](https://vite.dev), React, TypeScript, Tailwind CSS v4 and
 [shadcn/ui](https://ui.shadcn.com) components.
 
-## Setup
+## Build
 
-The React docs ship as source. Build once before running the API directly; the
-Dockerfile builds the bundle automatically for container images.
+The source is compiled into
+`../{{cookiecutter.project_name}}/static/studio/dist/`. The generated API
+serves stable `studio.js` and `studio.css` files; Docker builds the bundle
+automatically.
 
 ```bash
-cd frontend
-npm install
+npm ci
+npm run typecheck
 npm run build
 ```
 
-The bundle is emitted to `../{{cookiecutter.project_name}}/static/studio/dist/`
-with stable filenames (`studio.js`, `studio.css`) and is served by FastAPI on
-all three documentation routes.
-It is a build artifact and is git-ignored.
+The build output is a generated artifact and is git-ignored.
 
 ## Development
 
 ```bash
 # terminal 1 — the API
-uv run python -m {{cookiecutter.project_name}}
+uv run nk dev
 
 # terminal 2 — the Studio with hot reload
 cd frontend && npm run dev
@@ -62,6 +61,11 @@ The React app owns the documentation palette:
 
 The app uses a Baeldung-inspired editorial palette. The second file is only
 used by the pre-build fallback and legacy static assets.
+
+The API logo is supplied by
+`../{{cookiecutter.project_name}}/static/branding/logo.png`. Replace that
+asset to customize the generated project's branding across the favicon,
+navigation bar, and documentation shell.
 
 ## Layout
 

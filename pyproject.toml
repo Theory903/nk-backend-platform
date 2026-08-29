@@ -1,7 +1,7 @@
 [project]
 name = "fastapi_template"
 version = "0.0.0"
-description = "Feature-rich robust FastAPI template"
+description = "Composable FastAPI project generator for NK Backend OS"
 authors = [{ name = "Pavel Kirilin", email = "win10@list.ru" }]
 requires-python = ">=3.9,<4"
 readme = "README.md"
