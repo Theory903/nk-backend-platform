@@ -10,7 +10,6 @@ from prompt_toolkit.validation import ValidationError, Validator
 from termcolor import colored
 
 from fastapi_template.input_model import (
-    SKIP_ENTRY,
     BaseMenuModel,
     BuilderContext,
     Database,
@@ -31,26 +30,33 @@ class SnakeCaseValidator(Validator):
 def db_menu_update_info(ctx: BuilderContext, menu: SingularMenuModel) -> BuilderContext:
     for entry in menu.entries:
         if entry.code == ctx.db:
-            ctx.db_info = entry.additional_info.dict()
+            info = entry.additional_info
+            if info is None:
+                continue
+            ctx.db_info = (
+                info.model_dump() if hasattr(info, "model_dump") else info.dict()
+            )
     return ctx
 
 
 def disable_orm(ctx: BuilderContext) -> Optional[MenuEntry]:
+    # Pre-set orm when db is none; return None (not SKIP) so ask() does not
+    # treat a sentinel as a selection. _find_entry then resolves orm="none".
     if ctx.db == "none":
         ctx.orm = "none"
-        return SKIP_ENTRY
     return None
 
 
 def do_not_ask_features_if_quiet(ctx: BuilderContext) -> Optional[List[MenuEntry]]:
+    # Empty selection → Multiselect fills unset options as False (cancel is None).
     if ctx.quiet:
-        return [SKIP_ENTRY]
+        return []
     return None
 
 
 def do_not_ask_features_if_no_users(ctx: BuilderContext) -> Optional[list[MenuEntry]]:
     if not ctx.add_users:
-        return [SKIP_ENTRY]
+        return []
     return None
 
 
@@ -89,7 +95,6 @@ api_menu = SingularMenuModel(
         MenuEntry(
             code="graphql",
             user_view="GrapQL API",
-            pydantic_v1=True,
             description=(
                 "Choose this option if you want to create a service with {name}.\n"
                 "It's more suitable for services with {reason} and deep nesting.".format(
@@ -319,7 +324,6 @@ orm_menu = SingularMenuModel(
         MenuEntry(
             code="piccolo",
             user_view="Piccolo",
-            pydantic_v1=True,
             is_hidden=check_db(["postgresql", "sqlite"]),
             description=(
                 "{what} is a great ORM for Postgresql and SQLite.\n"

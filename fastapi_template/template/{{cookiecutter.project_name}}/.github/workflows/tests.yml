@@ -1,41 +1,132 @@
 name: Testing {{cookiecutter.project_name}}
 
-on: push
+# Baked-app CI only (quality + compose tests + prod image).
+# Cookiecutter profile-matrix smoke lives in the generator repo:
+#   FastAPI-template/.github/workflows/test.yml → generated-project-matrix
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-{{ '${{' }} github.workflow {{ '}}' }}-{{ '${{' }} github.ref {{ '}}' }}
+  cancel-in-progress: true
 
 jobs:
-  lint:
-    strategy:
-      matrix:
-        cmd:
-          - ruff-format
-          - ruff
-          - mypy
+  quality:
+    name: Quality
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: '3.12'
-      - name: Set up UV
+          python-version: "3.12"
+
+      - name: Set up uv
         uses: astral-sh/setup-uv@v6
-      - name: Install deps
-        run: uv sync
-      - name: Run lint check
-        run: uv run pre-commit run -a {{ '${{' }} matrix.cmd {{ '}}' }}
-  pytest:
+        with:
+          enable-cache: true
+
+      # Template does not ship uv.lock; post-gen creates it when network works.
+      # Prefer --locked once uv.lock is committed in the generated repo.
+      - name: Install dependencies
+        run: |
+          if [ -f uv.lock ]; then
+            uv sync --locked
+          else
+            echo "NOTE: uv.lock missing — running unlocked uv sync (commit lockfile for reproducible CI)"
+            uv sync
+          fi
+
+      - name: Check formatting
+        run: uv run ruff format --check .
+
+      - name: Lint
+        run: uv run ruff check .
+
+      - name: Type check
+        run: uv run mypy {{cookiecutter.project_name}} tests
+
+  tests:
+    name: Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Create .env
-        run: touch .env
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: '3.12'
-      - name: Update docker-compose
-        uses: KengoTODA/actions-setup-docker-compose@v1
+          python-version: "3.12"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
         with:
-          version: "2.28.0"
-      - name: run tests
-        run: docker-compose run --rm api pytest -vv
+          enable-cache: true
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Optional env file; compose marks env_file as required: false.
+      - name: Create environment
+        run: touch .env
+
+      # Dockerfile prod/dev stages bind-mount uv.lock — generate if missing.
+      - name: Create uv.lock if absent
+        run: |
+          if [ ! -f uv.lock ]; then
+            echo "NOTE: generating uv.lock for Docker build (commit it for reproducible CI)"
+            uv lock
+          fi
+
+      # Base + dev overlay → Dockerfile target `dev` (test deps) + source mount.
+      # Prod overlay is covered by the `docker` job (`--target prod`).
+      - name: Build application
+        run: docker compose -f docker-compose.yml -f docker-compose.dev.yml build api
+
+      - name: Run tests
+        run: docker compose -f docker-compose.yml -f docker-compose.dev.yml run --rm api pytest -vv
+
+      - name: Shutdown
+        if: {{ '${{' }} always() {{ '}}' }}
+        run: docker compose -f docker-compose.yml -f docker-compose.dev.yml down -v
+
+  docker:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Create uv.lock if absent
+        run: |
+          if [ ! -f uv.lock ]; then
+            echo "NOTE: generating uv.lock for Docker build (commit it for reproducible CI)"
+            uv lock
+          fi
+
+      - name: Build production image
+        run: |
+          docker build \
+            --target prod \
+            --tag {{cookiecutter.project_name}}:ci \
+            .

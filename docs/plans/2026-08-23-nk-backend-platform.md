@@ -221,3 +221,63 @@ MCP (Linux Foundation) hit v2 spec **2026-07-28**: stateless Streamable HTTP sin
 | G4 Durable ladder | P6 | `DurableBackend` protocol, DBOS adapter (default), Hatchet/Temporal adapters |
 | G5 MCP | P6+P8 | `/mcp` Streamable HTTP endpoint, OAuth RS wiring, ToolRegistry→MCP bridge |
 | G6 Standards | P4+P8 | standardwebhooks signer, CloudEvents envelope, Idempotency-Key middleware, AsyncAPI gen |
+
+---
+
+## 8. P6 Amendment — Production Agent Runtime (researched 2026-08-24)
+
+Sources studied: **langchain-ai/deepagents** repo structure (middleware composition, backend protocols, skills-as-folders) + LangChain/LangGraph 1.0 landscape.
+
+### Ecosystem facts driving design
+1. LangChain 1.0 (Oct 2025): `langchain.agents.create_agent` replaces `create_react_agent`, runs the LangGraph engine internally, exposes a middleware system. Official escalation ladder: `create_agent` → explicit `StateGraph` only when needing mid-run state inspection, HITL interrupts, conditional retries, or multi-agent handoffs.
+2. deepagents architecture: concerns are **middleware** (skills, subagents, filesystem, permissions, summarization, memory); agent file/workspace state sits behind a **backend protocol** (state/local/store/sandbox impls); **skills are folders** (`<name>/SKILL.md` + scripts/) discovered, trust-gated, lazily loaded; planning is a todo-list tool; HITL uses `interrupt()` / `Command(resume=)` and requires a checkpointer.
+3. Checkpointers: `InMemorySaver` (dev/tests) / `AsyncPostgresSaver` (prod) — we already own Postgres.
+
+### Folder structure (generated projects, gated by `enable_agents`)
+
+```
+{{project}}/{{project}}/
+├── ai/                          # P5 prerequisite layer
+│   ├── llm.py                   # LLMProvider protocol + settings-driven factory (openai|anthropic|ollama|fake)
+│   ├── embeddings.py            # EmbeddingProvider protocol (+ deterministic fake for tests)
+│   └── retrieval.py             # RetrievalProvider protocol; traditional RAG over data/ pgvector adapter (hybrid RRF)
+├── agents/
+│   ├── runtime.py               # AgentRuntime protocol + build_runtime(platform_config) -> loop|graph
+│   ├── loop.py                  # Hand-rolled ReAct loop: model→tool_calls→execute→observe→repeat; ZERO framework imports
+│   ├── graph.py                 # LangChain create_agent-backed runtime + checkpointer selection + interrupt() HITL
+│   ├── models.py                # Resolves LLMProvider → chat-model instance consumed by both runtimes
+│   ├── tools/
+│   │   ├── __init__.py          # ToolRegistry: @agent_tool decorator → typed catalog → export for either runtime
+│   │   └── builtins.py          # current_time, retrieve (RAG), workspace_read/write/list
+│   ├── skills/
+│   │   ├── loader.py            # SKILL.md frontmatter parse, trust gate, lazy context injection (deepagents-style)
+│   │   └── example/SKILL.md     # shipped sample skill pack
+│   ├── planning.py              # write_todos planning tool (deepagents pattern) exposed to both runtimes
+│   ├── workspace.py             # WorkspaceBackend protocol + LocalDirBackend (sandboxed project dir)
+│   ├── budgets.py               # max_steps/max_tokens/cost tracker; halt raises BudgetExhausted
+│   ├── guardrails.py            # tool allow/deny policy checked at dispatch time in BOTH runtimes
+│   └── hitl.py                  # ApprovalGate: graph mode → interrupt()/Command(resume=); loop mode → injected callback
+```
+
+### Two runtimes, one contract
+| | `loop` (default) | `graph` |
+|---|---|---|
+| Deps | none beyond `ai/` layer | `langchain>=1,<2`, `langgraph>=1,<2` (optional group) |
+| Engine | explicit ReAct while-loop | `create_agent` (LangGraph engine), middleware-ready |
+| Checkpointing | conversation list in caller's hands | MemorySaver (dev) / AsyncPostgresSaver (prod) |
+| HITL | injectable async callback gate | native `interrupt()` + resume |
+| Use when | simple tool agents, full control, no vendor coupling | branching, persistence, subgraphs, human gates |
+
+Selection: `platform.yaml → modules.agents.runtime: loop|graph`. Both consume identical ToolRegistry/budgets/guardrails/skills — enforced by one parametrized **AgentContractTest** using a deterministic FakeChatModel (scripted tool-call sequences, deepagents' own test trick): same task ⇒ same tool-call trace under both runtimes; budget exhaustion halts identically; denied tool never executes; skill content appears in context; graph-only: interrupt→resume roundtrip.
+
+### deepagents patterns adopted vs deferred
+- Adopted: skills-folder convention (+trust gate), planning/todos tool, workspace backend protocol, model profiles via settings, middleware CONCERNS as composable components.
+- Deferred (P7+/P9): subagent supervisor mesh, sandboxed shell backends, summarization middleware (context eviction), rubric evals.
+
+### Task breakdown (TDD, each with RED first)
+- **P5a**: ai/llm.py + embeddings.py + fake providers + factory tests
+- **P5b**: retrieval.py traditional RAG (pgvector cosine + FTS RRF hybrid) + postgres-leg contract tests
+- **P6a**: tools registry + loop runtime + FakeChatModel parity suite skeleton
+- **P6b**: graph runtime + checkpointer config + HITL interrupt/resume test
+- **P6c**: skills loader + planning + workspace + budgets/guardrails wired into both runtimes; template pyproject optional dependency group `agents`
+- Verification loops mirror P3/P4: generate sqlite-leg project natively with `enable_agents` + fake provider; postgres/pgvector pieces exercised on the dockerized pg leg; no real API keys anywhere in CI.

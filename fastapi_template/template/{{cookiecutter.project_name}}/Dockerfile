@@ -1,57 +1,148 @@
-FROM ghcr.io/astral-sh/uv:0.11.7-python3.13-trixie AS uv
+# syntax=docker/dockerfile:1.7
 
-# -----------------------------------
-# STAGE 1: prod stage
-# Only install main dependencies
-# -----------------------------------
-FROM python:3.13-slim-trixie AS prod
+# ============================================================================
+# Stage 1: uv
+# ============================================================================
 
-{%- if cookiecutter.db_info.name == "mysql" %}
-RUN apt-get update && apt-get install -y \
-  default-libmysqlclient-dev \
-  gcc \
-  pkg-config \
-  && rm -rf /var/lib/apt/lists/*
-{%- endif %}
+FROM ghcr.io/astral-sh/uv:0.11.7-python3.12-trixie AS uv
 
 
-{%- if cookiecutter.db_info.name == "postgresql" %}
-RUN apt-get update && apt-get install -y \
-  gcc \
-  && rm -rf /var/lib/apt/lists/*
-{%- endif %}
+# ============================================================================
+# Stage 2: React documentation assets
+# ============================================================================
 
-ENV UV_COMPILE_BYTECODE=1
-ENV UV_LINK_MODE=copy
-ENV UV_PROJECT_ENVIRONMENT=/usr/local
-ENV UV_PYTHON_DOWNLOADS=never
-ENV UV_NO_MANAGED_PYTHON=1
-{%- if cookiecutter.orm == 'piccolo' %}
-ENV PICCOLO_CONF="{{cookiecutter.project_name}}.piccolo_conf"
-{%- endif %}
+FROM node:22-alpine AS frontend
+
+WORKDIR /app/frontend
+
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci
+
+COPY frontend/ .
+RUN npm run build
+
+
+# ============================================================================
+# Stage 3: production
+# ============================================================================
+
+FROM python:3.12-slim-trixie AS prod
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    UV_PROJECT_ENVIRONMENT=/usr/local \
+    UV_PYTHON_DOWNLOADS=never \
+    UV_NO_MANAGED_PYTHON=1
 
 WORKDIR /app/src
 
+
+# ---------------------------------------------------------------------------
+# Runtime/build dependencies
+# ---------------------------------------------------------------------------
+
+{%- if cookiecutter.db_info.name == "mysql" %}
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        default-libmysqlclient-dev \
+        gcc \
+        pkg-config \
+    && rm -rf /var/lib/apt/lists/*
+
+{%- elif cookiecutter.db_info.name == "postgresql" %}
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+{%- endif %}
+
+
+# ---------------------------------------------------------------------------
+# Dependency layer
+# ---------------------------------------------------------------------------
+
 RUN --mount=from=uv,source=/usr/local/bin/uv,target=/bin/uv \
     --mount=type=cache,target=/root/.cache/uv \
-    --mount=type=bind,source=uv.lock,target=uv.lock \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-    uv sync --locked --no-install-project --no-dev
+    uv sync --no-install-project --no-dev
+
+
+# ---------------------------------------------------------------------------
+# Application
+# ---------------------------------------------------------------------------
 
 COPY . .
+COPY --from=frontend /app/{{cookiecutter.project_name}}/static/studio/dist ./{{cookiecutter.project_name}}/static/studio/dist
 
+
+# Install project itself.
 RUN --mount=from=uv,source=/usr/local/bin/uv,target=/bin/uv \
     --mount=type=cache,target=/root/.cache/uv \
-    uv sync --locked --no-dev
+    uv sync --no-dev
+
+
+# ---------------------------------------------------------------------------
+# Runtime user
+# ---------------------------------------------------------------------------
+
+RUN useradd \
+        --create-home \
+        --uid 10001 \
+        --shell /usr/sbin/nologin \
+        appuser \
+    && mkdir -p /db_data \
+    && chown -R appuser:appuser /app /db_data
+
+USER appuser
+
+
+# ---------------------------------------------------------------------------
+# Application configuration
+# ---------------------------------------------------------------------------
+
+{%- if cookiecutter.orm == 'piccolo' %}
+
+ENV PICCOLO_CONF="{{cookiecutter.project_name}}.piccolo_conf"
+
+{%- endif %}
+
+
+# ---------------------------------------------------------------------------
+# Health
+# ---------------------------------------------------------------------------
+
+HEALTHCHECK \
+    --interval=30s \
+    --timeout=3s \
+    --start-period=10s \
+    --retries=3 \
+    CMD python -c \
+        "import os, urllib.request; urllib.request.urlopen('http://127.0.0.1:' + os.getenv('{{cookiecutter.project_name | upper}}_PORT', '8000') + '/api/health')" \
+        || exit 1
+
+
+# ---------------------------------------------------------------------------
+# Runtime
+# ---------------------------------------------------------------------------
 
 CMD ["/usr/local/bin/python", "-m", "{{cookiecutter.project_name}}"]
 
-# -----------------------------------
-# STAGE 3: development build
-# Includes dev dependencies
-# -----------------------------------
+
+# ============================================================================
+# Stage 4: development
+# ============================================================================
+
 FROM prod AS dev
+
+USER root
 
 RUN --mount=from=uv,source=/usr/local/bin/uv,target=/bin/uv \
     --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --all-groups
+
+USER appuser

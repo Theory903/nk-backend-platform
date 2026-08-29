@@ -1,8 +1,6 @@
 import pytest
 
 {%- if cookiecutter.orm == "sqlalchemy" %}
-import json
-
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
@@ -122,6 +120,33 @@ async def test_unpublished_events_survive_relay_restart(published) -> None:
 
 
 {%- if cookiecutter.orm == "sqlalchemy" %}
+async def test_mid_batch_publish_failure_returns_zero(published) -> None:
+    """Rolled-back published_at updates must not inflate the success count."""
+
+    _relay, _seen, maker = published
+
+    async with maker() as session:
+        await record_event(session, EventEnvelope(type="ok", source="/t", data={"n": 1}))
+        await record_event(session, EventEnvelope(type="boom", source="/t", data={"n": 2}))
+        await session.commit()
+
+    async def flaky(payload: dict) -> None:
+        if payload["type"] == "boom":
+            raise RuntimeError("broker unavailable")
+
+    relay = OutboxRelay(maker, publish=flaky, batch_size=10)
+    handled = await relay.poll_once()
+    assert handled == 0
+
+    async with maker() as session:
+        pending = (
+            await session.execute(
+                select(OutboxRow).where(OutboxRow.published_at.is_(None))
+            )
+        ).scalars().all()
+    assert len(pending) == 2
+
+
 async def test_cleanup_removes_only_published(published) -> None:
     from datetime import timedelta
 

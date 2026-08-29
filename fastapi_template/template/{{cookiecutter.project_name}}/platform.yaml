@@ -14,6 +14,7 @@ modules:
   nats: {{ cookiecutter.enable_nats }}
   taskiq: {{ cookiecutter.enable_taskiq }}
   users: {{ cookiecutter.add_users }}
+  files: {{ cookiecutter.add_users }}
   llm: {{ cookiecutter.enable_llm }}
   vector: {{ cookiecutter.enable_vector }}
   rag_traditional: {{ cookiecutter.enable_rag_traditional }}
@@ -21,6 +22,7 @@ modules:
   graphrag: {{ cookiecutter.enable_graphrag }}
   audit: {{ cookiecutter.enable_audit }}
   idempotency: {{ cookiecutter.enable_idempotency }}
+  fintech: {{ cookiecutter.enable_fintech }}
 
 observability:
   prometheus: {{ cookiecutter.prometheus_enabled }}

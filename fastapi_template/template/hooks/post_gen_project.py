@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import os
 import shutil
 import subprocess
 import tomllib
@@ -9,6 +10,12 @@ from pathlib import Path
 
 CONDITIONAL_MANIFEST = Path("conditional_files.toml")
 REPLACE_MANIFEST = Path("replaceable_files.toml")
+
+
+def _clean_env() -> dict[str, str]:
+    env = dict(os.environ)
+    env.pop("VIRTUAL_ENV", None)
+    return env
 
 
 def delete_resource(resource: Path):
@@ -73,9 +80,15 @@ def run_cmd(cmd: str, ignore_error: bool = False):
         shlex.split(cmd),
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
+        env=_clean_env(),
     )
     if out.returncode != 0 and not ignore_error:
-        cprint(" WARNING ".center(50, "="))
+        # offline / cache miss: single yellow line, no red dump
+        stderr = (out.stderr or b"").decode(errors="replace")
+        if "uv sync" in cmd and ("offline" in stderr.lower() or "Failed to download" in stderr or "Network connectivity" in stderr or "Unable to find lockfile" in stderr):
+            cprint("[WARN] `uv sync` skipped (offline or cache miss). Run `uv sync` again with network.", "yellow")
+            return out
+        cprint(" WARNING ".center(50, "="), "yellow")
         cprint(
             f"[WARN] Command `{cmd}` was not successfull. Check output below.",
             "yellow",
@@ -89,26 +102,50 @@ def run_cmd(cmd: str, ignore_error: bool = False):
         if out.stderr:
             cprint(out.stderr.decode(errors="replace"), "red")
         raise ValueError()
+    return out
+
+
+def clean_frontend_artifacts():
+    """Drop any build artefacts that leaked in from the template checkout.
+
+    Cookiecutter copies the template working tree rather than its git index, so
+    a maintainer who ran `npm install` or `npm run build` locally would
+    otherwise ship `node_modules/` and a stale bundle into every new project.
+    """
+    for artifact in (
+        Path("frontend/node_modules"),
+        Path("frontend/dist"),
+        Path("frontend/tsconfig.tsbuildinfo"),
+        Path("{{cookiecutter.project_name}}/static/studio/dist"),
+    ):
+        if artifact.exists():
+            cprint(f"Removing copied build artifact {artifact}...", "red")
+            delete_resource(artifact)
 
 
 def init_repo():
     run_cmd("git init")
     cprint(" Git repository initialized", "green")
     run_cmd("git add .")
-    cprint("🐍 Installing python dpendencies with UV", "green")
-    run_cmd("uv sync")
-    run_cmd("uv run pre-commit install")
+    cprint("🐍 Installing python dependencies with uv", "green")
+    # --frozen, offline-aware, VIRTUAL_ENV sanitized
+    try:
+        run_cmd("uv sync --frozen")
+    except ValueError:
+        cprint("[WARN] `uv sync` skipped (offline or cache miss). Run `uv sync` again with network.", "yellow")
+    run_cmd("uv run pre-commit install", ignore_error=True)
     cprint("📚🖌️📄📏 Tidying up the project", "green")
     for _ in range(2):
         run_cmd("uv run pre-commit run -a", ignore_error=True)
-    run_cmd("git add .")
+    run_cmd("git add .", ignore_error=True)
     cprint("🚀Creating your first commit", "green")
-    run_cmd("git commit -m 'Initial commit'")
+    run_cmd("git commit -m 'Initial commit'", ignore_error=True)
 
 
 if __name__ == "__main__":
     delete_resources_for_disabled_features()
     replace_resources()
+    clean_frontend_artifacts()
     try:
         init_repo()
     except ValueError:

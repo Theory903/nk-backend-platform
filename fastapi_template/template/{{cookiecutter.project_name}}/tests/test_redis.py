@@ -1,3 +1,15 @@
+import pytest
+
+def _redis_available() -> bool:
+    import socket
+    try:
+        with socket.create_connection(("localhost", 6379), timeout=0.5):
+            return True
+    except OSError:
+        return False
+
+pytestmark = pytest.mark.skipif(not _redis_available(), reason="Redis not available")
+
 import uuid
 
 from fastapi import FastAPI

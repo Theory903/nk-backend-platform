@@ -10,30 +10,51 @@ tool.
 To run the project use this set of commands:
 
 ```bash
-uv sync --locked
+cd frontend
+npm ci
+npm run build
+cd ..
+uv sync
 uv run -m {{cookiecutter.project_name}}
 ```
 
 This will start the server on the configured host.
 
-You can find swagger documentation at `/api/docs`.
+The React documentation app is available at `/api/docs`, with interactive
+Swagger at `/api/swagger` and the reference view at `/api/redoc`.
 
 You can read more about uv here: https://docs.astral.sh/ruff/
 
 ## Docker
 
-You can start the project with docker using this command:
+Compose is split into base + overlays:
+
+| File | Role |
+| --- | --- |
+| `docker-compose.yml` | Base topology (`target: prod`, internal `app` network, no DB/broker host ports) |
+| `docker-compose.dev.yml` | Dev: `target: dev`, reload, source mount, API + infra host ports |
+| `docker-compose.prod.yml` | Prod: reload off, no source mounts, no infra host ports |
+
+**Development** (API on `:8000`, optional DB/Redis/broker ports for local tools):
 
 ```bash
-docker compose up --build
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 ```
 
-This command exposes the web application on port 8000, mounts current directory and enables autoreload.
-
-But you have to rebuild image every time you modify `uv.lock` or `pyproject.toml` with this command:
+**Production-shaped** (no host ports for DB/Redis/brokers; put an edge proxy in front):
 
 ```bash
-docker compose build
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+```
+
+Service DNS inside the stack is the Compose service name (`db`, `redis`, `rmq`, `kafka`, `nats`, `api`) — not `{{cookiecutter.project_name}}-db` hostnames.
+
+Credentials come from env (see `.env`): `DB_USER`, `DB_PASSWORD`, `DB_NAME`, and `RABBITMQ_USER` / `RABBITMQ_PASSWORD` when RabbitMQ is enabled. Override these for anything beyond local bootstrap.
+
+Rebuild whenever `uv.lock` or `pyproject.toml` changes:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml build
 ```
 
 ## Project structure
@@ -91,7 +112,7 @@ you can add `-f ./deploy/docker-compose.otlp.yml` to your docker command.
 Like this:
 
 ```bash
-docker compose -f docker-compose.yml -f deploy/docker-compose.otlp.yml --project-directory . up
+docker compose -f docker-compose.yml -f docker-compose.dev.yml -f deploy/docker-compose.otlp.yml --project-directory . up
 ```
 
 This command will start grafana with full opentelemetry stack at http://localhost:3000/. 
@@ -110,12 +131,15 @@ To install pre-commit simply run inside the shell:
 pre-commit install
 ```
 
-pre-commit is very useful to check your code before publishing it.
-It's configured using .pre-commit-config.yaml file.
+Local pre-commit runs **format + lint + mypy + bandit** (ruff format may rewrite files).
+CI validates only: `ruff format --check`, `ruff check` (no `--fix`), mypy, bandit, then pytest.
+A generated-project matrix across cookiecutter profiles is the next CI hardening step.
 
 By default it runs:
+* ruff format (auto-formats);
+* ruff check (lint only — no autofix);
 * mypy (validates types);
-* ruff (spots possible bugs);
+* bandit (security scan of `{{cookiecutter.project_name}}`, excludes tests);
 
 
 You can read more about pre-commit here: https://pre-commit.com/
@@ -181,8 +205,8 @@ aerich migrate
 If you want to run it in docker, simply run:
 
 ```bash
-docker compose run --build --rm api pytest -vv .
-docker compose down
+docker compose -f docker-compose.yml -f docker-compose.dev.yml run --build --rm api pytest -vv .
+docker compose -f docker-compose.yml -f docker-compose.dev.yml down
 ```
 
 For running tests on your local machine.
@@ -195,10 +219,10 @@ For running tests on your local machine.
 ) %}
 1. you need to start all aux services.
 
-We can do so by using our `docker-compose.yaml` configuration. It already has everything we need.
+We can do so with the base + dev Compose overlays (dev publishes host ports for tools):
 
 ```bash
-docker compose up -d --wait{%- if cookiecutter.db_info.name != 'none' %} db{%- endif %}{%- if cookiecutter.enable_redis == "True" %} redis{%- endif %}{%- if cookiecutter.enable_rmq == "True" %} rmq{%- endif %}{%- if cookiecutter.enable_kafka == "True" %} kafka{%- endif %}{%- if cookiecutter.enable_nats == "True" %} nats{%- endif %}
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --wait{%- if cookiecutter.db_info.name != 'none' and cookiecutter.db_info.name != 'sqlite' %} db{%- endif %}{%- if cookiecutter.enable_redis == "True" %} redis{%- endif %}{%- if cookiecutter.enable_rmq == "True" %} rmq{%- endif %}{%- if cookiecutter.enable_kafka == "True" %} kafka{%- endif %}{%- if cookiecutter.enable_nats == "True" %} nats{%- endif %}
 ```
 
 2. Run tests.

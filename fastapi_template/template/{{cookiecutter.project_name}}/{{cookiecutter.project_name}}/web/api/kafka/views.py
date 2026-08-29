@@ -1,6 +1,5 @@
-from aiokafka import AIOKafkaProducer
-from fastapi import APIRouter, Depends
-from {{cookiecutter.project_name}}.services.kafka.dependencies import get_kafka_producer
+from fastapi import APIRouter
+from {{cookiecutter.project_name}}.services.kafka.dependencies import KafkaProducer
 from {{cookiecutter.project_name}}.web.api.kafka.schema import KafkaMessage
 
 router = APIRouter()
@@ -9,7 +8,7 @@ router = APIRouter()
 @router.post("/")
 async def send_kafka_message(
     kafka_message: KafkaMessage,
-    producer: AIOKafkaProducer = Depends(get_kafka_producer),
+    producer: KafkaProducer,
 ) -> None:
     """
     Sends message to kafka.

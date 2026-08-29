@@ -85,7 +85,7 @@ auth_cookie = AuthenticationBackend(
 )
 {%- endif %}
 
-backends = [
+backends: list[AuthenticationBackend] = [
     {%- if cookiecutter.cookie_auth == "True" %}
     auth_cookie,
     {%- endif %}

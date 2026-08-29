@@ -12,6 +12,17 @@ from fastapi_template.tests.utils import run_docker_compose_command, model_dump_
 
 
 @pytest.fixture
+def worker_id(request: pytest.FixtureRequest) -> str:
+    """
+    pytest-xdist worker id, or ``master`` when xdist is absent / serial.
+    """
+    workerinput = getattr(request.config, "workerinput", None)
+    if workerinput is not None:
+        return workerinput["workerid"]
+    return "master"
+
+
+@pytest.fixture
 def project_name(worker_id: str) -> str:
     """
     Generate name for test project.

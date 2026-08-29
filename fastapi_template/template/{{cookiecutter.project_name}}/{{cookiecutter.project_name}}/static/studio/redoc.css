@@ -1,0 +1,614 @@
+/*
+ * NK ReDoc — production reference documentation
+ *
+ * Goals:
+ * - Native NK visual language
+ * - Excellent long-form API reading
+ * - Quiet navigation
+ * - Strong code readability
+ * - Consistent Studio / Swagger / ReDoc chrome
+ */
+
+ html,
+ body {
+   margin: 0;
+   min-height: 100%;
+   overflow: auto;
+ 
+   background: var(--bg, #090b0f) !important;
+   color: var(--text, #eef0f2) !important;
+ }
+ 
+ .redoc-stage {
+   min-height: 0;
+   background: var(--bg, #090b0f);
+ }
+ 
+ #redoc-container {
+   min-height: calc(100vh - var(--bar-h, 52px));
+   background: var(--bg, #090b0f);
+ }
+ 
+ 
+ /* ==========================================================================
+    ROOT
+    ========================================================================== */
+ 
+ #redoc-container,
+ #redoc-container * {
+   box-sizing: border-box;
+ }
+ 
+ #redoc-container {
+   font-family:
+     var(--font,
+     Inter,
+     ui-sans-serif,
+     system-ui,
+     -apple-system,
+     BlinkMacSystemFont,
+     "Segoe UI",
+     sans-serif) !important;
+ }
+ 
+ 
+ /* ==========================================================================
+    MAIN LAYOUT
+    ========================================================================== */
+ 
+ #redoc-container .redoc-wrap {
+   min-height: calc(100vh - var(--bar-h, 52px));
+ 
+   background: var(--bg, #090b0f) !important;
+ }
+ 
+ #redoc-container .api-info {
+   background: var(--bg, #090b0f) !important;
+ }
+ 
+ 
+ /* ==========================================================================
+    LEFT NAVIGATION
+    ========================================================================== */
+ 
+ #redoc-container .menu-content {
+   position: sticky !important;
+   top: var(--bar-h, 52px);
+ 
+   width: 272px !important;
+   min-width: 272px !important;
+   max-height: calc(100vh - var(--bar-h, 52px));
+ 
+   padding: 18px 10px 24px !important;
+ 
+   overflow-y: auto !important;
+ 
+   background:
+     linear-gradient(
+       180deg,
+       #101319 0%,
+       #0e1116 100%
+     ) !important;
+ 
+   border-right: 1px solid var(--border, #202630) !important;
+ 
+   scrollbar-width: thin;
+ }
+ 
+ #redoc-container .menu-content::-webkit-scrollbar {
+   width: 7px;
+ }
+ 
+ #redoc-container .menu-content::-webkit-scrollbar-track {
+   background: transparent;
+ }
+ 
+ #redoc-container .menu-content::-webkit-scrollbar-thumb {
+   background: #252b34;
+   border: 2px solid transparent;
+   border-radius: 8px;
+   background-clip: padding-box;
+ }
+ 
+ 
+ /* Navigation typography */
+ 
+ #redoc-container .menu-content label,
+ #redoc-container .menu-content span {
+   font-family: var(--font) !important;
+ }
+ 
+ #redoc-container .menu-content label {
+   color: var(--text-secondary, #a0a8b5) !important;
+ 
+   font-size: 10px !important;
+   font-weight: 600 !important;
+ 
+   letter-spacing: .05em !important;
+ }
+ 
+ #redoc-container .menu-content li {
+   margin: 1px 0 !important;
+ }
+ 
+ 
+ /* Navigation links */
+ 
+ #redoc-container .menu-content a {
+   display: flex !important;
+   align-items: center !important;
+ 
+   min-height: 30px !important;
+ 
+   padding: 0 9px !important;
+ 
+   color: var(--text-secondary, #a0a8b5) !important;
+ 
+   border-radius: 6px !important;
+ 
+   font-size: 11px !important;
+   font-weight: 500 !important;
+ 
+   text-decoration: none !important;
+ 
+   transition:
+     color 100ms ease,
+     background 100ms ease !important;
+ }
+ 
+ #redoc-container .menu-content a:hover {
+   color: var(--text, #eef0f2) !important;
+ 
+   background: rgba(255,255,255,.035) !important;
+ }
+ 
+ #redoc-container .menu-content a.active {
+   color: var(--accent, #d4f35c) !important;
+ 
+   background: rgba(212,243,92,.07) !important;
+ }
+ 
+ 
+ /* ==========================================================================
+    MAIN DOCUMENTATION COLUMN
+    ========================================================================== */
+ 
+ #redoc-container .api-content {
+   max-width: 920px !important;
+ 
+   padding:
+     36px
+     48px
+     80px !important;
+ 
+   color: var(--text, #eef0f2) !important;
+ }
+ 
+ #redoc-container .api-content > div {
+   max-width: 860px;
+ }
+ 
+ 
+ /* ==========================================================================
+    HEADINGS
+    ========================================================================== */
+ 
+ #redoc-container h1,
+ #redoc-container h2,
+ #redoc-container h3,
+ #redoc-container h4,
+ #redoc-container h5 {
+   color: var(--text, #eef0f2) !important;
+ 
+   font-family: var(--font) !important;
+ 
+   letter-spacing: -.025em !important;
+ }
+ 
+ #redoc-container h1 {
+   margin-top: 0 !important;
+ 
+   font-size: 30px !important;
+   font-weight: 650 !important;
+   line-height: 1.2 !important;
+ }
+ 
+ #redoc-container h2 {
+   margin-top: 42px !important;
+ 
+   padding-top: 20px !important;
+ 
+   border-top: 1px solid var(--border-subtle, #1c2129) !important;
+ 
+   font-size: 21px !important;
+   font-weight: 650 !important;
+ }
+ 
+ #redoc-container h3 {
+   margin-top: 28px !important;
+ 
+   font-size: 16px !important;
+   font-weight: 600 !important;
+ }
+ 
+ #redoc-container h4 {
+   font-size: 13px !important;
+   font-weight: 600 !important;
+ }
+ 
+ 
+ /* ==========================================================================
+    BODY COPY
+    ========================================================================== */
+ 
+ #redoc-container p,
+ #redoc-container li {
+   color: var(--text-secondary, #a0a8b5) !important;
+ 
+   font-size: 13px !important;
+   line-height: 1.65 !important;
+ }
+ 
+ #redoc-container strong {
+   color: var(--text, #eef0f2) !important;
+   font-weight: 600 !important;
+ }
+ 
+ #redoc-container blockquote {
+   margin: 16px 0 !important;
+   padding: 10px 14px !important;
+ 
+   color: var(--text-secondary, #a0a8b5) !important;
+ 
+   background: var(--bg-raised, #11151b) !important;
+ 
+   border-left:
+     2px solid var(--accent, #d4f35c) !important;
+ 
+   border-radius: 0 6px 6px 0 !important;
+ }
+ 
+ 
+ /* ==========================================================================
+    LINKS
+    ========================================================================== */
+ 
+ #redoc-container a {
+   color: var(--accent, #d4f35c) !important;
+ 
+   text-decoration: none !important;
+ }
+ 
+ #redoc-container a:hover {
+   color: #e2ff7a !important;
+ }
+ 
+ 
+ /* ==========================================================================
+    OPERATION CARDS
+    ========================================================================== */
+ 
+ #redoc-container .operation-type {
+   font-family:
+     var(--mono,
+     "IBM Plex Mono",
+     ui-monospace,
+     monospace) !important;
+ 
+   font-size: 10px !important;
+   font-weight: 650 !important;
+ }
+ 
+ #redoc-container .operation-summary {
+   color: var(--text, #eef0f2) !important;
+ 
+   font-size: 15px !important;
+   font-weight: 600 !important;
+ }
+ 
+ 
+ /* ==========================================================================
+    HTTP COLORS
+    ========================================================================== */
+ 
+ #redoc-container [data-section-id*="get"] {
+   --redoc-method: var(--get, #3dd6c6);
+ }
+ 
+ #redoc-container [data-section-id*="post"] {
+   --redoc-method: var(--post, #5b9fff);
+ }
+ 
+ #redoc-container [data-section-id*="put"] {
+   --redoc-method: var(--put, #e8b84a);
+ }
+ 
+ #redoc-container [data-section-id*="patch"] {
+   --redoc-method: var(--patch, #b8a4ff);
+ }
+ 
+ #redoc-container [data-section-id*="delete"] {
+   --redoc-method: var(--delete, #f07178);
+ }
+ 
+ 
+ /* ==========================================================================
+    CODE
+    ========================================================================== */
+ 
+ #redoc-container pre {
+   margin: 12px 0 !important;
+   padding: 14px 16px !important;
+ 
+   background: #080a0e !important;
+ 
+   border:
+     1px solid var(--border, #202630) !important;
+ 
+   border-radius: 7px !important;
+ 
+   box-shadow: none !important;
+ 
+   overflow-x: auto !important;
+ }
+ 
+ #redoc-container pre,
+ #redoc-container pre code {
+   color: #cbd2dc !important;
+ 
+   font-family:
+     var(--mono,
+     "IBM Plex Mono",
+     ui-monospace,
+     SFMono-Regular,
+     Menlo,
+     Monaco,
+     Consolas,
+     monospace) !important;
+ 
+   font-size: 11px !important;
+   line-height: 1.65 !important;
+ }
+ 
+ #redoc-container code {
+   color: var(--get, #3dd6c6) !important;
+ 
+   font-family:
+     var(--mono,
+     "IBM Plex Mono",
+     ui-monospace,
+     monospace) !important;
+ 
+   font-size: 11px !important;
+ }
+ 
+ #redoc-container p code,
+ #redoc-container li code {
+   padding: 2px 5px !important;
+ 
+   background: var(--bg-input, #0a0d12) !important;
+ 
+   border:
+     1px solid var(--border, #202630) !important;
+ 
+   border-radius: 4px !important;
+ }
+ 
+ 
+ /* ==========================================================================
+    RIGHT CODE PANEL
+    ========================================================================== */
+ 
+ #redoc-container .right-panel {
+   background: #080a0e !important;
+ 
+   border-left:
+     1px solid var(--border, #202630) !important;
+ }
+ 
+ #redoc-container .right-panel pre {
+   background: transparent !important;
+   border: 0 !important;
+ }
+ 
+ 
+ /* ==========================================================================
+    TABLES
+    ========================================================================== */
+ 
+ #redoc-container table {
+   width: 100% !important;
+ 
+   background: transparent !important;
+ 
+   border-collapse: collapse !important;
+ }
+ 
+ #redoc-container th {
+   padding: 9px 10px !important;
+ 
+   color: var(--text-tertiary, #69727f) !important;
+ 
+   background: var(--bg-raised, #11151b) !important;
+ 
+   border-bottom:
+     1px solid var(--border, #202630) !important;
+ 
+   font-size: 9px !important;
+   font-weight: 650 !important;
+ 
+   letter-spacing: .06em !important;
+   text-transform: uppercase !important;
+ 
+   text-align: left !important;
+ }
+ 
+ #redoc-container td {
+   padding: 10px !important;
+ 
+   color: var(--text-secondary, #a0a8b5) !important;
+ 
+   border-bottom:
+     1px solid var(--border-subtle, #1c2129) !important;
+ 
+   font-size: 11px !important;
+ }
+ 
+ 
+ /* ==========================================================================
+    SCHEMAS
+    ========================================================================== */
+ 
+ #redoc-container .schema {
+   color: var(--text, #eef0f2) !important;
+ }
+ 
+ #redoc-container .property-name {
+   color: var(--text, #eef0f2) !important;
+ 
+   font-family:
+     var(--mono,
+     "IBM Plex Mono",
+     ui-monospace,
+     monospace) !important;
+ 
+   font-size: 11px !important;
+ }
+ 
+ #redoc-container .property-type {
+   color: var(--get, #3dd6c6) !important;
+ 
+   font-family:
+     var(--mono,
+     "IBM Plex Mono",
+     ui-monospace,
+     monospace) !important;
+ 
+   font-size: 10px !important;
+ }
+ 
+ #redoc-container .required {
+   color: var(--delete, #f07178) !important;
+ }
+ 
+ 
+ /* ==========================================================================
+    BADGES
+    ========================================================================== */
+ 
+ #redoc-container [class*="badge"] {
+   border-radius: 999px !important;
+ 
+   font-family:
+     var(--mono,
+     "IBM Plex Mono",
+     ui-monospace,
+     monospace) !important;
+ 
+   font-size: 9px !important;
+ }
+ 
+ 
+ /* ==========================================================================
+    DIVIDERS
+    ========================================================================== */
+ 
+ #redoc-container hr {
+   height: 1px !important;
+ 
+   margin: 24px 0 !important;
+ 
+   background: var(--border-subtle, #1c2129) !important;
+ 
+   border: 0 !important;
+ }
+ 
+ 
+ /* ==========================================================================
+    SCROLLBARS
+    ========================================================================== */
+ 
+ #redoc-container ::-webkit-scrollbar {
+   width: 8px;
+   height: 8px;
+ }
+ 
+ #redoc-container ::-webkit-scrollbar-track {
+   background: transparent;
+ }
+ 
+ #redoc-container ::-webkit-scrollbar-thumb {
+   background: #252b34;
+ 
+   border: 2px solid transparent;
+   border-radius: 8px;
+ 
+   background-clip: padding-box;
+ }
+ 
+ 
+ /* ==========================================================================
+    RESPONSIVE
+    ========================================================================== */
+ 
+ @media (max-width: 1100px) {
+   #redoc-container .menu-content {
+     width: 230px !important;
+     min-width: 230px !important;
+   }
+ 
+   #redoc-container .api-content {
+     padding-left: 28px !important;
+     padding-right: 28px !important;
+   }
+ }
+ 
+ @media (max-width: 760px) {
+   #redoc-container .menu-content {
+     position: relative !important;
+     top: 0 !important;
+ 
+     width: 100% !important;
+     min-width: 0 !important;
+ 
+     max-height: none !important;
+ 
+     border-right: 0 !important;
+     border-bottom: 1px solid var(--border, #202630) !important;
+   }
+ 
+   #redoc-container .api-content {
+     width: 100% !important;
+ 
+     padding:
+       24px
+       16px
+       60px !important;
+   }
+ 
+   #redoc-container .right-panel {
+     display: none !important;
+   }
+ 
+   #redoc-container h1 {
+     font-size: 25px !important;
+   }
+ 
+   #redoc-container h2 {
+     margin-top: 32px !important;
+   }
+ }
+ 
+ 
+ /* ==========================================================================
+    REDUCED MOTION
+    ========================================================================== */
+ 
+ @media (prefers-reduced-motion: reduce) {
+   #redoc-container *,
+   #redoc-container *::before,
+   #redoc-container *::after {
+     transition-duration: .01ms !important;
+     animation-duration: .01ms !important;
+   }
+ }

@@ -1,0 +1,44 @@
+# Production overlay — prod image target, no host ports for infra, no source mounts.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+#
+# Required: set DB_USER / DB_PASSWORD / DB_NAME (and RABBITMQ_* if enabled) via
+# env or secret manager. Do not rely on compose `:-` bootstrap defaults in prod.
+#
+# Edge proxy: not defined here. Put Traefik/nginx (or a cloud LB) in front and
+# publish only :80/:443. Keep api on the internal `app` network; Traefik labels
+# (if generated with traefik_labels) expect an external Traefik on traefik-shared.
+#
+# Remaining gaps (intentional):
+#   - Traefik/nginx service definition
+#   - Docker/Swarm/K8s secrets instead of plain env
+#   - Kafka/NATS TLS + auth
+#   - Redis persistence / auth if Redis holds authoritative sessions
+#   - Profile-driven compose subsets beyond Jinja feature flags
+#   - Move in-memory identity/session stores to Postgres/Redis (app work)
+
+services:
+  api:
+    build:
+      target: prod
+    environment:
+      {{cookiecutter.project_name | upper}}_RELOAD: "False"
+      {{cookiecutter.project_name | upper}}_ENVIRONMENT: "prod"
+    # No ports: reach API via edge proxy on the Docker network (service DNS: api:8000).
+
+  {%- if cookiecutter.enable_taskiq == "True" %}
+
+  taskiq-worker:
+    build:
+      target: prod
+    environment:
+      {{cookiecutter.project_name | upper}}_RELOAD: "False"
+      {{cookiecutter.project_name | upper}}_ENVIRONMENT: "prod"
+  {%- endif %}
+
+  {%- if cookiecutter.enable_migrations == 'True' and cookiecutter.orm != 'psycopg' %}
+
+  migrator:
+    build:
+      target: prod
+  {%- endif %}

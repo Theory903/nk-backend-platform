@@ -18,8 +18,8 @@ from {{cookiecutter.project_name}}.services.redis.lifespan import (init_redis,
 {%- endif %}
 
 {%- if cookiecutter.enable_rmq == "True" %}
-from {{cookiecutter.project_name}}.services.rabbit.lifespan import (init_rabbit,
-                                                                    shutdown_rabbit)
+from {{cookiecutter.project_name}}.services.rabbit.lifespan import (init_rmq,
+                                                                    shutdown_rmq)
 
 {%- endif %}
 
@@ -87,10 +87,6 @@ from opentelemetry.instrumentation.aio_pika import AioPikaInstrumentor
 {%- if cookiecutter.enable_loguru != "True" %}
 from opentelemetry.instrumentation.logging import LoggingInstrumentor
 
-{%- endif %}
-
-{%- if cookiecutter.enable_nats == "True" %}
-from natsrpy.instrumentation import NatsrpyInstrumentor
 {%- endif %}
 
 {%- endif %}
@@ -223,6 +219,7 @@ def setup_opentelemetry(app: FastAPI) -> None:  # pragma: no cover
     excluded_endpoints = [
         app.url_path_for('health_check'),
         app.url_path_for('openapi'),
+        app.url_path_for('api_studio'),
         app.url_path_for('swagger_ui_html'),
         app.url_path_for('swagger_ui_redirect'),
         app.url_path_for('redoc_html'),
@@ -263,9 +260,6 @@ def setup_opentelemetry(app: FastAPI) -> None:  # pragma: no cover
         tracer_provider=tracer_provider,
     )
     {%- endif %}
-    {%- if cookiecutter.enable_nats == "True" %}
-    NatsrpyInstrumentor().instrument(tracer_provider=tracer_provider)
-    {%- endif %}
 
 
 def stop_opentelemetry(app: FastAPI) -> None:  # pragma: no cover
@@ -292,9 +286,6 @@ def stop_opentelemetry(app: FastAPI) -> None:  # pragma: no cover
     {%- endif %}
     {%- if cookiecutter.enable_taskiq == "True" %}
     TaskiqInstrumentor().uninstrument_broker(broker)
-    {%- endif %}
-    {%- if cookiecutter.enable_nats == "True" %}
-    NatsrpyInstrumentor().uninstrument()
     {%- endif %}
 
 {%- endif %}
@@ -325,6 +316,24 @@ async def lifespan_setup(app: FastAPI) -> AsyncGenerator[None, None]:  # pragma:
     """
 
     app.middleware_stack = None
+    {%- if cookiecutter.add_users == "True" %}
+    # Auth stores must be configured at startup (never at import time).
+    # In-memory defaults are fine for local/dev; production should pass
+    # Redis/SQL-backed implementations (and optionally CsrfProtection).
+    from {{cookiecutter.project_name}}.identity.api_keys import ApiKeyStore
+    from {{cookiecutter.project_name}}.identity.csrf import CsrfProtection
+    from {{cookiecutter.project_name}}.identity.deps import configure_auth_stores
+    from {{cookiecutter.project_name}}.identity.session import SessionStore
+
+    _auth_kwargs: dict = {
+        "api_keys": ApiKeyStore(),
+        "sessions": SessionStore(),
+    }
+    _users_secret = getattr(settings, "users_secret", "") or ""
+    if len(_users_secret.encode("utf-8")) >= 32:
+        _auth_kwargs["csrf"] = CsrfProtection(_users_secret)
+    configure_auth_stores(**_auth_kwargs)
+    {%- endif %}
     {%- if cookiecutter.otlp_enabled == "True" %}
     setup_opentelemetry(app)
     {%- endif %}
@@ -348,7 +357,7 @@ async def lifespan_setup(app: FastAPI) -> AsyncGenerator[None, None]:  # pragma:
     init_redis(app)
     {%- endif %}
     {%- if cookiecutter.enable_rmq == "True" %}
-    init_rabbit(app)
+    await init_rmq(app)
     {%- endif %}
     {%- if cookiecutter.enable_kafka == "True" %}
     await init_kafka(app)
@@ -378,7 +387,7 @@ async def lifespan_setup(app: FastAPI) -> AsyncGenerator[None, None]:  # pragma:
     await shutdown_redis(app)
     {%- endif %}
     {%- if cookiecutter.enable_rmq == "True" %}
-    await shutdown_rabbit(app)
+    await shutdown_rmq(app)
     {%- endif %}
     {%- if cookiecutter.enable_kafka == "True" %}
     await shutdown_kafka(app)

@@ -1,16 +1,44 @@
+from __future__ import annotations
+
 from fastapi import Request
-from natsrpy import Nats
+from nats.aio.client import Client as NATS
+
+from {{cookiecutter.project_name}}.services.nats.lifespan import NATS_STATE_KEY
 
 {%- if cookiecutter.enable_taskiq == "True" %}
 from taskiq import TaskiqDepends
 {%- endif %}
 
 
-def get_nats(request: Request {%- if cookiecutter.enable_taskiq == "True" %} = TaskiqDepends(){%- endif %}) -> Nats:  # pragma: no cover
+def get_nats(
+    request: Request
+    {%- if cookiecutter.enable_taskiq == "True" %}
+    = TaskiqDepends()
+    {%- endif %}
+) -> NATS:
     """
-    Returns nats instance.
+    Resolve the application-wide NATS client.
 
-    :param request: current request.
-    :return: nats from the state.
+    The NATS connection must be initialized during application startup
+    and stored in app.state.
+
+    A single connection is shared by the FastAPI process.
     """
-    return request.app.state.nats
+
+    client = getattr(
+        request.app.state,
+        NATS_STATE_KEY,
+        None,
+    )
+
+    if client is None:
+        raise RuntimeError(
+            "NATS client is not initialized"
+        )
+
+    if getattr(client, "is_closed", False):
+        raise RuntimeError(
+            "NATS client is closed"
+        )
+
+    return client

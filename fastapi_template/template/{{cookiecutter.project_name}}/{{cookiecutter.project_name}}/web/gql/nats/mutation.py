@@ -22,6 +22,6 @@ class Mutation:
         """
         await info.context.nats.publish(
             message.subject,
-            message.message,
+            message.message.encode(),
         )
 

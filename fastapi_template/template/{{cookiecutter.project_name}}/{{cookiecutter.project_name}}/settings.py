@@ -41,6 +41,16 @@ class Settings(BaseSettings):
 
     log_level: LogLevel = LogLevel.INFO
 
+    # Reverse-proxy trust + browser security headers.
+    # trusted_proxy_count > 0 allows X-Forwarded-Proto for HSTS detection.
+    # Keep 0 unless the app sits behind a trusted proxy/LB.
+    trusted_proxy_count: int = 0
+    hsts_max_age: int = 31536000
+    hsts_include_subdomains: bool = True
+    hsts_preload: bool = False
+    # None → SecurityHeadersMiddleware DEFAULT_CSP
+    security_csp: Optional[str] = None
+
     {%- if cookiecutter.add_users == "True" %}
     {%- if cookiecutter.orm == "sqlalchemy" %}
     users_secret: str = os.getenv("USERS_SECRET", "")
@@ -71,6 +81,7 @@ class Settings(BaseSettings):
     redis_user: Optional[str] = None
     redis_pass: Optional[str] = None
     redis_base: Optional[int] = None
+    redis_max_connections: int = 50
 
     {%- endif %}
 
@@ -119,13 +130,22 @@ class Settings(BaseSettings):
     {%- if cookiecutter.enable_kafka == "True" %}
 
     kafka_bootstrap_servers: List[str] = ["localhost:9092"]
+    # Producer knobs (services.kafka.lifespan). Prefer these over hard-coded
+    # defaults. kafka_compression_type defaults to "lz4"; init_kafka falls
+    # back to "gzip" when lz4 is unavailable. Set to None to disable.
+    kafka_acks: str = "all"
+    kafka_enable_idempotence: bool = True
+    kafka_linger_ms: int = 5
+    kafka_compression_type: Optional[str] = "lz4"
+    kafka_request_timeout_ms: int = 30_000
 
     {%- endif %}
 
 
     {%- if cookiecutter.enable_nats == "True" %}
-    nats_hosts: list[str] = ["nats://localhost:4222"]
+    nats_servers: list[str] = ["nats://localhost:4222"]
     {%- endif %}
+
 
     {%- if cookiecutter.db_info.name != "none" %}
 
@@ -210,6 +230,9 @@ class Settings(BaseSettings):
         env_file = ".env",
         env_prefix = "{{cookiecutter.project_name | upper }}_",
         env_file_encoding = "utf-8",
+        # Compose-only keys (DB_USER/DB_PASSWORD/DB_NAME, etc.) live in .env
+        # alongside prefixed app settings; ignore extras so Settings can load.
+        extra = "ignore",
     )
 
 

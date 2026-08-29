@@ -1,0 +1,92 @@
+/*
+ * Shared design tokens for every documentation surface.
+ *
+ * This is the single source of truth for colour across the three docs pages:
+ *   - /api/docs    — React (Vite + shadcn/ui); mirrors these in
+ *                    `frontend/src/index.css` via Tailwind's `@theme inline`.
+ *   - /api/swagger — Swagger UI, themed through `shell.css` + `swagger.css`.
+ *   - /api/redoc   — ReDoc, themed through `shell.css` + `redoc.css`, plus a
+ *                    JS theme object built from these variables at runtime.
+ *
+ * Naming follows shadcn/ui so the React and non-React surfaces stay aligned.
+ * Keep this file and `frontend/src/index.css` in sync when changing a colour.
+ *
+ * Fonts are linked from HTML, never `@import`-ed: static assets are served
+ * under a strict CSP that blocks remote stylesheet imports.
+ */
+
+:root {
+  color-scheme: light;
+
+  --background: #ffffff;
+  --foreground: #0e1116;
+  --card: #ffffff;
+  --card-foreground: #0e1116;
+  --popover: #ffffff;
+  --popover-foreground: #0e1116;
+  --primary: #46560f;
+  --primary-foreground: #f7ffe2;
+  --secondary: #f3f4f6;
+  --secondary-foreground: #1f242c;
+  --muted: #f3f4f6;
+  --muted-foreground: #5f6875;
+  --accent-surface: #f0f4e2;
+  --accent-surface-foreground: #3a4a0c;
+  --destructive: #c8353d;
+  --success: #10794f;
+  --warning: #8a6410;
+  --info: #2563eb;
+  --border-color: #e3e6ea;
+  --input-surface: #ffffff;
+  --ring: #a8c72e;
+
+  --sidebar: #fafbfc;
+  --sidebar-border: #e3e6ea;
+
+  --method-get: #0f8f83;
+  --method-post: #2563eb;
+  --method-put: #9a6b0a;
+  --method-patch: #6d43d1;
+  --method-delete: #c8353d;
+  --method-head: #5f6875;
+  --method-options: #5f6875;
+
+  --radius-base: 0.625rem;
+}
+
+.dark {
+  color-scheme: dark;
+
+  --background: #090b0f;
+  --foreground: #eef0f2;
+  --card: #0e1116;
+  --card-foreground: #eef0f2;
+  --popover: #11151b;
+  --popover-foreground: #eef0f2;
+  --primary: #d4f35c;
+  --primary-foreground: #12160a;
+  --secondary: #151a21;
+  --secondary-foreground: #eef0f2;
+  --muted: #11151b;
+  --muted-foreground: #a0a8b5;
+  --accent-surface: #151a21;
+  --accent-surface-foreground: #d4f35c;
+  --destructive: #f07178;
+  --success: #3ecf8e;
+  --warning: #e8b84a;
+  --info: #5b9fff;
+  --border-color: #202630;
+  --input-surface: #0a0d12;
+  --ring: #d4f35c;
+
+  --sidebar: #0b0e13;
+  --sidebar-border: #202630;
+
+  --method-get: #3dd6c6;
+  --method-post: #5b9fff;
+  --method-put: #e8b84a;
+  --method-patch: #b8a4ff;
+  --method-delete: #f07178;
+  --method-head: #a0a8b5;
+  --method-options: #a0a8b5;
+}

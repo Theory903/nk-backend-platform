@@ -1,57 +1,135 @@
-import aio_pika
-from aio_pika.abc import AbstractChannel, AbstractRobustConnection
+from __future__ import annotations
+
+from aio_pika import Channel, connect_robust
 from aio_pika.pool import Pool
 from fastapi import FastAPI
+
 from {{cookiecutter.project_name}}.settings import settings
 
 
-def init_rabbit(app: FastAPI) -> None:  # pragma: no cover
+RMQ_CHANNEL_POOL_STATE_KEY = "rmq_channel_pool"
+RMQ_CONNECTION_STATE_KEY = "rmq_connection"
+
+
+def _resolve_rabbitmq_url() -> str:
+    """Prefer rabbitmq_url; fall back to legacy rabbit_url."""
+    url = getattr(settings, "rabbitmq_url", None)
+    if url is None:
+        url = getattr(settings, "rabbit_url", None)
+    if url is None:
+        raise RuntimeError("RabbitMQ URL is not configured")
+    return str(url)
+
+
+def _resolve_channel_pool_size() -> int:
+    """Prefer rabbitmq_channel_pool_size; fall back to rabbit_channel_pool_size."""
+    size = getattr(settings, "rabbitmq_channel_pool_size", None)
+    if size is None:
+        size = getattr(settings, "rabbit_channel_pool_size", 20)
+    return int(size)
+
+
+async def init_rmq(
+    app: FastAPI,
+) -> None:  # pragma: no cover
     """
-    Initialize rabbitmq pools.
+    Initialize the application-wide RabbitMQ connection and channel pool.
 
-    :param app: current FastAPI application.
+    One robust connection and one channel pool are created per FastAPI
+    process and reused by all requests. Do not connect per request.
+
+    Next: wrap the pool behind a MessagePublisher abstraction so
+    application services do not depend on aio_pika.Pool directly.
     """
 
-    async def get_connection() -> AbstractRobustConnection:
-        """
-        Creates connection to RabbitMQ using url from settings.
-
-        :return: async connection to RabbitMQ.
-        """
-        return await aio_pika.connect_robust(str(settings.rabbit_url))
-
-    # This pool is used to open connections.
-    connection_pool: Pool[AbstractRobustConnection] = Pool(
-        get_connection,
-        max_size=settings.rabbit_pool_size,
+    existing = getattr(
+        app.state,
+        RMQ_CHANNEL_POOL_STATE_KEY,
+        None,
     )
 
-    async def get_channel() -> AbstractChannel:
-        """
-        Open channel on connection.
+    if existing is not None:
+        return
 
-        Channels are used to actually communicate with rabbitmq.
-
-        :return: connected channel.
-        """
-        async with connection_pool.acquire() as connection:
-            return await connection.channel()
-
-    # This pool is used to open channels.
-    channel_pool: Pool[aio_pika.Channel] = Pool(
-        get_channel,
-        max_size=settings.rabbit_channel_pool_size,
+    connection = await connect_robust(
+        _resolve_rabbitmq_url(),
+        client_properties={
+            "connection_name": getattr(
+                settings,
+                "app_name",
+                "{{cookiecutter.project_name}}",
+            ),
+        },
     )
 
-    app.state.rmq_pool = connection_pool
-    app.state.rmq_channel_pool = channel_pool
+    try:
+        async def create_channel() -> Channel:
+            return await connection.channel(
+                publisher_confirms=True,
+            )
+
+        channel_pool = Pool(
+            create_channel,
+            max_size=_resolve_channel_pool_size(),
+        )
+    except Exception:
+        try:
+            await connection.close()
+        except Exception:
+            pass
+        raise
+
+    setattr(app.state, RMQ_CONNECTION_STATE_KEY, connection)
+    setattr(app.state, RMQ_CHANNEL_POOL_STATE_KEY, channel_pool)
 
 
-async def shutdown_rabbit(app: FastAPI) -> None:  # pragma: no cover
+async def shutdown_rmq(
+    app: FastAPI,
+) -> None:  # pragma: no cover
     """
-    Close all connection and pools.
+    Gracefully close RabbitMQ resources.
 
-    :param app: current application.
+    Closes the channel pool first, then the connection, then clears
+    state keys. Safe when resources were never initialized.
     """
-    await app.state.rmq_channel_pool.close()
-    await app.state.rmq_pool.close()
+
+    pool: Pool[Channel] | None = getattr(
+        app.state,
+        RMQ_CHANNEL_POOL_STATE_KEY,
+        None,
+    )
+
+    connection = getattr(
+        app.state,
+        RMQ_CONNECTION_STATE_KEY,
+        None,
+    )
+
+    try:
+        if pool is not None:
+            close = getattr(pool, "close", None)
+            if callable(close):
+                result = close()
+                if hasattr(result, "__await__"):
+                    await result  # type: ignore[misc]
+    finally:
+        if connection is not None:
+            try:
+                await connection.close()
+            except Exception:
+                pass
+
+        for key in (
+            RMQ_CHANNEL_POOL_STATE_KEY,
+            RMQ_CONNECTION_STATE_KEY,
+        ):
+            try:
+                delattr(app.state, key)
+            except (AttributeError, KeyError):
+                # Starlette State raises KeyError for missing keys.
+                pass
+
+
+# Back-compat aliases for older call sites / generated docs.
+init_rabbit = init_rmq
+shutdown_rabbit = shutdown_rmq

@@ -23,10 +23,11 @@ from {{cookiecutter.project_name}}.services.kafka.dependencies import get_kafka_
 
 
 {%- if cookiecutter.enable_nats == "True" %}
-from natsrpy import Nats
+from nats.aio.client import Client as NATS
 from {{cookiecutter.project_name}}.services.nats.dependencies import get_nats
 
 {%- endif %}
+
 
 
 {%- if cookiecutter.orm == "sqlalchemy" %}
@@ -61,8 +62,9 @@ class Context(BaseContext):
         kafka_producer: AIOKafkaProducer = Depends(get_kafka_producer),
         {%- endif %}
         {%- if cookiecutter.enable_nats == "True" %}
-        nats: Nats = Depends(get_nats),
+        nats: NATS = Depends(get_nats),
         {%- endif %}
+
     ) -> None:
         {%- if cookiecutter.enable_redis == "True" %}
         self.redis_pool = redis_pool

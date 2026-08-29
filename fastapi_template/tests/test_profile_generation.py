@@ -44,6 +44,7 @@ SCRIPTED_DEFAULTS = {
     "enable_graphrag": False,
     "enable_audit": False,
     "enable_idempotency": False,
+    "enable_fintech": False,
 }
 
 
@@ -102,8 +103,77 @@ def test_minimal_profile_ships_no_data_layer() -> None:
     assert not Path("smoke_minimal_solo/smoke_minimal_solo/data").exists()
 
 
-def test_every_profile_generates_without_prompts() -> None:
+_HEAVY_AI_IMPORTS = ("langchain", "fastembed", "any_llm", "langgraph")
+
+
+def test_minimal_grep_guard_no_heavy_ai_imports() -> None:
+    """Gold rule: minimal tree must not import heavy AI stacks."""
+    name = "smoke_minimal_grep"
+    _generate("minimal", name)
+    pkg = Path(name) / name
+    offenders: list[str] = []
+    for py_file in pkg.rglob("*.py"):
+        text = py_file.read_text(encoding="utf-8")
+        for needle in _HEAVY_AI_IMPORTS:
+            if f"import {needle}" in text or f"from {needle}" in text:
+                offenders.append(f"{py_file.relative_to(name)}:{needle}")
+    assert not offenders, f"minimal leaked AI imports: {offenders}"
+    assert not (pkg / "core" / "crud.py").exists()
+    assert not (pkg / "core" / "event_emitter.py").exists()
+
+
+def test_minimal_boot_surface_has_no_pruned_deps() -> None:
+    """Minimal app sources must not hard-import pruned optional modules."""
+    name = "smoke_minimal_boot"
+    _generate("minimal", name)
+    pkg = Path(name) / name
+    assert not (pkg / "core" / "crud.py").exists()
+    assert not (pkg / "core" / "event_emitter.py").exists()
+    views = (pkg / "web" / "api" / "monitoring" / "views.py").read_text(
+        encoding="utf-8",
+    )
+    assert "operations.metrics" not in views
+    assert "/metrics" not in views
+    app_src = (pkg / "web" / "application.py").read_text(encoding="utf-8")
+    assert "identity.deps" not in app_src
+    assert "platform.files" not in app_src
+
+
+def test_every_profile_generates_key_paths() -> None:
+    """Quiet bake each profile offline; assert profile-specific paths."""
+    expectations = {
+        "minimal": lambda root, pkg: (
+            not (pkg / "agents").exists(),
+            not (pkg / "data").exists(),
+            not (pkg / "ai" / "providers").exists(),
+        ),
+        "saas": lambda root, pkg: (
+            (pkg / "identity").exists(),
+            (root / "platform.yaml").exists(),
+        ),
+        "ai-saas": lambda root, pkg: (
+            (pkg / "ai").exists(),
+            True,
+        ),
+        "agentic": lambda root, pkg: (
+            (pkg / "agents").exists(),
+            True,
+        ),
+        "fintech": lambda root, pkg: (
+            (pkg / "industry" / "fintech").exists(),
+            True,
+        ),
+    }
     for idx, profile in enumerate(PROFILES):
         name = f"smoke_all_{idx}_{profile.replace('-', '_')}"
         manifest = _generate(profile, name)
         assert manifest["profile"] == profile
+        root = Path(name)
+        pkg = root / name
+        checks = expectations[profile](root, pkg)
+        assert all(checks), f"{profile} path checks failed: {checks}"
+
+        # nk CLI must ship in every profile
+        assert (pkg / "cli" / "__init__.py").exists()
+        pyproject = (root / "pyproject.toml").read_text(encoding="utf-8")
+        assert 'nk = "' in pyproject or "nk =" in pyproject

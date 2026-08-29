@@ -1,3 +1,15 @@
+import pytest
+
+def _rmq_available() -> bool:
+    import socket
+    try:
+        with socket.create_connection(("localhost", 5672), timeout=0.5):
+            return True
+    except OSError:
+        return False
+
+pytestmark = pytest.mark.skipif(not _rmq_available(), reason="RabbitMQ not available")
+
 import uuid
 
 import pytest

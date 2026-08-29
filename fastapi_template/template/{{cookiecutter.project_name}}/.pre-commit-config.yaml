@@ -1,4 +1,7 @@
 ---
+# Local pre-commit: format (mutates) + lint + mypy + bandit.
+# CI should NOT reuse format as-is — use `uv run ruff format --check` (validate only).
+# CI also runs tests; a generated-project matrix is the next hardening step.
 # See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
@@ -11,14 +14,21 @@ repos:
             language: system
             pass_filenames: false
             always_run: true
+            args:
+              - "{{cookiecutter.project_name}}"
+              - "tests"
+              - "scripts"
 
           - id: ruff
             name: Check with Ruff
-            entry: uv run ruff
+            entry: uv run ruff check
             language: system
             pass_filenames: false
             always_run: true
-            args: ["check", "{{cookiecutter.project_name}}", "tests", "--fix"]
+            args:
+              - "{{cookiecutter.project_name}}"
+              - "tests"
+              - "scripts"
 
           - id: mypy
             name: Validate types with MyPy
@@ -26,6 +36,21 @@ repos:
             language: system
             types: [python]
             pass_filenames: false
+            always_run: true
             args:
               - "{{cookiecutter.project_name}}"
               - "tests"
+              - "scripts"
+
+          - id: bandit
+            name: Security scan with Bandit
+            entry: uv run bandit
+            language: system
+            pass_filenames: false
+            always_run: true
+            args:
+              - "-r"
+              - "{{cookiecutter.project_name}}"
+              - "-x"
+              - "tests"
+              - "-q"

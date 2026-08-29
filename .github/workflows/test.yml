@@ -1,23 +1,33 @@
 name: Testing fastapi-template
 
+# Generator-repo CI: package tests + profile-matrix smoke that generates projects.
+# Baked-app CI (quality / compose pytest / prod image) lives inside the template:
+#   fastapi_template/template/{{cookiecutter.project_name}}/.github/workflows/tests.yml
+
 on:
+  push:
   pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   pre_job:
-    # continue-on-error: true # Uncomment once integration is finished
     runs-on: ubuntu-latest
-    # Map a step output to a job output
     outputs:
       should_skip: ${{ steps.skip_check.outputs.should_skip }}
     steps:
       - id: skip_check
         uses: fkirc/skip-duplicate-actions@master
         with:
-          # All of these options are optional, so you can remove them if you are happy with the defaults
-          concurrent_skipping: 'same_content'
-          skip_after_successful_duplicate: 'true'
+          concurrent_skipping: "same_content"
+          skip_after_successful_duplicate: "true"
           paths_ignore: '["**/README.md"]'
+
   pytest:
     needs: pre_job
     if: ${{ needs.pre_job.outputs.should_skip != 'true' }}
@@ -27,14 +37,97 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: '3.12'
-        env:
-          POETRY_VIRTUALENVS_CREATE: "False"
-      - name: Set up UV
+          python-version: "3.12"
+      - name: Set up uv
         uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
       - name: Setup GIT
         run: |
           git config --global user.name "fastapi_template"
           git config --global user.email "fastapi_template@pytest.python"
+      - name: Install dependencies
+        run: uv sync --locked
       - name: Run tests
         run: uv run pytest -vv -n auto
+
+  generated-project-matrix:
+    name: Generated project (${{ matrix.profile }})
+    needs: pre_job
+    if: ${{ needs.pre_job.outputs.should_skip != 'true' }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: [minimal, saas, ai-saas, agentic, fintech]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - name: Setup GIT
+        run: |
+          git config --global user.name "fastapi_template"
+          git config --global user.email "fastapi_template@pytest.python"
+      - name: Install generator dependencies
+        run: uv sync --locked
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Generate profile and smoke-check
+        env:
+          PROFILE: ${{ matrix.profile }}
+        run: |
+          set -euo pipefail
+          NAME="mat_${PROFILE//-/_}"
+          # Quiet profile generate (no interactive menus). Feature flags come
+          # from expand_profile + --quiet Multiselect→False fill-ins.
+          uv run python -m fastapi_template create \
+            --quiet --force \
+            --profile "$PROFILE" \
+            -n "$NAME"
+          test -d "$NAME"
+          test -f "$NAME/platform.yaml"
+          test -f "$NAME/$NAME/cli/__init__.py"
+
+          # Profile-specific path / grep guards
+          case "$PROFILE" in
+            minimal)
+              if grep -R -n -E '(^from |^import )(langchain|langgraph|fastembed|any_llm)' \
+                   "$NAME/$NAME" --include='*.py' | grep -v '^$' ; then
+                echo "minimal leaked heavy AI imports"
+                exit 1
+              fi
+              test ! -d "$NAME/$NAME/agents"
+              ;;
+            saas)
+              test -d "$NAME/$NAME/identity"
+              ;;
+            ai-saas)
+              test -d "$NAME/$NAME/ai"
+              ;;
+            agentic)
+              test -d "$NAME/$NAME/agents"
+              ;;
+            fintech)
+              test -d "$NAME/$NAME/industry/fintech"
+              ;;
+          esac
+
+          if [ -f "$NAME/uv.lock" ]; then
+            (cd "$NAME" && uv sync --locked)
+          else
+            echo "NOTE: $NAME/uv.lock missing after generate — unlocked sync"
+            (cd "$NAME" && uv sync)
+          fi
+          (cd "$NAME" && uv run nk doctor)
+          (cd "$NAME" && uv run nk validate)
+          (cd "$NAME" && uv run ruff format --check .)
+          (cd "$NAME" && uv run ruff check .)
+          (cd "$NAME" && uv run mypy "$NAME" tests)
+          (cd "$NAME" && uv run pytest -q --tb=line)
+          (cd "$NAME" && docker build --target prod --tag "${NAME}:ci" .)

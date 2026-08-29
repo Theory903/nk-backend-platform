@@ -1,6 +1,32 @@
 import asyncio
 import uuid
 
+import pytest
+from aiokafka import AIOKafkaConsumer
+from fastapi import FastAPI
+from httpx import AsyncClient
+from starlette import status
+from {{cookiecutter.project_name}}.settings import settings
+
+
+def _kafka_available() -> bool:
+    import socket
+    host = settings.kafka_bootstrap_servers[0].split(":")[0]
+    port = int(settings.kafka_bootstrap_servers[0].split(":")[-1])
+    try:
+        with socket.create_connection((host, port), timeout=0.5):
+            return True
+    except OSError:
+        return False
+
+
+pytestmark = pytest.mark.skipif(
+    not _kafka_available(),
+    reason="Kafka not available on configured bootstrap servers",
+)
+import asyncio
+import uuid
+
 from aiokafka import AIOKafkaConsumer
 from fastapi import FastAPI
 from httpx import AsyncClient

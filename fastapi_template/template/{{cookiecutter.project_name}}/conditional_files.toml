@@ -1,3 +1,14 @@
+# Feature → resource manifest for post-gen pruning.
+# Cookiecutter renders Jinja in `enabled` (and paths) before post_gen runs.
+# post_gen deletes resources when enabled.lower() != "true".
+# Prefer a single owning feature per resource; REST/GraphQL may still list
+# transport-specific routes so the wrong API type is pruned.
+# Combined flags: avoid Jinja `or` on stringy bools — use one primary Builder flag.
+
+# ---------------------------------------------------------------------------
+# API surface
+# ---------------------------------------------------------------------------
+
 [[features]]
 name = "GraphQL API"
 enabled = "{{cookiecutter.api_type == 'graphql'}}"
@@ -16,14 +27,164 @@ resources = [
 ]
 
 [[features]]
+name = "Example routes"
+enabled = "{{cookiecutter.enable_routers}}"
+resources = [
+  "{{cookiecutter.project_name}}/web/api/echo",
+  "{{cookiecutter.project_name}}/web/gql/echo",
+  "tests/test_echo.py"
+]
+
+# ---------------------------------------------------------------------------
+# Identity / authn / authz / tenancy
+# ---------------------------------------------------------------------------
+
+[[features]]
+name = "Identity platform"
+enabled = "{{cookiecutter.add_users}}"
+resources = [
+  "{{cookiecutter.project_name}}/identity",
+  "tests/test_identity_all_auth.py",
+  "tests/test_identity_certification.py",
+  "tests/test_identity_deps.py",
+  "tests/test_identity_hardened.py",
+  "tests/test_identity_jwt.py",
+  "tests/test_identity_ldap.py",
+  "tests/test_identity_local.py",
+  "tests/test_identity_production.py",
+  "tests/test_session.py",
+  "tests/test_csrf.py",
+  "tests/test_mfa.py",
+  "tests/test_oidc.py",
+  "tests/test_oauth2_client.py",
+  "tests/test_api_keys.py",
+  "tests/test_api_key_lifecycle.py",
+  "tests/test_key_rotation.py",
+  "tests/test_password_lifecycle.py",
+  "tests/test_email_verification.py",
+  "tests/test_account_lifecycle.py",
+  "tests/test_account_linking.py",
+  "tests/test_auth_rate_limit.py",
+  "tests/test_principal.py",
+  "tests/test_refresh_tokens.py",
+  "tests/test_token_policy.py"
+]
+
+[[features]]
+name = "Multi-tenant authorization"
+enabled = "{{cookiecutter.add_users}}"
+resources = [
+  "{{cookiecutter.project_name}}/platform/tenancy.py",
+  "{{cookiecutter.project_name}}/data/rls.py",
+  "tests/test_tenant_context.py",
+  "tests/test_platform_tenancy.py",
+  "tests/test_rls_isolation.py"
+]
+
+[[features]]
+name = "RBAC and service accounts"
+enabled = "{{cookiecutter.add_users}}"
+resources = [
+  "tests/test_permissions.py",
+  "tests/test_service_accounts.py"
+]
+
+[[features]]
+name = "User models"
+enabled = "{{cookiecutter.add_users}}"
+resources = [
+  "{{cookiecutter.project_name}}/web/api/users",
+  "{{cookiecutter.project_name}}/db_sa/models/users.py",
+  "{{cookiecutter.project_name}}/db_sa/migrations/versions/2026-05-05-14-37_8caca4abd7b4.py"
+]
+
+[[features]]
+name = "SCIM provisioning"
+enabled = "{{cookiecutter.add_users}}"
+resources = [
+  "{{cookiecutter.project_name}}/api",
+  "{{cookiecutter.project_name}}/services/scim.py",
+  "{{cookiecutter.project_name}}/core/scim.py",
+  "{{cookiecutter.project_name}}/core/scim_filter.py",
+  "{{cookiecutter.project_name}}/core/scim_patch.py",
+  "{{cookiecutter.project_name}}/data/scim_identity.py",
+  "{{cookiecutter.project_name}}/data/scim_repository.py",
+  "tests/test_scim.py"
+]
+
+# ---------------------------------------------------------------------------
+# Security / compliance
+# ---------------------------------------------------------------------------
+
+[[features]]
+name = "Security middleware"
+enabled = "True"
+resources = [
+  "{{cookiecutter.project_name}}/web/middleware/request_id.py",
+  "{{cookiecutter.project_name}}/web/middleware/security_headers.py",
+  "{{cookiecutter.project_name}}/core/security.py",
+  "tests/test_request_id.py",
+  "tests/test_security_headers.py",
+  "tests/test_core_security.py"
+]
+
+[[features]]
+name = "Idempotency"
+enabled = "{{cookiecutter.enable_idempotency}}"
+resources = [
+  "{{cookiecutter.project_name}}/core/idempotency.py",
+  "{{cookiecutter.project_name}}/web/middleware/idempotency.py",
+  "tests/test_idempotency_middleware.py"
+]
+
+[[features]]
+name = "Audit trail"
+enabled = "{{cookiecutter.enable_audit}}"
+resources = [
+  "{{cookiecutter.project_name}}/platform/audit",
+  "{{cookiecutter.project_name}}/identity/security_events.py",
+  "tests/test_platform_audit.py",
+  "tests/test_security_events.py"
+]
+
+[[features]]
+name = "Object storage"
+enabled = "{{cookiecutter.add_users}}"
+resources = [
+  "{{cookiecutter.project_name}}/platform/files",
+  "tests/test_files_module.py"
+]
+
+# ---------------------------------------------------------------------------
+# Distributed state / caching (Redis)
+# ---------------------------------------------------------------------------
+
+[[features]]
 name = "Redis support"
 enabled = "{{cookiecutter.enable_redis}}"
 resources = [
   "{{cookiecutter.project_name}}/web/api/redis",
   "{{cookiecutter.project_name}}/web/gql/redis",
   "{{cookiecutter.project_name}}/services/redis",
-  "tests/test_redis.py"
+  "tests/test_redis.py",
+  "tests/test_redis_pool.py"
 ]
+
+[[features]]
+name = "Distributed state"
+enabled = "{{cookiecutter.enable_redis}}"
+resources = [
+  "{{cookiecutter.project_name}}/core/state.py",
+  "{{cookiecutter.project_name}}/core/locks.py",
+  "{{cookiecutter.project_name}}/stores",
+  "tests/test_core_state.py",
+  "tests/test_distributed_locks.py",
+  "tests/test_stores_contract.py"
+]
+
+# ---------------------------------------------------------------------------
+# Messaging / reliability
+# ---------------------------------------------------------------------------
 
 [[features]]
 name = "RabbitMQ support"
@@ -32,7 +193,8 @@ resources = [
   "{{cookiecutter.project_name}}/web/api/rabbit",
   "{{cookiecutter.project_name}}/web/gql/rabbit",
   "{{cookiecutter.project_name}}/services/rabbit",
-  "tests/test_rabbit.py"
+  "tests/test_rabbit.py",
+  "tests/test_rabbit_pool.py"
 ]
 
 [[features]]
@@ -42,7 +204,8 @@ resources = [
   "{{cookiecutter.project_name}}/web/api/kafka",
   "{{cookiecutter.project_name}}/web/gql/kafka",
   "{{cookiecutter.project_name}}/services/kafka",
-  "tests/test_kafka.py"
+  "tests/test_kafka.py",
+  "tests/test_kafka_producer.py"
 ]
 
 [[features]]
@@ -56,14 +219,68 @@ resources = [
 ]
 
 [[features]]
+name = "Taskiq support"
+enabled = "{{cookiecutter.enable_taskiq}}"
+resources = [
+  "{{cookiecutter.project_name}}/tkq.py",
+  "{{cookiecutter.project_name}}/jobs",
+  "tests/test_jobs_dlq.py"
+]
+
+[[features]]
+name = "Transactional outbox"
+enabled = "{{cookiecutter.orm in ['sqlalchemy', 'beanie']}}"
+resources = [
+  "{{cookiecutter.project_name}}/data/adapters/sqlalchemy/outbox.py",
+  "{{cookiecutter.project_name}}/data/adapters/mongo/outbox.py",
+  "{{cookiecutter.project_name}}/core/event_emitter.py",
+  "tests/test_outbox_relay.py",
+  "tests/test_mongo_outbox.py",
+  "tests/test_events_emit.py"
+]
+
+[[features]]
+name = "Resilience"
+enabled = "{{cookiecutter.enable_taskiq}}"
+resources = [
+  "{{cookiecutter.project_name}}/core/circuit_breaker.py"
+]
+
+# ---------------------------------------------------------------------------
+# Observability
+# ---------------------------------------------------------------------------
+
+[[features]]
+name = "OpenTelemetry support"
+enabled = "{{cookiecutter.otlp_enabled}}"
+resources = ["deploy/docker-compose.otlp.yml"]
+
+[[features]]
+name = "Prometheus metrics"
+enabled = "{{cookiecutter.prometheus_enabled}}"
+resources = [
+  "{{cookiecutter.project_name}}/operations/metrics.py",
+  "tests/test_metrics.py"
+]
+
+[[features]]
+name = "Sentry integration"
+enabled = "{{cookiecutter.sentry_enabled}}"
+resources = []
+
+[[features]]
+name = "Loguru support"
+enabled = "{{cookiecutter.enable_loguru}}"
+resources = ["{{cookiecutter.project_name}}/log.py"]
+
+# ---------------------------------------------------------------------------
+# Data layer / ORM
+# ---------------------------------------------------------------------------
+
+[[features]]
 name = "Database support"
 enabled = "{{cookiecutter.db_info.name != 'none'}}"
-resources = [
-  "alembic.ini",
-  "{{cookiecutter.project_name}}/web/api/dummy",
-  "{{cookiecutter.project_name}}/web/gql/dummy",
-  "tests/test_dummy.py"
-]
+resources = []
 
 [[features]]
 name = "Migrations support"
@@ -81,51 +298,6 @@ resources = [
 name = "Alembic migrations"
 enabled = "{{cookiecutter.orm in ['ormar', 'sqlalchemy']}}"
 resources = ["alembic.ini"]
-
-[[features]]
-name = "Gitlab CI"
-enabled = "{{cookiecutter.ci_type == 'gitlab_ci'}}"
-resources = [".gitlab-ci.yml"]
-
-[[features]]
-name = "GitHub actions"
-enabled = "{{cookiecutter.ci_type == 'github'}}"
-resources = [".github"]
-
-[[features]]
-name = "Loguru support"
-enabled = "{{cookiecutter.enable_loguru}}"
-resources = ["{{cookiecutter.project_name}}/logging.py"]
-
-[[features]]
-name = "Example routes"
-enabled = "{{cookiecutter.enable_routers}}"
-resources = [
-  "{{cookiecutter.project_name}}/web/api/echo",
-  "{{cookiecutter.project_name}}/web/gql/echo",
-  "{{cookiecutter.project_name}}/web/api/dummy",
-  "{{cookiecutter.project_name}}/web/gql/dummy",
-  "{{cookiecutter.project_name}}/web/api/redis",
-  "{{cookiecutter.project_name}}/web/gql/redis",
-  "{{cookiecutter.project_name}}/web/api/kafka",
-  "{{cookiecutter.project_name}}/web/gql/kafka",
-  "{{cookiecutter.project_name}}/web/api/rabbit",
-  "{{cookiecutter.project_name}}/web/gql/rabbit",
-  "tests/test_echo.py",
-  "tests/test_dummy.py",
-  "tests/test_redis.py",
-  "tests/test_rabbit.py",
-  "tests/test_kafka.py"
-]
-
-[[features]]
-name = "User models"
-enabled = "{{cookiecutter.add_users}}"
-resources = [
-  "{{cookiecutter.project_name}}/web/api/users",
-  "{{cookiecutter.project_name}}/db_sa/models/users.py",
-  "{{cookiecutter.project_name}}/db_sa/migrations/versions/2026-05-05-14-37_8caca4abd7b4.py",
-]
 
 [[features]]
 name = "Dummy models"
@@ -151,14 +323,6 @@ resources = [
   "{{cookiecutter.project_name}}/db_tortoise/migrations/models/1_20210928165300_init_dummy_mysql.sql",
   "{{cookiecutter.project_name}}/db_tortoise/migrations/models/1_20210928165300_init_dummy_sqlite.sql",
   "{{cookiecutter.project_name}}/db_piccolo/migrations/2022-04-16T17-38-51-672827.py"
-]
-
-[[features]]
-name = "Self-Hosted Swagger UI"
-enabled = "{{cookiecutter.self_hosted_swagger}}"
-resources = [
-  "{{cookiecutter.project_name}}/static/docs",
-  "{{cookiecutter.project_name}}/web/api/docs"
 ]
 
 [[features]]
@@ -219,23 +383,22 @@ resources = [
 ]
 
 [[features]]
-name = "Opentelemetry support"
-enabled = "{{cookiecutter.otlp_enabled}}"
-resources = ["deploy/docker-compose.otlp.yml"]
-
-[[features]]
-name = "Taskiq support"
-enabled = "{{cookiecutter.enable_taskiq}}"
-resources = ["{{cookiecutter.project_name}}/tkq.py"]
-
-[[features]]
 name = "Universal data layer"
 enabled = "{{cookiecutter.orm in ['sqlalchemy', 'beanie']}}"
 resources = [
   "{{cookiecutter.project_name}}/data/__init__.py",
   "{{cookiecutter.project_name}}/data/models.py",
   "{{cookiecutter.project_name}}/data/protocols.py",
+  "{{cookiecutter.project_name}}/data/query_runtime.py",
+  "{{cookiecutter.project_name}}/data/soft_delete.py",
+  "{{cookiecutter.project_name}}/data/optimistic_lock.py",
+  "{{cookiecutter.project_name}}/core/crud.py",
   "tests/test_data_repository.py",
+  "tests/test_query_runtime.py",
+  "tests/test_data_models.py",
+  "tests/test_soft_delete.py",
+  "tests/test_optimistic_locking.py",
+  "tests/test_crud_framework.py"
 ]
 
 [[features]]
@@ -244,6 +407,7 @@ enabled = "{{cookiecutter.orm == 'sqlalchemy'}}"
 resources = [
   "{{cookiecutter.project_name}}/data/adapters/__init__.py",
   "{{cookiecutter.project_name}}/data/adapters/sqlalchemy",
+  "tests/test_sqlalchemy_unit_of_work.py"
 ]
 
 [[features]]
@@ -252,12 +416,91 @@ enabled = "{{cookiecutter.orm == 'beanie'}}"
 resources = [
   "{{cookiecutter.project_name}}/data/adapters/__init__.py",
   "{{cookiecutter.project_name}}/data/adapters/mongo",
+  "tests/test_mongo_repository.py"
+]
+
+# ---------------------------------------------------------------------------
+# AI / agents
+# ---------------------------------------------------------------------------
+
+[[features]]
+name = "LLM provider"
+enabled = "{{cookiecutter.enable_llm}}"
+resources = [
+  "{{cookiecutter.project_name}}/ai/llm.py",
+  "{{cookiecutter.project_name}}/ai/usage.py",
+  "{{cookiecutter.project_name}}/ai/gateway",
+  "{{cookiecutter.project_name}}/ai/prompts",
+  "{{cookiecutter.project_name}}/ai/providers",
+  "tests/test_ai_gateway.py",
+  "tests/test_prompt_registry.py"
 ]
 
 [[features]]
-name = "Transactional outbox"
-enabled = "{{cookiecutter.orm in ['sqlalchemy', 'beanie']}}"
-resources = ["tests/test_outbox_relay.py"]
+name = "Vector storage"
+enabled = "{{cookiecutter.enable_vector}}"
+resources = [
+  "{{cookiecutter.project_name}}/ai/embeddings.py",
+  "{{cookiecutter.project_name}}/ai/knowledge",
+  "tests/test_ai_knowledge.py",
+  "tests/test_pgvector_store.py"
+]
+
+[[features]]
+name = "Traditional RAG"
+enabled = "{{cookiecutter.enable_rag_traditional}}"
+resources = []
+
+[[features]]
+name = "GraphRAG retrieval"
+enabled = "{{cookiecutter.enable_graphrag}}"
+resources = []
+
+[[features]]
+name = "Agent runtime"
+enabled = "{{cookiecutter.enable_agents}}"
+resources = [
+  "{{cookiecutter.project_name}}/agents",
+  "tests/test_agents_ai.py",
+  "tests/test_agents_runtime.py",
+  "tests/test_agents_memory.py",
+  "tests/test_agents_budgets_extended.py",
+  "tests/test_agents_guardrails_3layer.py",
+  "tests/test_agentic_rag.py",
+  "tests/test_evaluation_harness.py"
+]
+
+# ---------------------------------------------------------------------------
+# Industry packs / CI / ops
+# ---------------------------------------------------------------------------
+
+[[features]]
+name = "FinTech Industry Pack"
+enabled = "{{cookiecutter.enable_fintech}}"
+resources = [
+  "{{cookiecutter.project_name}}/industry/fintech",
+  "tests/test_fintech_ledger.py",
+  "tests/test_fintech_compliance.py"
+]
+
+[[features]]
+name = "Gitlab CI"
+enabled = "{{cookiecutter.ci_type == 'gitlab_ci'}}"
+resources = [".gitlab-ci.yml"]
+
+[[features]]
+name = "GitHub actions"
+enabled = "{{cookiecutter.ci_type == 'github'}}"
+resources = [".github"]
+
+[[features]]
+name = "Self-Hosted Swagger UI"
+enabled = "{{cookiecutter.self_hosted_swagger}}"
+resources = [
+  "{{cookiecutter.project_name}}/static/docs/swagger-ui-bundle.js",
+  "{{cookiecutter.project_name}}/static/docs/swagger-ui.css",
+  "{{cookiecutter.project_name}}/static/docs/redoc.standalone.js"
+]
 
 [[features]]
 name = "Gunicorn support"

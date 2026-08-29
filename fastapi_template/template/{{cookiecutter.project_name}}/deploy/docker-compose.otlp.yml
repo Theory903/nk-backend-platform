@@ -1,23 +1,42 @@
 services:
   api:
     environment:
-      # Adds opentelemetry endpoint.
-      {{cookiecutter.project_name | upper}}_OPENTELEMETRY_ENDPOINT: "http://otel-collector:4317"
+      {{ cookiecutter.project_name | upper }}_OPENTELEMETRY_ENDPOINT: "http://otel-stack:4317"
 
   {%- if cookiecutter.enable_taskiq == "True" %}
   taskiq-worker:
     environment:
-      # Adds opentelemetry endpoint.
-      {{cookiecutter.project_name | upper}}_OPENTELEMETRY_ENDPOINT: "http://otel-collector:4317"
+      {{ cookiecutter.project_name | upper }}_OPENTELEMETRY_ENDPOINT: "http://otel-stack:4317"
   {%- endif %}
 
   otel-stack:
-    image: grafana/otel-lgtm
-    hostname: "otel-collector"
+    image: grafana/otel-lgtm:latest
+    hostname: otel-stack
+    restart: unless-stopped
+    networks:
+      - app
+
     ports:
-      # Collector's GRPC endpoint
-      - "4317:4317"
-      # Collector's HTTP endpoint
-      - "4318:4318"
       # Grafana UI
       - "3000:3000"
+
+      # Only expose these externally if you actually need host access.
+      # Container-to-container traffic does not require ports.
+      # - "4317:4317"
+      # - "4318:4318"
+
+    healthcheck:
+      test:
+        - CMD
+        - sh
+        - -c
+        - "wget -q --spider http://localhost:3000/api/health || exit 1"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+networks:
+  # Merges with base compose `app` network (service DNS: otel-stack).
+  app:
+    name: {{cookiecutter.project_name}}-app

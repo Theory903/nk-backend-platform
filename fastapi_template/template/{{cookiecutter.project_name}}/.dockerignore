@@ -4,6 +4,9 @@ deploy/
 .idea/
 .vscode/
 .git/
+frontend/node_modules/
+frontend/dist/
+{{cookiecutter.project_name}}/static/studio/dist/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

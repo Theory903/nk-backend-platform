@@ -92,11 +92,18 @@
     "enable_idempotency": {
         "type": "bool"
     },
+    "enable_fintech": {
+        "type": "bool"
+    },
     "_extensions": [
         "cookiecutter.extensions.RandomStringExtension"
     ],
     "_copy_without_render": [
         "*.js",
-        "*.css"
+        "*.css",
+        "frontend/src/*",
+        "frontend/index.html",
+        "frontend/node_modules/*",
+        "*/static/studio/dist/*"
     ]
 }

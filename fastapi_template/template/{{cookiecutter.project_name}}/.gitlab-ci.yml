@@ -1,8 +1,12 @@
 stages:
-  - "test"
+  - quality
 
-.test-template:
-  stage: test
+# Light parity with generated-project GitHub Actions (quality only).
+# Full compose pytest + prod image build run in .github/workflows/tests.yml.
+# Cookiecutter profile-matrix lives in the generator repo CI, not here.
+
+.quality-template:
+  stage: quality
   image: ghcr.io/astral-sh/uv:0.9.12-python3.13-bookworm-slim
   tags:
     - kubernetes-runner
@@ -11,23 +15,19 @@ stages:
     - tags
   before_script:
     - apt update && apt install -y git
-    - uv sync
+    # Template may lack uv.lock until post-gen; prefer --locked when present.
+    - |
+      if [ -f uv.lock ]; then
+        uv sync --locked
+      else
+        echo "NOTE: uv.lock missing — unlocked uv sync"
+        uv sync
+      fi
 
-black:
+quality:
   extends:
-    - .test-template
+    - .quality-template
   script:
-    - pre-commit run ruff-format -a
-
-ruff:
-  extends:
-    - .test-template
-  script:
-    - pre-commit run ruff -a
-
-mypy:
-  extends:
-    - .test-template
-  script:
-    - pre-commit run mypy -a
-
+    - uv run ruff format --check .
+    - uv run ruff check .
+    - uv run mypy {{cookiecutter.project_name}} tests
