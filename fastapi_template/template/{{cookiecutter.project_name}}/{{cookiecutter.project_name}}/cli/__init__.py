@@ -113,6 +113,8 @@ def cmd_dev(args: argparse.Namespace) -> int:
     root = _project_root()
     manifest = _load_manifest(root)
     project = manifest.get("project") or root.name
+    if getattr(args, "app_only", False):
+        os.environ.setdefault(f"{project.upper()}_ENVIRONMENT", "dev")
     host = os.environ.get("HOST", "0.0.0.0")
     port = os.environ.get("PORT", "8000")
 

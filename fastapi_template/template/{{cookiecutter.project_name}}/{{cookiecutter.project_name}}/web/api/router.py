@@ -32,6 +32,11 @@ from {{cookiecutter.project_name}}.web.api import kafka
 {%- endif %}
 from {{cookiecutter.project_name}}.web.api import docs
 from {{cookiecutter.project_name}}.web.api import monitoring
+{%- if cookiecutter.orm in ['sqlalchemy', 'beanie'] %}
+from {{cookiecutter.project_name}}.core.module_discovery import (
+    include_business_routers,
+)
+{%- endif %}
 
 api_router = APIRouter()
 api_router.include_router(monitoring.router)
@@ -58,4 +63,7 @@ api_router.include_router(nats.router, prefix="/nats", tags=["nats"])
 api_router.include_router(kafka.router, prefix="/kafka", tags=["kafka"])
 {%- endif %}
 {%- endif %}
+{%- endif %}
+{%- if cookiecutter.orm in ['sqlalchemy', 'beanie'] %}
+include_business_routers(api_router)
 {%- endif %}

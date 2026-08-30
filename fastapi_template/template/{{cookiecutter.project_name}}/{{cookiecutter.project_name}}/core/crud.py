@@ -7,13 +7,23 @@ authorization, audit, query validation, and domain errors.
 
 from __future__ import annotations
 
+import inspect
 import json
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from typing import Any, Generic, Protocol, TypeVar
 
-from fastapi import APIRouter, Depends, Header, Query, Request, Response, status
-from pydantic import BaseModel, Field
+from fastapi import (
+    APIRouter,
+    Depends,
+    Header,
+    Query,
+    Request,
+    Response,
+    status,
+)
+from fastapi.exceptions import RequestValidationError
+from pydantic import BaseModel, Field, ValidationError
 
 from {{cookiecutter.project_name}}.core.errors import Problem
 from {{cookiecutter.project_name}}.core.logging import get_logger
@@ -310,6 +320,10 @@ class CrudService(Generic[ModelT]):
         requested = limit if limit is not None else self.config.default_page_size
         requested = max(1, requested)
         try:
+            if sort is not None and len(sort) > 1:
+                raise ValueError(
+                    "multi-field sorting is not supported by cursor pagination",
+                )
             if cursor:
                 parse_cursor(cursor)
             return normalize_query(
@@ -358,7 +372,7 @@ class CrudService(Generic[ModelT]):
         page_items = items[: spec.limit]
         next_cursor = None
         if has_more and page_items:
-            next_cursor = self._make_cursor(page_items[-1])
+            next_cursor = self._make_cursor(page_items[-1], sort=spec.sort)
         return Page(items=page_items, next_cursor=next_cursor)
 
     # ------------------------------------------------------------------
@@ -370,7 +384,7 @@ class CrudService(Generic[ModelT]):
             raise ForbiddenError("create is disabled for this resource")
         await self.authorize("create")
         payload = dict(data)
-        if self.context.org_id and "org_id" not in payload:
+        if self.context.org_id:
             payload["org_id"] = self.context.org_id
         prepared = await self.before_create(payload)
         obj = await self.repository.create(prepared)
@@ -457,7 +471,7 @@ class CrudService(Generic[ModelT]):
         prepared: list[dict[str, Any]] = []
         for raw in items:
             payload = dict(raw)
-            if self.context.org_id and "org_id" not in payload:
+            if self.context.org_id:
                 payload["org_id"] = self.context.org_id
             prepared.append(await self.before_create(payload))
         created = await self.repository.bulk_create(prepared)
@@ -499,8 +513,13 @@ class CrudService(Generic[ModelT]):
         await self._audit("bulk_delete", detail={"count": count})
         return count
 
-    def _make_cursor(self, obj: ModelT) -> str:
-        sort_field = self.config.cursor_sort_field
+    def _make_cursor(
+        self,
+        obj: ModelT,
+        *,
+        sort: Sequence[SortField] | None = None,
+    ) -> str:
+        sort_field = (sort or ())[0].field if sort else self.config.cursor_sort_field
         sort_value = getattr(obj, sort_field, None)
         item_id = getattr(obj, "id", None)
         if item_id is None:
@@ -549,7 +568,16 @@ def _parse_filter_param(raw: str | None) -> list[FilterClause]:
         field_name = item.get("field")
         if not field_name:
             raise ValidationQueryError("filter.field is required")
-        clauses.append(FilterClause(field=str(field_name), op=op, value=item.get("value")))
+        try:
+            clauses.append(
+                FilterClause(
+                    field=str(field_name),
+                    op=op,
+                    value=item.get("value"),
+                ),
+            )
+        except ValueError as exc:
+            raise ValidationQueryError(str(exc)) from exc
     return clauses
 
 
@@ -570,7 +598,15 @@ def _parse_sort_param(raw: str | None) -> list[SortField]:
             direction_enum = SortDirection(direction.lower())
         except ValueError as exc:
             raise ValidationQueryError(f"invalid sort direction: {direction}") from exc
-        result.append(SortField(field=name.strip(), direction=direction_enum))
+        try:
+            result.append(
+                SortField(
+                    field=name.strip(),
+                    direction=direction_enum,
+                ),
+            )
+        except ValueError as exc:
+            raise ValidationQueryError(str(exc)) from exc
     return result
 
 
@@ -589,6 +625,78 @@ def _parse_if_match(if_match: str | None) -> int | None:
 # ---------------------------------------------------------------------------
 
 
+def _validate_bulk_payload(
+    schema: type[BaseModel] | None,
+    payload: dict[str, Any],
+    *,
+    allow_version: bool = False,
+) -> dict[str, Any]:
+    """Validate raw bulk dictionaries with the resource's write schema."""
+    if schema is None:
+        return payload
+    version = payload.get("version")
+    validation_payload = (
+        {key: value for key, value in payload.items() if key != "version"}
+        if allow_version
+        else payload
+    )
+    allowed_fields = set(schema.model_fields)
+    for field in schema.model_fields.values():
+        if field.alias:
+            allowed_fields.add(field.alias)
+        validation_alias = field.validation_alias
+        if isinstance(validation_alias, str):
+            allowed_fields.add(validation_alias)
+        choices = getattr(validation_alias, "choices", ())
+        allowed_fields.update(
+            choice for choice in choices if isinstance(choice, str)
+        )
+    unknown = sorted(set(validation_payload) - allowed_fields)
+    if unknown:
+        raise RequestValidationError(
+            [
+                {
+                    "loc": ("body",),
+                    "msg": f"unknown fields: {', '.join(unknown)}",
+                    "type": "value_error.extra",
+                },
+            ],
+        )
+    try:
+        validated = schema.model_validate(validation_payload).model_dump(
+            exclude_unset=True,
+        )
+    except ValidationError as exc:
+        raise RequestValidationError(exc.errors()) from exc
+    if not validated:
+        raise RequestValidationError(
+            [
+                {
+                    "loc": ("body",),
+                    "msg": "payload must contain at least one writable field",
+                    "type": "value_error.empty",
+                },
+            ],
+        )
+    if allow_version:
+        if (
+            not isinstance(version, int)
+            or isinstance(version, bool)
+            or version < 1
+        ):
+            raise RequestValidationError(
+                [
+                    {
+                        "loc": ("body", "version"),
+                        "msg": "version must be an integer greater than zero",
+                        "type": "type_error.integer",
+                    },
+                ],
+            )
+        validated["version"] = version
+    return validated
+
+
 def crud_router(
     *,
     service_factory: ServiceFactory,
@@ -599,26 +707,37 @@ def crud_router(
     response_schema: type[BaseModel] | None = None,
     config: CrudConfig | None = None,
     get_audit_log: Callable[[], AuditLogger] | None = None,
+    dependencies: Sequence[Any] | None = None,
 ) -> APIRouter:
     """
     Generate standard CRUD endpoints.
 
     `service_factory` owns dependency injection, authentication context,
     tenant scoping, and repository creation. It may be sync or async and
-    may accept FastAPI `Depends` parameters when used as a dependency.
+    may accept a keyword-only ``request`` parameter.
     """
 
     cfg = config or CrudConfig()
-    router = APIRouter(prefix=prefix, tags=tags or [])
+    router = APIRouter(
+        prefix=prefix,
+        tags=tags or [],
+        dependencies=list(dependencies or ()),
+    )
 
     async def resolve_service(request: Request) -> CrudService[Any]:
-        result = service_factory()
+        parameters = inspect.signature(service_factory).parameters
+        if "request" in parameters:
+            result = service_factory(request=request)
+        else:
+            result = service_factory()
         if hasattr(result, "__await__"):
             service = await result  # type: ignore[misc]
         else:
             service = result
         if get_audit_log is not None and service.context.audit_log is None:
             service.context.audit_log = get_audit_log()
+        if service.context.principal is None:
+            service.context.principal = getattr(request.state, "principal", None)
         # Org comes from authenticated principal only — never trust X-Org-Id alone.
         # Multi-org selection: use platform.tenancy.require_tenant_context.
         if service.context.org_id is None:
@@ -640,7 +759,10 @@ def crud_router(
         cursor: str | None = Query(default=None),
         limit: int = Query(default=cfg.default_page_size, ge=1, le=cfg.max_page_size),
         filters: str | None = Query(default=None, description="JSON array of filter clauses"),
-        sort: str | None = Query(default=None, description="field:asc,other:desc"),
+        sort: str | None = Query(
+            default=None,
+            description="field:asc (single field only)",
+        ),
         search: str | None = Query(default=None),
         include_deleted: bool = Query(default=False),
         service: CrudService[Any] = Depends(resolve_service),
@@ -670,7 +792,16 @@ def crud_router(
             body: BulkCreateBody,
             service: CrudService[Any] = Depends(resolve_service),
         ) -> dict[str, Any]:
-            created = await service.bulk_create(body.items)
+            if len(body.items) > cfg.max_bulk_size:
+                raise ValidationQueryError(
+                    f"bulk size {len(body.items)} exceeds "
+                    f"max_bulk_size {cfg.max_bulk_size}",
+                )
+            items = [
+                _validate_bulk_payload(create_schema, item)
+                for item in body.items
+            ]
+            created = await service.bulk_create(items)
             return {"items": [serialize(item, response_schema) for item in created]}
 
         @router.patch(
@@ -681,7 +812,23 @@ def crud_router(
             body: BulkUpdateBody,
             service: CrudService[Any] = Depends(resolve_service),
         ) -> dict[str, Any]:
-            updated = await service.bulk_update([(item.id, item.data) for item in body.items])
+            if len(body.items) > cfg.max_bulk_size:
+                raise ValidationQueryError(
+                    f"bulk size {len(body.items)} exceeds "
+                    f"max_bulk_size {cfg.max_bulk_size}",
+                )
+            updates = [
+                (
+                    item.id,
+                    _validate_bulk_payload(
+                        update_schema,
+                        item.data,
+                        allow_version=True,
+                    ),
+                )
+                for item in body.items
+            ]
+            updated = await service.bulk_update(updates)
             return {"items": [serialize(item, response_schema) for item in updated]}
 
         @router.post(

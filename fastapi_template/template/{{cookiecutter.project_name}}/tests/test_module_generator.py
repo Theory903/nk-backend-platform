@@ -1,6 +1,5 @@
 """Test that the module generator produces valid Python files."""
 import ast
-import tempfile
 from pathlib import Path
 
 import pytest
@@ -19,6 +18,8 @@ class TestGenerateModule:
     def tmp_project(self, tmp_path: Path) -> Path:
         (tmp_path / "pyproject.toml").write_text('name = "my_app"\n')
         (tmp_path / "business" / "modules").mkdir(parents=True)
+        (tmp_path / "my_app" / "core").mkdir(parents=True)
+        (tmp_path / "my_app" / "core" / "crud.py").write_text("")
         return tmp_path
 
     def test_creates_all_files(self, tmp_project: Path) -> None:
@@ -28,6 +29,7 @@ class TestGenerateModule:
         assert "models.py" in filenames
         assert "schemas.py" in filenames
         assert "service.py" in filenames
+        assert "repository.py" in filenames
         assert "router.py" in filenames
 
     def test_generated_files_are_valid_python(self, tmp_project: Path) -> None:
@@ -55,6 +57,51 @@ class TestGenerateModule:
         assert 'prefix="/contacts"' in content
         assert "service_factory=_service_factory" in content
         assert "async def _service_factory" in content
+        assert "NotImplementedError" not in content
+{%- if cookiecutter.add_users|string|lower == "true" %}
+        assert "Depends(CurrentUser)" in content
+        assert "Depends(RequireCsrf())" in content
+{%- endif %}
+        repository_file = router_file.with_name("repository.py")
+        assert "data.adapters.memory.repository" in repository_file.read_text()
+
+    @pytest.mark.parametrize(
+        "module_path",
+        [
+            "leads",
+            "CRM.leads",
+            "crm.leads.extra",
+            "../crm.leads",
+            "crm/../leads",
+            "crm.class",
+        ],
+    )
+    def test_rejects_invalid_module_path(
+        self,
+        tmp_project: Path,
+        module_path: str,
+    ) -> None:
+        with pytest.raises(ValueError, match="module path must be"):
+            generate_module(module_path, project_root=tmp_project)
+
+    @pytest.mark.parametrize(
+        "fields",
+        [
+            [("display-name", "str")],
+            [("class", "str")],
+            [("id", "str")],
+            [("name", "EmailStr")],
+            [("name", "str"), ("name", "int")],
+            [("model_dump", "str")],
+        ],
+    )
+    def test_rejects_unsafe_fields(
+        self,
+        tmp_project: Path,
+        fields: list[tuple[str, str]],
+    ) -> None:
+        with pytest.raises(ValueError, match="invalid field"):
+            generate_module("crm.leads", fields=fields, project_root=tmp_project)
 
     def test_custom_fields_in_schemas(self, tmp_project: Path) -> None:
         generate_module("crm.deals",

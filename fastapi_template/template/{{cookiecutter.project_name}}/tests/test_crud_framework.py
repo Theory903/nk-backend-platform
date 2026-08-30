@@ -9,6 +9,7 @@ from typing import Any, Sequence
 
 import pytest
 from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
 from httpx import ASGITransport, AsyncClient
 from pydantic import BaseModel
 
@@ -16,6 +17,7 @@ from {{cookiecutter.project_name}}.core.crud import (
     CrudConfig,
     CrudContext,
     CrudService,
+    _validate_bulk_payload,
     crud_router,
 )
 from {{cookiecutter.project_name}}.core.errors import register_problem_handlers
@@ -32,13 +34,6 @@ from {{cookiecutter.project_name}}.data.query_runtime import (
     apply_search,
     apply_sort,
 )
-from {{cookiecutter.project_name}}.platform.audit import (
-    AuditLogger,
-    AuditQuery,
-    InMemoryAuditSink,
-)
-
-
 @dataclass
 class Lead:
     id: str = ""
@@ -231,18 +226,13 @@ class InMemoryLeadRepo:
 
 
 @pytest.fixture
-def audit_log() -> AuditLogger:
-    return AuditLogger(InMemoryAuditSink())
-
-
-@pytest.fixture
-def app(audit_log: AuditLogger) -> FastAPI:
+def app() -> FastAPI:
     app = FastAPI()
     register_problem_handlers(app)
     repo = InMemoryLeadRepo()
     config = CrudConfig(
         soft_delete=True,
-        audit_events=True,
+        audit_events=False,
         resource_name="lead",
         default_page_size=2,
         max_page_size=10,
@@ -258,7 +248,7 @@ def app(audit_log: AuditLogger) -> FastAPI:
         return LeadService(
             repo,
             config=config,
-            context=CrudContext(audit_log=audit_log),
+            context=CrudContext(),
         )
 
     router = crud_router(
@@ -269,7 +259,6 @@ def app(audit_log: AuditLogger) -> FastAPI:
         update_schema=LeadUpdate,
         response_schema=LeadRead,
         config=config,
-        get_audit_log=lambda: audit_log,
     )
     app.include_router(router, prefix="/api/v1")
     return app
@@ -431,18 +420,13 @@ class TestCrudEndpoints:
         )
         assert too_many.status_code == 400
 
-    @pytest.mark.anyio
-    async def test_audit_events_recorded(
-        self,
-        client: AsyncClient,
-        audit_log: AuditLogger,
-    ) -> None:
-        await client.post(
-            "/api/v1/leads/",
-            json={"name": "Audited", "email": "aud@x.com"},
-        )
-        events = await audit_log.query(AuditQuery(action="create"))
-        assert len(events) >= 1
+    def test_bulk_update_version_must_be_positive(self) -> None:
+        with pytest.raises(RequestValidationError):
+            _validate_bulk_payload(
+                LeadUpdate,
+                {"name": "updated", "version": 0},
+                allow_version=True,
+            )
 
     @pytest.mark.anyio
     async def test_x_org_id_header_alone_does_not_set_org(

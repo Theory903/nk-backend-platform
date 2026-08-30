@@ -386,14 +386,21 @@ resources = [
 name = "Universal data layer"
 enabled = "{{cookiecutter.orm in ['sqlalchemy', 'beanie']}}"
 resources = [
+  "business/__init__.py",
+  "business/modules/__init__.py",
   "{{cookiecutter.project_name}}/data/__init__.py",
-  "{{cookiecutter.project_name}}/data/models.py",
   "{{cookiecutter.project_name}}/data/protocols.py",
+  "{{cookiecutter.project_name}}/data/errors.py",
+  "{{cookiecutter.project_name}}/data/models.py",
   "{{cookiecutter.project_name}}/data/query_runtime.py",
   "{{cookiecutter.project_name}}/data/soft_delete.py",
   "{{cookiecutter.project_name}}/data/optimistic_lock.py",
+  "{{cookiecutter.project_name}}/data/adapters/memory",
   "{{cookiecutter.project_name}}/core/crud.py",
+  "{{cookiecutter.project_name}}/core/module_discovery.py",
   "tests/test_data_repository.py",
+  "tests/test_module_discovery.py",
+  "tests/test_memory_repository.py",
   "tests/test_query_runtime.py",
   "tests/test_data_models.py",
   "tests/test_soft_delete.py",

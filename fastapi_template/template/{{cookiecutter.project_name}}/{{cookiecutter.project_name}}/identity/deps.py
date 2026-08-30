@@ -196,6 +196,7 @@ def _principal_from_api_key(
 
     return Principal(
         user_id=f"svc:{record.key_id}",
+        org_id=record.org_id,
         roles=frozenset(roles),
         provider="api_key",
         is_service=True,
@@ -271,12 +272,14 @@ def _resolve_session(
 
     # SessionStore.create keeps extras under "data"; accept top-level too.
     roles = session.get("roles")
+    data = session.get("data") or {}
     if roles is None:
-        data = session.get("data") or {}
         roles = data.get("roles", ())
+    org_id = session.get("org_id") or data.get("org_id")
 
     return Principal(
         user_id=str(principal_id),
+        org_id=str(org_id) if org_id is not None else None,
         roles=frozenset(str(role) for role in roles),
         provider="session",
     )

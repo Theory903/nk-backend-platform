@@ -22,39 +22,18 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Any, Generic, Protocol, TypeVar
 
+{%- if cookiecutter.orm == "sqlalchemy" %}
 from sqlalchemy.orm import Mapped, mapped_column
+{%- endif %}
 
-from {{cookiecutter.project_name}}.core.errors import Problem
 from {{cookiecutter.project_name}}.core.query import FilterClause, SortField
+from {{cookiecutter.project_name}}.data.errors import ConcurrencyConflictError
 from {{cookiecutter.project_name}}.data.protocols import Repository
 
 M = TypeVar("M")
 
 
-class ConcurrencyConflictError(Problem):
-    """Raised when an optimistic-lock version check fails."""
-
-    def __init__(
-        self,
-        resource_id: str,
-        expected_version: int,
-        actual_version: int | None = None,
-    ) -> None:
-        detail = (
-            f"resource '{resource_id}' was modified concurrently; "
-            f"expected version {expected_version}"
-        )
-
-        if actual_version is not None:
-            detail += f", actual version {actual_version}"
-
-        super().__init__(
-            title="Concurrent Modification Conflict",
-            status_code=409,
-            detail=detail,
-        )
-
-
+{%- if cookiecutter.orm == "sqlalchemy" %}
 class VersionedMixin:
     """SQLAlchemy mixin for resources protected by optimistic locking."""
 
@@ -62,6 +41,10 @@ class VersionedMixin:
         nullable=False,
         default=1,
     )
+{%- else %}
+class VersionedMixin:
+    """Placeholder for non-SQLAlchemy profiles."""
+{%- endif %}
 
 
 class VersionedRepository(Protocol[M]):
