@@ -56,11 +56,26 @@ a route is public from its path alone.
 
 ## Generate an application-specific reference
 
-For a deployable service, publish the OpenAPI output from the generated
-application rather than copying this route table:
+For a deployable service, export OpenAPI from the generated application
+rather than copying this route table. No HTTP server is required — the CLI
+loads `get_app()` and writes the schema. Any future route registered on the
+app is included automatically on the next export:
 
 ```bash
-curl --fail http://localhost:8000/api/openapi.json \
+uv run nk export-openapi
+```
+
+This writes `docs/openapi.json` (Postman-ready: server variables, login/register
+examples, fixed OAuth2 token URL) and `docs/postman-environment.json`
+(`baseUrl`, `testEmail`, `testPassword`, `accessToken`, …).
+
+**Postman:** import the environment first, then the OpenAPI file, select **NK
+Local Dev**, run Register → JWT Login, set `accessToken`.
+
+Alternatively, while the API is running:
+
+```bash
+curl --fail http://127.0.0.1:8000/api/openapi.json \
   --output docs/openapi.json
 ```
 

@@ -1,4 +1,5 @@
 from typing import AsyncGenerator
+import sys
 import uuid
 
 from fastapi import Depends, Request
@@ -40,6 +41,19 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
     reset_password_token_secret = settings.users_secret
     verification_token_secret = settings.users_secret
 
+    async def on_after_request_verify(
+        self,
+        user: User,
+        token: str,
+        request: Request | None = None,
+    ) -> None:
+        """Log verification tokens in dev — no SMTP configured by default."""
+        if settings.environment != "dev":
+            return
+        sys.stderr.write(
+            f"\n[dev verify] email={user.email}\n"
+            f'[dev verify] POST /api/auth/verify  {{"token": "{token}"}}\n\n'
+        )
 
 async def get_user_db(session: AsyncSession = Depends(get_db_session)) -> AsyncGenerator[SQLAlchemyUserDatabase[User, uuid.UUID], None]:
     """

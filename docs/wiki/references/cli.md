@@ -44,16 +44,33 @@ isolated one. `--otlp` adds the local OpenTelemetry overlay when enabled.
 | `nk migrate` | Apply database migrations when migrations are enabled |
 | `nk seed` | Seed configured development data |
 | `nk generate` | Scaffold a business module |
+| `nk export-openapi` | Export OpenAPI JSON/YAML + Postman environment for import |
 
 Example:
 
 ```bash
 uv run nk generate crm.leads --fields name:str email:str
+uv run nk export-openapi
 ```
 
-Generated business modules are discovered by
-`{{cookiecutter.project_name}}/core/module_discovery.py` and are included in
-the protected API router for supported database/ORM combinations.
+Import order in Postman: `docs/postman-environment.json` (environment) then
+`docs/openapi.json` (collection). Re-run export after scaffolding so clients
+pick up new paths and variables stay aligned.
+
+## E2E smoke (Postman CLI)
+
+With the dev Compose stack running:
+
+```bash
+./scripts/e2e_postman.sh
+```
+
+Requires [Postman CLI](https://learning.postman.com/docs/postman-cli/postman-cli-overview/).
+The script waits for `/api/ready`, then exercises auth, optional infra
+(Redis/Kafka/Rabbit/NATS), SCIM, files, MCP, and cookie auth depending on
+`platform.yaml` capabilities. In dev, privileged routes use an ApiKey emitted
+at API startup — grep docker logs for `[dev e2e]`. Restart the API container
+after pulling changes so the bootstrap key is re-printed.
 
 ## AI and operations
 

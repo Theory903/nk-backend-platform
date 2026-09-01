@@ -179,6 +179,26 @@ dependencies = [
 {%- endif %}
 ]
 
+{%- if cookiecutter.enable_llm in [True, "True", "true", 1, "1"] or cookiecutter.enable_agents in [True, "True", "true", 1, "1"] %}
+[project.optional-dependencies]
+ai-platform = [
+  "qdrant-client >=1.12,<2",
+  "mcp >=1.0,<2",
+  "a2a-sdk >=0.2,<1",
+  "smolagents >=1.0,<2",
+  "litellm >=1.0,<2",
+]
+ai-eval = [
+  "ragas >=0.2,<1",
+  "deepeval >=2.0,<3",
+]
+{%- if cookiecutter.enable_agents in [True, "True", "true", 1, "1"] %}
+browser = [
+  "browser-use >=0.1,<1",
+]
+{%- endif %}
+{%- endif %}
+
 [dependency-groups]
 dev = [
   "pytest >=9.0.1,<10",

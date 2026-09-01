@@ -78,6 +78,15 @@ x-app-environment: &app-environment
   {%- if cookiecutter.enable_nats in [True, "True", "true", 1, "1"] %}
   {{cookiecutter.project_name | upper }}_NATS_SERVERS: '["nats://nats:4222"]'
   {%- endif %}
+  {%- if cookiecutter.enable_llm in [True, "True", "true", 1, "1"] %}
+  # any-llm / LiteLLM read OLLAMA_API_BASE; OLLAMA_HOST is the Ollama CLI convention.
+  OLLAMA_HOST: http://ollama:11434
+  OLLAMA_API_BASE: http://ollama:11434
+  {%- endif %}
+  {%- if cookiecutter.enable_vector in [True, "True", "true", 1, "1"] %}
+  {{cookiecutter.project_name | upper }}_QDRANT_HOST: qdrant
+  {{cookiecutter.project_name | upper }}_QDRANT_PORT: 6333
+  {%- endif %}
 
 services:
   api:
@@ -104,7 +113,8 @@ services:
             cookiecutter.enable_redis in [True, "True", "true", 1, "1"] or
             cookiecutter.enable_rmq in [True, "True", "true", 1, "1"] or
             cookiecutter.enable_kafka in [True, "True", "true", 1, "1"] or
-            cookiecutter.enable_nats in [True, "True", "true", 1, "1"]
+            cookiecutter.enable_nats in [True, "True", "true", 1, "1"] or
+            cookiecutter.enable_llm in [True, "True", "true", 1, "1"]
     ) %}
     depends_on:
       {%- if cookiecutter.db_info.name != "none" %}
@@ -128,6 +138,10 @@ services:
       {%- if cookiecutter.enable_nats in [True, "True", "true", 1, "1"] %}
       nats:
         condition: service_healthy
+      {%- endif %}
+      {%- if cookiecutter.enable_llm in [True, "True", "true", 1, "1"] %}
+      ollama:
+        condition: service_started
       {%- endif %}
       {%- if cookiecutter.enable_migrations in [True, "True", "true", 1, "1"] and cookiecutter.orm != 'psycopg' %}
       migrator:
@@ -169,7 +183,8 @@ services:
             cookiecutter.enable_redis in [True, "True", "true", 1, "1"] or
             cookiecutter.enable_rmq in [True, "True", "true", 1, "1"] or
             cookiecutter.enable_kafka in [True, "True", "true", 1, "1"] or
-            cookiecutter.enable_nats in [True, "True", "true", 1, "1"]
+            cookiecutter.enable_nats in [True, "True", "true", 1, "1"] or
+            cookiecutter.enable_llm in [True, "True", "true", 1, "1"]
     ) %}
     depends_on:
       {%- if cookiecutter.db_info.name != "none" %}
@@ -193,6 +208,10 @@ services:
       {%- if cookiecutter.enable_nats in [True, "True", "true", 1, "1"] %}
       nats:
         condition: service_healthy
+      {%- endif %}
+      {%- if cookiecutter.enable_llm in [True, "True", "true", 1, "1"] %}
+      ollama:
+        condition: service_started
       {%- endif %}
       {%- if cookiecutter.enable_migrations in [True, "True", "true", 1, "1"] and cookiecutter.orm != 'psycopg' %}
       migrator:
@@ -395,6 +414,55 @@ services:
       - app
   {%- endif %}
 
+  {%- if cookiecutter.enable_llm in [True, "True", "true", 1, "1"] %}
+
+  # Local LLM inference (production-ai-local). Pull models after first start:
+  #   docker compose exec ollama ollama pull llama3.2
+  ollama:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    volumes:
+      - {{cookiecutter.project_name}}-ollama-data:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+    networks:
+      - app
+
+  ollama-init:
+    image: ollama/ollama:latest
+    restart: "no"
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    entrypoint: ["ollama", "pull", "llama3.2"]
+    networks:
+      - app
+  {%- endif %}
+
+  {%- if cookiecutter.enable_vector in [True, "True", "true", 1, "1"] %}
+
+  # Scale vector backend (set VECTOR_STORE_BACKEND=qdrant). Dev/small uses pgvector.
+  qdrant:
+    image: qdrant/qdrant:v1.12.5
+    restart: unless-stopped
+    volumes:
+      - {{cookiecutter.project_name}}-qdrant-data:/qdrant/storage
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:6333/readyz | grep -q ok || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    networks:
+      - app
+  {%- endif %}
+
 networks:
   app:
     name: {{ "${" }}COMPOSE_PROJECT_NAME:-{{cookiecutter.project_name}}{{ "}" }}-app
@@ -405,8 +473,18 @@ networks:
     name: traefik-shared
   {%- endif %}
 
-{% if cookiecutter.db_info.name != 'none' %}
+{% if cookiecutter.db_info.name != 'none' or cookiecutter.enable_llm in [True, "True", "true", 1, "1"] or cookiecutter.enable_vector in [True, "True", "true", 1, "1"] %}
 volumes:
+  {%- if cookiecutter.db_info.name != 'none' %}
   {{cookiecutter.project_name}}-db-data:
     name: {{ "${" }}COMPOSE_PROJECT_NAME:-{{cookiecutter.project_name}}{{ "}" }}-db-data
+  {%- endif %}
+  {%- if cookiecutter.enable_llm in [True, "True", "true", 1, "1"] %}
+  {{cookiecutter.project_name}}-ollama-data:
+    name: {{ "${" }}COMPOSE_PROJECT_NAME:-{{cookiecutter.project_name}}{{ "}" }}-ollama-data
+  {%- endif %}
+  {%- if cookiecutter.enable_vector in [True, "True", "true", 1, "1"] %}
+  {{cookiecutter.project_name}}-qdrant-data:
+    name: {{ "${" }}COMPOSE_PROJECT_NAME:-{{cookiecutter.project_name}}{{ "}" }}-qdrant-data
+  {%- endif %}
 {%- endif %}

@@ -6,7 +6,7 @@ from typing import Any
 from langchain_core.tools import StructuredTool
 from langgraph.prebuilt import create_react_agent
 
-from {{cookiecutter.project_name}}.agents.loop import AgentResult
+from {{cookiecutter.project_name}}.agents.types import AgentResult, RuntimeMode
 from {{cookiecutter.project_name}}.agents.tools import AgentTool, ToolRegistry
 
 
@@ -224,6 +224,7 @@ class GraphRuntime:
             trace=trace,
             transcript=transcript,
             steps=len(trace),
+            runtime_mode=RuntimeMode.GRAPH,
         )
 
 

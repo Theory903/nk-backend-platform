@@ -3,12 +3,15 @@ from {{cookiecutter.project_name}}.ai.usage import UsageTracker
 
 
 def test_router_default_and_reasoning() -> None:
-    router = ModelRouter(routes={
-        "default": Route(provider="ollama", model="llama3.2"),
-        "reasoning": Route(provider="openai", model="gpt-4o"),
-    })
+    router = ModelRouter(
+        routes={
+            "chat": Route(provider="ollama", model="llama3.2"),
+            "reasoning": Route(provider="openai", model="gpt-4o"),
+        },
+        task_aliases={"default": "chat"},
+    )
     assert router.for_task("default").provider == "ollama"
-    assert router.for_task("reasoning").model == "gpt-4o"
+    assert router.for_capability("reasoning").model == "gpt-4o"
     assert router.for_task("unknown").provider == "ollama"
 
 

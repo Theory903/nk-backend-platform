@@ -1,0 +1,105 @@
+# NK ERP ↔ ERPNext parity manifest
+# Updated: 2026-09-02 session 43 — toe-to-toe ERPNext replica layer
+
+upstream:
+  repo: frappe/erpnext
+  ref: develop
+  license: GPL-3.0
+  usage: reference-only (not vendored)
+
+replica:
+  enabled: true
+  report_manifest: erp/schemas/reports/manifest.yaml
+  report_columns_index: erp/schemas/reports/columns_index.yaml
+  controller_manifest: erp/schemas/controllers/manifest.yaml
+  upstream_reports: 185
+  controller_classes: 6
+  report_output_fieldnames: erpnext_exact
+  controller_validation: selling|buying|stock|accounts
+  ar_ap_aging_buckets: true
+  payment_term_row_split: true
+  gl_entry_rows: true
+  stock_ledger_rows: true
+
+coverage:
+  doctypes_catalogued: 534
+  doctypes_api_accessible: 534
+  doctype_api_coverage_pct: 100.0
+  specialized_tables: 26
+  specialized_coverage_pct: 4.9
+  doctype_manifest: erp/schemas/doctypes/manifest.yaml
+  field_index: erp/schemas/doctypes/field_index.yaml
+  reports_catalogued: 170
+  reports_wired: 170
+  report_coverage_pct: 100.0
+  feature_packs: 15
+  api_routes: 90
+  submittable_doctypes: 84
+  submittable_with_hooks: 84
+
+universal_doctype_api:
+  enabled: true
+  store: erp_doctype_record
+  controller_hooks_on_submit: true
+  hook_categories:
+    - transaction
+    - stock
+    - payment
+    - manufacturing
+    - status
+    - generic_submittable
+  routes:
+    - GET /doctypes
+    - GET /doctypes/{slug}/meta
+    - GET/POST /doctypes/{slug}/records
+    - PUT /doctypes/{slug}/records/{id}
+    - POST /doctypes/{slug}/records/{id}/submit
+    - POST /doctypes/{slug}/records/{id}/cancel
+    - POST /doctypes/{slug}/records/{id}/amend
+  field_schemas: true
+
+lifecycle:
+  docstatus_draft: true
+  docstatus_submitted: true
+  docstatus_cancelled: true
+  amend: true
+  submit_posts_gl: true
+  submit_posts_stock: true
+  submit_records_ar_ap: true
+
+pricing:
+  item_values: true
+  inclusive_tax: true
+  regional_templates: true
+
+collections:
+  payment_reconciliation: true
+  bank_reconciliation: true
+  dunning_levels: true
+
+feature_pack_routes:
+  order_to_cash: quotation/sales_order/sales_invoice/delivery_note CRUD + mappers
+  procure_to_pay: rfq/purchase_order/purchase_invoice/receipt CRUD + mappers
+  erp_masters: party lookup route + agent tool
+  inventory_management: material request route
+  projects_delivery: list projects/tasks
+  doctype_hub: amend route
+
+nk_extras:
+  - multi_tenant org_id
+  - REST-first FastAPI (534 doctype CRUD)
+  - agent tools per pack
+  - OpenAPI + Postman e2e
+  - platform.yaml toggles (15 packs)
+  - catalog-driven report registry (170/170)
+
+gaps:
+  - Frappe desk / portal UI
+  - Per-doctype specialized SQL tables (26/534 — rest JSON store)
+  - Print formats and email alerts
+
+positioning: |
+  NK ERP is a full API replica of ERPNext: 534 DocTypes, 185 report manifests,
+  ERPNext column fieldnames, AR/AP aging + payment-term row splitting, GL/stock
+  ledger rows, controller validation, submit hooks on 84 submittable types.
+  API-native superset without Frappe runtime.

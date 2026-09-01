@@ -472,8 +472,11 @@ resources = [
   "{{cookiecutter.project_name}}/ai/gateway",
   "{{cookiecutter.project_name}}/ai/prompts",
   "{{cookiecutter.project_name}}/ai/providers",
+  "{{cookiecutter.project_name}}/llm",
   "tests/test_ai_gateway.py",
-  "tests/test_prompt_registry.py"
+  "tests/test_gateway_capabilities.py",
+  "tests/test_prompt_registry.py",
+  "tests/test_llm_features.py"
 ]
 
 [[features]]
@@ -488,7 +491,11 @@ resources = [
   "{{cookiecutter.project_name}}/ai/knowledge/answer.py",
   "{{cookiecutter.project_name}}/ai/knowledge/runtime.py",
   "tests/test_ai_knowledge.py",
+  "{{cookiecutter.project_name}}/ai/knowledge/pgvector_store.py",
+  "{{cookiecutter.project_name}}/ai/knowledge/qdrant_store.py",
+  "{{cookiecutter.project_name}}/ai/knowledge/store_factory.py",
   "tests/test_pgvector_store.py",
+  "tests/test_qdrant_store.py",
   "tests/test_knowledge_lifecycle.py",
   "tests/test_rag_answer.py"
 ]
@@ -518,17 +525,45 @@ name = "Agent runtime"
 enabled = "{{cookiecutter.enable_agents}}"
 resources = [
   "{{cookiecutter.project_name}}/agents",
+  "{{cookiecutter.project_name}}/agents/bootstrap.py",
+  "{{cookiecutter.project_name}}/agents/memory_redis.py",
+  "{{cookiecutter.project_name}}/agents/memory_factory.py",
   "{{cookiecutter.project_name}}/agents/sandbox.py",
   "{{cookiecutter.project_name}}/web/api/agent_protocol.py",
   "tests/test_agents_ai.py",
   "tests/test_agents_runtime.py",
+  "tests/test_runtime_routing.py",
   "tests/test_agents_memory.py",
+  "tests/test_redis_memory.py",
   "tests/test_agents_budgets_extended.py",
   "tests/test_agents_guardrails_3layer.py",
   "tests/test_agentic_rag.py",
   "tests/test_evaluation_harness.py",
   "tests/test_agent_runtime_contract.py",
   "tests/test_agent_security.py",
+  "tests/test_tool_gateway.py",
+  "tests/test_session_runtime.py",
+  "tests/test_harness_runner.py",
+  "tests/test_eval_adapters.py",
+  "{{cookiecutter.project_name}}/agents/evaluation/adapters",
+  "{{cookiecutter.project_name}}/agents/security_pii.py",
+  "{{cookiecutter.project_name}}/agents/security_poisoning.py",
+  "{{cookiecutter.project_name}}/agents/security_rag.py",
+  "{{cookiecutter.project_name}}/agents/security_loader.py",
+  "{{cookiecutter.project_name}}/agents/security_manifest.yaml",
+  "{{cookiecutter.project_name}}/agents/security_invariants.py",
+  "{{cookiecutter.project_name}}/observability/genai",
+  "{{cookiecutter.project_name}}/kernel",
+  "{{cookiecutter.project_name}}/kernel/plugins",
+  "{{cookiecutter.project_name}}/agents/skills/manifest.py",
+  "{{cookiecutter.project_name}}/agents/skills/manifest_loader.py",
+  "{{cookiecutter.project_name}}/agents/skills/runtime.py",
+  "{{cookiecutter.project_name}}/agents/skills/presets.yaml",
+  "{{cookiecutter.project_name}}/agents/skills/example/skill.yaml",
+  "{{cookiecutter.project_name}}/research",
+  "{{cookiecutter.project_name}}/research/experiments",
+  "tests/evals/scenarios.yaml",
+  "tests/evals/fixtures",
   "tests/test_evaluation_governance.py",
   "scripts/eval.py",
   "tests/evals"
@@ -545,6 +580,32 @@ resources = [
   "{{cookiecutter.project_name}}/industry/fintech",
   "tests/test_fintech_ledger.py",
   "tests/test_fintech_compliance.py"
+]
+
+[[features]]
+name = "ERP domain packs"
+enabled = "{{cookiecutter.db_info.name != 'none' and cookiecutter.orm == 'sqlalchemy'}}"
+resources = [
+  "{{cookiecutter.project_name}}/erp",
+  "{{cookiecutter.project_name}}/db_sa/models/erp",
+  "{{cookiecutter.project_name}}/db_sa/migrations/versions/2026-09-01-erp_core.py",
+  "{{cookiecutter.project_name}}/db_sa/migrations/versions/2026-09-01-erp_transactions.py",
+  "{{cookiecutter.project_name}}/db_sa/migrations/versions/2026-09-02-erp_parity.py",
+  "{{cookiecutter.project_name}}/db_sa/migrations/versions/2026-09-02-erp_bank.py",
+  "{{cookiecutter.project_name}}/db_sa/migrations/versions/2026-09-02-erp_doctype.py",
+  "{{cookiecutter.project_name}}/db_sa/migrations/versions/2026-09-02-erp_payment_terms.py",
+  "tests/test_erp_features.py",
+  "tests/test_erp_pricing_parity.py",
+  "tests/test_erp_bank_reconciliation.py",
+  "tests/test_erp_doctype_hub.py",
+  "tests/test_erp_doctype_hooks.py",
+  "tests/test_erp_reports_full.py",
+  "tests/test_erp_replica_parity.py",
+  "tests/test_erp_billing_replica.py",
+  "tests/test_erp_payment_schedule.py",
+  "erp/schemas/reports/manifest.yaml",
+  "erp/schemas/reports/columns_index.yaml",
+  "erp/schemas/controllers/manifest.yaml"
 ]
 
 [[features]]

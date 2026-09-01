@@ -14,7 +14,9 @@ from ..core.scim import (
     ScimUser,
 )
 from ..core.scim_filter import ScimFilterError, ScimFilterParser
+from ..data.scim_memory import InMemoryScimRepository
 from ..services.scim import ScimService
+from ..settings import settings
 
 router = APIRouter(
     prefix="/scim/v2",
@@ -22,12 +24,22 @@ router = APIRouter(
     dependencies=[Depends(RequirePermission("identity.provision"))],
 )
 
+E2E_ORG_ID = "org:e2e-smoke"
+_dev_scim_repo: InMemoryScimRepository | None = None
+
 
 def get_scim_service() -> ScimService:
     """
-    Replace with your DI container / tenant-aware dependency.
+    Dev uses an in-memory repository; production should inject a durable store.
     """
-    raise NotImplementedError
+    if settings.environment.lower() not in {"dev", "development", "test"}:
+        raise NotImplementedError(
+            "Configure get_scim_service with your production SCIM repository",
+        )
+    global _dev_scim_repo
+    if _dev_scim_repo is None:
+        _dev_scim_repo = InMemoryScimRepository()
+    return ScimService(_dev_scim_repo, org_id=E2E_ORG_ID)
 
 
 @router.post(

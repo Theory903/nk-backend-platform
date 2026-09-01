@@ -1,0 +1,23 @@
+# AI security manifest (P18).
+# Override: {{cookiecutter.project_name | upper}}_SECURITY_MANIFEST_FILE
+
+pii:
+  redact_in_context: true
+  redact_in_output: true
+
+injection:
+  block_high_risk: true
+
+tool_poisoning:
+  scan_on_invoke: true
+
+rag:
+  data_boundary: true
+  sanitize_chunks: true
+
+approval:
+  failed_is_denial: true
+
+sandbox:
+  enabled: false
+  allowed_commands: []

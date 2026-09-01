@@ -4,7 +4,7 @@ project: "{{ cookiecutter.project_name }}"
 framework:
   version: "1.x"
 scale:
-  stage: "{% if cookiecutter.profile == 'minimal' %}S0{% elif cookiecutter.profile == 'saas' %}S1{% elif cookiecutter.profile == 'ai-saas' %}S2{% elif cookiecutter.profile == 'agentic' %}S3{% elif cookiecutter.profile == 'fintech' %}S2{% else %}S0{% endif %}"
+  stage: "{% if cookiecutter.profile == 'minimal' %}S0{% elif cookiecutter.profile == 'saas' %}S1{% elif cookiecutter.profile == 'ai-saas' %}S2{% elif cookiecutter.profile == 'agentic' %}S3{% elif cookiecutter.profile == 'production-ai' %}S4{% elif cookiecutter.profile == 'fintech' %}S2{% else %}S0{% endif %}"
 
 providers:
   api_type: {{ cookiecutter.api_type }}
@@ -79,6 +79,38 @@ agents:
   approvals: {{ cookiecutter.enable_agents }}
   multi_agent: false
 
+erp_features:
+  erp_masters: {% if cookiecutter.db_info.name != "none" and cookiecutter.add_users in [True, "True", "true", 1, "1"] %}true{% else %}false{% endif %}
+  crm_pipeline: {% if cookiecutter.db_info.name != "none" and cookiecutter.add_users in [True, "True", "true", 1, "1"] %}true{% else %}false{% endif %}
+  pricing_taxes: {% if cookiecutter.db_info.name != "none" %}true{% else %}false{% endif %}
+  order_to_cash: {% if cookiecutter.db_info.name != "none" and cookiecutter.add_users in [True, "True", "true", 1, "1"] %}true{% else %}false{% endif %}
+  procure_to_pay: {% if cookiecutter.db_info.name != "none" and cookiecutter.add_users in [True, "True", "true", 1, "1"] %}true{% else %}false{% endif %}
+  inventory_management: {% if cookiecutter.db_info.name != "none" %}true{% else %}false{% endif %}
+  financial_accounting: {% if cookiecutter.db_info.name != "none" %}true{% else %}false{% endif %}
+  billing_collections: {% if cookiecutter.db_info.name != "none" and cookiecutter.add_users in [True, "True", "true", 1, "1"] %}true{% else %}false{% endif %}
+  support_sla: {% if cookiecutter.db_info.name != "none" and cookiecutter.add_users in [True, "True", "true", 1, "1"] %}true{% else %}false{% endif %}
+  projects_delivery: {% if cookiecutter.db_info.name != "none" and cookiecutter.add_users in [True, "True", "true", 1, "1"] %}true{% else %}false{% endif %}
+  manufacturing_ops: {% if cookiecutter.db_info.name != "none" and cookiecutter.add_users in [True, "True", "true", 1, "1"] %}true{% else %}false{% endif %}
+  assets_quality: {% if cookiecutter.db_info.name != "none" %}true{% else %}false{% endif %}
+  reporting_analytics: {% if cookiecutter.db_info.name != "none" %}true{% else %}false{% endif %}
+  documents_hub: {% if cookiecutter.db_info.name != "none" %}true{% else %}false{% endif %}
+  doctype_hub: {% if cookiecutter.db_info.name != "none" %}true{% else %}false{% endif %}
+
+llm_features:
+  chat_over_docs: {% if cookiecutter.enable_rag_traditional in [True, "True", "true", 1, "1"] %}true{% else %}false{% endif %}
+  agentic_rag: {% if cookiecutter.enable_agents in [True, "True", "true", 1, "1"] and cookiecutter.enable_rag_traditional in [True, "True", "true", 1, "1"] %}true{% else %}false{% endif %}
+  deep_research: {{ cookiecutter.enable_agents }}
+  data_analyst: {{ cookiecutter.enable_agents }}
+  starter_agents: {{ cookiecutter.enable_agents }}
+  advanced_agents: {{ cookiecutter.enable_agents }}
+  mcp_assistant: {{ cookiecutter.enable_agents }}
+  memory_chat: {{ cookiecutter.enable_agents }}
+  voice_multimodal: {{ cookiecutter.enable_llm }}
+  always_on: {% if cookiecutter.enable_agents in [True, "True", "true", 1, "1"] and cookiecutter.enable_taskiq in [True, "True", "true", 1, "1"] %}true{% else %}false{% endif %}
+  generative_ui: {{ cookiecutter.enable_agents }}
+  structured_agents: {{ cookiecutter.enable_agents }}
+  coding_skills: {{ cookiecutter.enable_agents }}
+
 storage:
   metadata: {{ cookiecutter.db_info.name }}
   vectors: "{% if cookiecutter.enable_vector in [True, "True", "true", 1, "1"] and cookiecutter.db_info.name == 'postgresql' %}pgvector{% elif cookiecutter.enable_vector in [True, "True", "true", 1, "1"] %}external{% else %}none{% endif %}"
@@ -111,3 +143,21 @@ reproducibility:
   model_versions: {{ cookiecutter.enable_llm }}
   prompt_versions: {{ cookiecutter.enable_llm }}
   tool_versions: {{ cookiecutter.enable_agents }}
+
+plugins:
+  model_gateway: {{ cookiecutter.enable_llm }}
+  tool_gateway: {{ cookiecutter.enable_agents }}
+  agent_runtime: {{ cookiecutter.enable_agents }}
+  session_runtime: {% if cookiecutter.enable_agents in [True, "True", "true", 1, "1"] and cookiecutter.db_info.name != "none" %}true{% else %}false{% endif %}
+  harness: {{ cookiecutter.enable_agents }}
+  eval_adapters: {{ cookiecutter.enable_llm }}
+  security: {{ cookiecutter.enable_agents }}
+  observability: {{ cookiecutter.enable_llm }}
+  memory_store: {{ cookiecutter.enable_agents }}
+  vector_store: {{ cookiecutter.enable_vector }}
+  rag_context: {{ cookiecutter.enable_rag_traditional }}
+  skills: {{ cookiecutter.enable_agents }}
+
+skills:
+  preset: gstack-compatible
+  trusted_all: true

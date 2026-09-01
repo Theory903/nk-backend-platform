@@ -673,6 +673,37 @@ llm_cost_usd_total = NkCounter(
 )
 
 
+llm_request_duration = NkHistogram(
+    name="nk_llm_request_duration_seconds",
+    description="LLM completion latency by provider and capability.",
+    label_names=(
+        "provider",
+        "capability",
+        "model",
+    ),
+)
+
+
+genai_tool_duration = NkHistogram(
+    name="nk_genai_tool_duration_seconds",
+    description="Tool invocation latency for agent runs.",
+    label_names=(
+        "tool",
+        "outcome",
+    ),
+)
+
+
+genai_tool_invocations_total = NkCounter(
+    name="nk_genai_tool_invocations_total",
+    description="Tool invocations by tool name and outcome.",
+    label_names=(
+        "tool",
+        "outcome",
+    ),
+)
+
+
 agent_steps_total = NkCounter(
     name="nk_agent_steps_total",
     description="Agent execution steps by agent type and outcome.",
@@ -913,6 +944,43 @@ def record_llm_usage(
         )
 
 
+def record_llm_latency(
+    *,
+    provider: str,
+    capability: str,
+    model: str,
+    duration_s: float,
+) -> None:
+    """Record LLM completion latency for GenAI observability."""
+    if duration_s <= 0:
+        return
+    llm_request_duration.observe(
+        duration_s,
+        provider=provider,
+        capability=capability,
+        model=model,
+    )
+
+
+def record_genai_tool(
+    *,
+    tool_name: str,
+    duration_s: float,
+    outcome: str,
+) -> None:
+    """Record agent tool invocation latency and outcome."""
+    genai_tool_invocations_total.inc(
+        tool=tool_name,
+        outcome=outcome,
+    )
+    if duration_s > 0:
+        genai_tool_duration.observe(
+            duration_s,
+            tool=tool_name,
+            outcome=outcome,
+        )
+
+
 def record_auth_attempt(
     *,
     method: str,
@@ -999,7 +1067,10 @@ __all__ = [
     "export_metrics",
     "http_request_duration",
     "http_requests_total",
+    "genai_tool_duration",
+    "genai_tool_invocations_total",
     "llm_cost_usd_total",
+    "llm_request_duration",
     "llm_tokens_total",
     "metrics_content_type",
     "outbox_pending",
@@ -1009,7 +1080,9 @@ __all__ = [
     "queue_jobs_total",
     "rate_limit_rejections_total",
     "record_auth_attempt",
+    "record_genai_tool",
     "record_http_request",
+    "record_llm_latency",
     "record_llm_usage",
     "record_queue_job",
     "record_queue_enqueue",

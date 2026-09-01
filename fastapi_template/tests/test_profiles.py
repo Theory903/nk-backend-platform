@@ -99,6 +99,15 @@ def test_agentic_inherits_ai_and_enables_agents() -> None:
     assert ctx.enable_graphrag is True
 
 
+def test_production_ai_extends_agentic_with_scale_controls() -> None:
+    ctx = expand_profile("production-ai", BuilderContext())
+    assert ctx.enable_agents is True
+    assert ctx.enable_graphrag is True
+    assert ctx.enable_audit is True
+    assert ctx.enable_idempotency is True
+    assert ctx.enable_nats is True
+
+
 def test_fintech_extends_saas_without_ai() -> None:
     ctx = expand_profile("fintech", BuilderContext())
     assert ctx.enable_audit is True

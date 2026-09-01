@@ -69,6 +69,22 @@ class Settings(BaseSettings):
     llm_timeout_s: float = 30.0
     llm_max_retries: int = 1
     llm_cost_budget_usd: float | None = None
+    {%- if cookiecutter.enable_llm in [True, "True", "true", 1, "1"] or cookiecutter.enable_vector in [True, "True", "true", 1, "1"] or cookiecutter.enable_agents in [True, "True", "true", 1, "1"] %}
+
+    embedding_provider: str = "local"
+    embedding_dimensions: int = 384
+    vector_store_backend: str = "auto"
+    memory_backend: str = "auto"
+    qdrant_host: str = "localhost"
+    qdrant_port: int = 6333
+    qdrant_collection: str = "nk_embeddings"
+    memory_redis_prefix: str = "nk:memory"
+    llm_capabilities_file: str | None = None
+    tool_policy_file: str | None = None
+    llm_semantic_cache_enabled: bool = True
+    llm_semantic_cache_ttl_s: int = 3600
+    llm_semantic_cache_threshold: float = 0.92
+    {%- endif %}
 
     # Reverse-proxy trust + browser security headers.
     # trusted_proxy_count > 0 allows X-Forwarded-Proto for HSTS detection.
@@ -79,6 +95,10 @@ class Settings(BaseSettings):
     hsts_preload: bool = False
     # None → SecurityHeadersMiddleware DEFAULT_CSP
     security_csp: Optional[str] = None
+    security_manifest_file: Optional[str] = os.getenv(
+        "{{cookiecutter.project_name | upper}}_SECURITY_MANIFEST_FILE",
+        None,
+    )
 
     {%- if cookiecutter.add_users in [True, "True", "true", 1, "1"] %}
     {%- if cookiecutter.orm == "sqlalchemy" %}

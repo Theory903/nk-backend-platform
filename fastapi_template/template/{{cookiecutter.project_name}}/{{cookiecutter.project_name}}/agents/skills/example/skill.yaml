@@ -1,0 +1,8 @@
+name: platform-guide
+description: Explains the generated NK platform layout and guides agents to extension points.
+tools: []
+permissions:
+  network: false
+  filesystem: read
+evaluation:
+  harness: platform-smoke

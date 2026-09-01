@@ -1,0 +1,4446 @@
+version: 1
+source: temp/erpnext
+license: GPL-3.0
+upstream_url: https://github.com/frappe/erpnext
+pack_count: 13
+doctype_count: 536
+report_count: 170
+upstream_count: 706
+packs:
+  erp_masters:
+    name: ERP Master Data
+    module: erp.features.erp_masters
+    requires:
+    - db
+    - users
+    description: Company, item, customer, supplier, warehouse, COA masters
+    priority: 1
+    upstream_doctypes: 50
+    portable_patterns: []
+  crm_pipeline:
+    name: CRM & Sales Pipeline
+    module: erp.features.crm_pipeline
+    requires:
+    - db
+    - users
+    - erp_masters
+    description: Lead, opportunity, campaign, contract, pipeline analytics
+    priority: 2
+    upstream_doctypes: 39
+    portable_patterns:
+    - id: lead-mapper
+      name: Lead → Customer/Opportunity/Quotation
+      path: erpnext/crm/doctype/lead/mapper.py
+      kind: mapper
+    - id: status-updater-crm
+      name: Lead/Opportunity status_map
+      path: erpnext/controllers/status_updater.py
+      kind: workflow
+  pricing_taxes:
+    name: Pricing & Tax Engine
+    module: erp.features.pricing_taxes
+    requires:
+    - db
+    - erp_masters
+    description: Tax/total calculation, pricing rules, item detail resolution
+    priority: 3
+    upstream_doctypes: 0
+    portable_patterns:
+    - id: taxes-and-totals
+      name: calculate_taxes_and_totals
+      path: erpnext/controllers/taxes_and_totals.py
+      kind: calculation
+    - id: item-details
+      name: get_item_details
+      path: erpnext/stock/get_item_details.py
+      kind: lookup
+    - id: pricing-rule
+      name: Pricing Rule
+      path: erpnext/accounts/doctype/pricing_rule
+      kind: doctype
+  order_to_cash:
+    name: Order to Cash
+    module: erp.features.order_to_cash
+    requires:
+    - db
+    - users
+    - erp_masters
+    - pricing_taxes
+    - inventory_management
+    description: Quotation, sales order, delivery note, sales invoice
+    priority: 4
+    upstream_doctypes: 43
+    portable_patterns:
+    - id: so-mapper
+      name: Sales Order → DN/SI/MR/Project
+      path: erpnext/selling/doctype/sales_order/mapper.py
+      kind: mapper
+    - id: selling-controller
+      name: SellingController validation chain
+      path: erpnext/controllers/selling_controller.py
+      kind: controller
+  procure_to_pay:
+    name: Procure to Pay
+    module: erp.features.procure_to_pay
+    requires:
+    - db
+    - users
+    - erp_masters
+    - pricing_taxes
+    - inventory_management
+    description: RFQ, purchase order, purchase receipt, supplier scorecard
+    priority: 5
+    upstream_doctypes: 31
+    portable_patterns:
+    - id: po-mapper
+      name: Purchase Order → PR/PI
+      path: erpnext/buying/doctype/purchase_order/mapper.py
+      kind: mapper
+  inventory_management:
+    name: Inventory & Stock Ledger
+    module: erp.features.inventory_management
+    requires:
+    - db
+    - erp_masters
+    description: Stock ledger, valuation FIFO/LIFO, batch/serial, material request
+    priority: 3
+    upstream_doctypes: 123
+    portable_patterns:
+    - id: fifo-lifo
+      name: FIFOValuation / LIFOValuation
+      path: erpnext/stock/valuation.py
+      kind: calculation
+    - id: stock-ledger
+      name: Stock ledger posting
+      path: erpnext/stock/stock_ledger.py
+      kind: ledger
+  financial_accounting:
+    name: Financial Accounting & GL
+    module: erp.features.financial_accounting
+    requires:
+    - db
+    - erp_masters
+    description: Journal entry, GL posting, payment entry, fiscal periods
+    priority: 6
+    upstream_doctypes: 244
+    portable_patterns:
+    - id: gl-posting
+      name: make_gl_entries
+      path: erpnext/accounts/general_ledger.py
+      kind: ledger
+  billing_collections:
+    name: AR/AP & Collections
+    module: erp.features.billing_collections
+    requires:
+    - db
+    - financial_accounting
+    - order_to_cash
+    - procure_to_pay
+    description: Payment ledger, reconciliation, dunning, bank transactions
+    priority: 7
+    upstream_doctypes: 0
+    portable_patterns: []
+  support_sla:
+    name: Support & SLA Management
+    module: erp.features.support_sla
+    requires:
+    - db
+    - users
+    - erp_masters
+    description: Issue lifecycle, SLA deadlines, warranty claims
+    priority: 2
+    upstream_doctypes: 20
+    portable_patterns:
+    - id: issue-api
+      name: split_issue / set_status
+      path: erpnext/support/doctype/issue/issue.py
+      kind: api
+    - id: sla-calc
+      name: Service Level Agreement deadlines
+      path: erpnext/support/doctype/service_level_agreement
+      kind: calculation
+  projects_delivery:
+    name: Projects & Timesheets
+    module: erp.features.projects_delivery
+    requires:
+    - db
+    - users
+    - erp_masters
+    description: Project, task dependencies, timesheets, cost rollup
+    priority: 5
+    upstream_doctypes: 20
+    portable_patterns: []
+  manufacturing_ops:
+    name: Manufacturing Operations
+    module: erp.features.manufacturing_ops
+    requires:
+    - db
+    - inventory_management
+    - procure_to_pay
+    description: BOM, work order, production plan, job card
+    priority: 8
+    upstream_doctypes: 79
+    portable_patterns: []
+  assets_quality:
+    name: Assets, Quality & Maintenance
+    module: erp.features.assets_quality
+    requires:
+    - db
+    - erp_masters
+    description: Fixed assets, depreciation, quality inspection, maintenance
+    priority: 8
+    upstream_doctypes: 48
+    portable_patterns: []
+  reporting_analytics:
+    name: ERP Reporting Engine
+    module: erp.features.reporting_analytics
+    requires:
+    - db
+    description: 'Cross-domain reports: GL, AR/AP aging, pipeline, stock balance'
+    priority: 9
+    upstream_doctypes: 9
+    portable_patterns: []
+upstream:
+- id: account
+  name: Account
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/account
+  kind: doctype
+- id: account-category
+  name: Account Category
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/account_category
+  kind: doctype
+- id: account-closing-balance
+  name: Account Closing Balance
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/account_closing_balance
+  kind: doctype
+- id: accounting-dimension
+  name: Accounting Dimension
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/accounting_dimension
+  kind: doctype
+- id: accounting-dimension-detail
+  name: Accounting Dimension Detail
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/accounting_dimension_detail
+  kind: doctype
+- id: accounting-dimension-filter
+  name: Accounting Dimension Filter
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/accounting_dimension_filter
+  kind: doctype
+- id: accounting-period
+  name: Accounting Period
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/accounting_period
+  kind: doctype
+- id: accounts-settings
+  name: Accounts Settings
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/accounts_settings
+  kind: doctype
+- id: advance-payment-ledger-entry
+  name: Advance Payment Ledger Entry
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/advance_payment_ledger_entry
+  kind: doctype
+- id: advance-taxes-and-charges
+  name: Advance Taxes and Charges
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/advance_taxes_and_charges
+  kind: doctype
+- id: allowed-dimension
+  name: Allowed Dimension
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/allowed_dimension
+  kind: doctype
+- id: allowed-to-transact-with
+  name: Allowed To Transact With
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/allowed_to_transact_with
+  kind: doctype
+- id: applicable-on-account
+  name: Applicable On Account
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/applicable_on_account
+  kind: doctype
+- id: bank
+  name: Bank
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/bank
+  kind: doctype
+- id: bank-account
+  name: Bank Account
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/bank_account
+  kind: doctype
+- id: bank-account-balance
+  name: Bank Account Balance
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/bank_account_balance
+  kind: doctype
+- id: bank-account-subtype
+  name: Bank Account Subtype
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/bank_account_subtype
+  kind: doctype
+- id: bank-account-type
+  name: Bank Account Type
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/bank_account_type
+  kind: doctype
+- id: bank-clearance
+  name: Bank Clearance
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/bank_clearance
+  kind: doctype
+- id: bank-clearance-detail
+  name: Bank Clearance Detail
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/bank_clearance_detail
+  kind: doctype
+- id: bank-guarantee
+  name: Bank Guarantee
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/bank_guarantee
+  kind: doctype
+- id: bank-reconciliation-tool
+  name: Bank Reconciliation Tool
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/bank_reconciliation_tool
+  kind: doctype
+- id: bank-statement-import
+  name: Bank Statement Import
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/bank_statement_import
+  kind: doctype
+- id: bank-statement-import-log
+  name: Bank Statement Import Log
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/bank_statement_import_log
+  kind: doctype
+- id: bank-statement-import-log-column-map
+  name: Bank Statement Import Log Column Map
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/bank_statement_import_log_column_map
+  kind: doctype
+- id: bank-transaction
+  name: Bank Transaction
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/bank_transaction
+  kind: doctype
+- id: bank-transaction-mapping
+  name: Bank Transaction Mapping
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/bank_transaction_mapping
+  kind: doctype
+- id: bank-transaction-payments
+  name: Bank Transaction Payments
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/bank_transaction_payments
+  kind: doctype
+- id: bank-transaction-rule
+  name: Bank Transaction Rule
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/bank_transaction_rule
+  kind: doctype
+- id: bank-transaction-rule-accounts
+  name: Bank Transaction Rule Accounts
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/bank_transaction_rule_accounts
+  kind: doctype
+- id: bank-transaction-rule-description-conditions
+  name: Bank Transaction Rule Description Conditions
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/bank_transaction_rule_description_conditions
+  kind: doctype
+- id: bisect-accounting-statements
+  name: Bisect Accounting Statements
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/bisect_accounting_statements
+  kind: doctype
+- id: bisect-nodes
+  name: Bisect Nodes
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/bisect_nodes
+  kind: doctype
+- id: budget
+  name: Budget
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/budget
+  kind: doctype
+- id: budget-account
+  name: Budget Account
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/budget_account
+  kind: doctype
+- id: budget-distribution
+  name: Budget Distribution
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/budget_distribution
+  kind: doctype
+- id: campaign-item
+  name: Campaign Item
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/campaign_item
+  kind: doctype
+- id: cashier-closing
+  name: Cashier Closing
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/cashier_closing
+  kind: doctype
+- id: cashier-closing-payments
+  name: Cashier Closing Payments
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/cashier_closing_payments
+  kind: doctype
+- id: chart-of-accounts-importer
+  name: Chart of Accounts Importer
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/chart_of_accounts_importer
+  kind: doctype
+- id: cheque-print-template
+  name: Cheque Print Template
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/cheque_print_template
+  kind: doctype
+- id: closed-document
+  name: Closed Document
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/closed_document
+  kind: doctype
+- id: cost-center
+  name: Cost Center
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/cost_center
+  kind: doctype
+- id: cost-center-allocation
+  name: Cost Center Allocation
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/cost_center_allocation
+  kind: doctype
+- id: cost-center-allocation-percentage
+  name: Cost Center Allocation Percentage
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/cost_center_allocation_percentage
+  kind: doctype
+- id: coupon-code
+  name: Coupon Code
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/coupon_code
+  kind: doctype
+- id: currency-exchange-settings
+  name: Currency Exchange Settings
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/currency_exchange_settings
+  kind: doctype
+- id: currency-exchange-settings-details
+  name: Currency Exchange Settings Details
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/currency_exchange_settings_details
+  kind: doctype
+- id: currency-exchange-settings-result
+  name: Currency Exchange Settings Result
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/currency_exchange_settings_result
+  kind: doctype
+- id: customer-group-item
+  name: Customer Group Item
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/customer_group_item
+  kind: doctype
+- id: customer-item
+  name: Customer Item
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/customer_item
+  kind: doctype
+- id: discounted-invoice
+  name: Discounted Invoice
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/discounted_invoice
+  kind: doctype
+- id: dunning
+  name: Dunning
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/dunning
+  kind: doctype
+- id: dunning-letter-text
+  name: Dunning Letter Text
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/dunning_letter_text
+  kind: doctype
+- id: dunning-type
+  name: Dunning Type
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/dunning_type
+  kind: doctype
+- id: exchange-rate-revaluation
+  name: Exchange Rate Revaluation
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/exchange_rate_revaluation
+  kind: doctype
+- id: exchange-rate-revaluation-account
+  name: Exchange Rate Revaluation Account
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/exchange_rate_revaluation_account
+  kind: doctype
+- id: finance-book
+  name: Finance Book
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/finance_book
+  kind: doctype
+- id: financial-report-row
+  name: Financial Report Row
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/financial_report_row
+  kind: doctype
+- id: financial-report-template
+  name: Financial Report Template
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/financial_report_template
+  kind: doctype
+- id: fiscal-year
+  name: Fiscal Year
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/fiscal_year
+  kind: doctype
+- id: fiscal-year-company
+  name: Fiscal Year Company
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/fiscal_year_company
+  kind: doctype
+- id: gl-entry
+  name: GL Entry
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/gl_entry
+  kind: doctype
+- id: invoice-discounting
+  name: Invoice Discounting
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/invoice_discounting
+  kind: doctype
+- id: item-tax-template
+  name: Item Tax Template
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/item_tax_template
+  kind: doctype
+- id: item-tax-template-detail
+  name: Item Tax Template Detail
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/item_tax_template_detail
+  kind: doctype
+- id: item-wise-tax-detail
+  name: Item Wise Tax Detail
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/item_wise_tax_detail
+  kind: doctype
+- id: journal-entry
+  name: Journal Entry
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/journal_entry
+  kind: doctype
+- id: journal-entry-account
+  name: Journal Entry Account
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/journal_entry_account
+  kind: doctype
+- id: journal-entry-template
+  name: Journal Entry Template
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/journal_entry_template
+  kind: doctype
+- id: journal-entry-template-account
+  name: Journal Entry Template Account
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/journal_entry_template_account
+  kind: doctype
+- id: ledger-health
+  name: Ledger Health
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/ledger_health
+  kind: doctype
+- id: ledger-health-monitor
+  name: Ledger Health Monitor
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/ledger_health_monitor
+  kind: doctype
+- id: ledger-health-monitor-company
+  name: Ledger Health Monitor Company
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/ledger_health_monitor_company
+  kind: doctype
+- id: ledger-merge
+  name: Ledger Merge
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/ledger_merge
+  kind: doctype
+- id: ledger-merge-accounts
+  name: Ledger Merge Accounts
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/ledger_merge_accounts
+  kind: doctype
+- id: loyalty-point-entry
+  name: Loyalty Point Entry
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/loyalty_point_entry
+  kind: doctype
+- id: loyalty-point-entry-redemption
+  name: Loyalty Point Entry Redemption
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/loyalty_point_entry_redemption
+  kind: doctype
+- id: loyalty-program
+  name: Loyalty Program
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/loyalty_program
+  kind: doctype
+- id: loyalty-program-collection
+  name: Loyalty Program Collection
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/loyalty_program_collection
+  kind: doctype
+- id: mode-of-payment
+  name: Mode of Payment
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/mode_of_payment
+  kind: doctype
+- id: mode-of-payment-account
+  name: Mode of Payment Account
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/mode_of_payment_account
+  kind: doctype
+- id: monthly-distribution
+  name: Monthly Distribution
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/monthly_distribution
+  kind: doctype
+- id: monthly-distribution-percentage
+  name: Monthly Distribution Percentage
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/monthly_distribution_percentage
+  kind: doctype
+- id: opening-invoice-creation-tool
+  name: Opening Invoice Creation Tool
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/opening_invoice_creation_tool
+  kind: doctype
+- id: opening-invoice-creation-tool-item
+  name: Opening Invoice Creation Tool Item
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/opening_invoice_creation_tool_item
+  kind: doctype
+- id: overdue-payment
+  name: Overdue Payment
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/overdue_payment
+  kind: doctype
+- id: party-account
+  name: Party Account
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/party_account
+  kind: doctype
+- id: party-link
+  name: Party Link
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/party_link
+  kind: doctype
+- id: payment-entry
+  name: Payment Entry
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/payment_entry
+  kind: doctype
+- id: payment-entry-deduction
+  name: Payment Entry Deduction
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/payment_entry_deduction
+  kind: doctype
+- id: payment-entry-reference
+  name: Payment Entry Reference
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/payment_entry_reference
+  kind: doctype
+- id: payment-gateway-account
+  name: Payment Gateway Account
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/payment_gateway_account
+  kind: doctype
+- id: payment-ledger-entry
+  name: Payment Ledger Entry
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/payment_ledger_entry
+  kind: doctype
+- id: payment-order
+  name: Payment Order
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/payment_order
+  kind: doctype
+- id: payment-order-reference
+  name: Payment Order Reference
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/payment_order_reference
+  kind: doctype
+- id: payment-reconciliation
+  name: Payment Reconciliation
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/payment_reconciliation
+  kind: doctype
+- id: payment-reconciliation-allocation
+  name: Payment Reconciliation Allocation
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/payment_reconciliation_allocation
+  kind: doctype
+- id: payment-reconciliation-invoice
+  name: Payment Reconciliation Invoice
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/payment_reconciliation_invoice
+  kind: doctype
+- id: payment-reconciliation-payment
+  name: Payment Reconciliation Payment
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/payment_reconciliation_payment
+  kind: doctype
+- id: payment-reference
+  name: Payment Reference
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/payment_reference
+  kind: doctype
+- id: payment-request
+  name: Payment Request
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/payment_request
+  kind: doctype
+- id: payment-schedule
+  name: Payment Schedule
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/payment_schedule
+  kind: doctype
+- id: payment-term
+  name: Payment Term
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/payment_term
+  kind: doctype
+- id: payment-terms-template
+  name: Payment Terms Template
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/payment_terms_template
+  kind: doctype
+- id: payment-terms-template-detail
+  name: Payment Terms Template Detail
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/payment_terms_template_detail
+  kind: doctype
+- id: pegged-currencies
+  name: Pegged Currencies
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/pegged_currencies
+  kind: doctype
+- id: pegged-currency-details
+  name: Pegged Currency Details
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/pegged_currency_details
+  kind: doctype
+- id: period-closing-voucher
+  name: Period Closing Voucher
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/period_closing_voucher
+  kind: doctype
+- id: pos-closing-entry
+  name: POS Closing Entry
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/pos_closing_entry
+  kind: doctype
+- id: pos-closing-entry-detail
+  name: POS Closing Entry Detail
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/pos_closing_entry_detail
+  kind: doctype
+- id: pos-closing-entry-taxes
+  name: POS Closing Entry Taxes
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/pos_closing_entry_taxes
+  kind: doctype
+- id: pos-customer-group
+  name: POS Customer Group
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/pos_customer_group
+  kind: doctype
+- id: pos-field
+  name: POS Field
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/pos_field
+  kind: doctype
+- id: pos-invoice
+  name: POS Invoice
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/pos_invoice
+  kind: doctype
+- id: pos-invoice-item
+  name: POS Invoice Item
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/pos_invoice_item
+  kind: doctype
+- id: pos-invoice-merge-log
+  name: POS Invoice Merge Log
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/pos_invoice_merge_log
+  kind: doctype
+- id: pos-invoice-reference
+  name: POS Invoice Reference
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/pos_invoice_reference
+  kind: doctype
+- id: pos-item-group
+  name: POS Item Group
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/pos_item_group
+  kind: doctype
+- id: pos-opening-entry
+  name: POS Opening Entry
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/pos_opening_entry
+  kind: doctype
+- id: pos-opening-entry-detail
+  name: POS Opening Entry Detail
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/pos_opening_entry_detail
+  kind: doctype
+- id: pos-payment-method
+  name: POS Payment Method
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/pos_payment_method
+  kind: doctype
+- id: pos-profile
+  name: POS Profile
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/pos_profile
+  kind: doctype
+- id: pos-profile-user
+  name: POS Profile User
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/pos_profile_user
+  kind: doctype
+- id: pos-search-fields
+  name: POS Search Fields
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/pos_search_fields
+  kind: doctype
+- id: pos-settings
+  name: POS Settings
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/pos_settings
+  kind: doctype
+- id: pricing-rule
+  name: Pricing Rule
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/pricing_rule
+  kind: doctype
+- id: pricing-rule-brand
+  name: Pricing Rule Brand
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/pricing_rule_brand
+  kind: doctype
+- id: pricing-rule-detail
+  name: Pricing Rule Detail
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/pricing_rule_detail
+  kind: doctype
+- id: pricing-rule-item-code
+  name: Pricing Rule Item Code
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/pricing_rule_item_code
+  kind: doctype
+- id: pricing-rule-item-group
+  name: Pricing Rule Item Group
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/pricing_rule_item_group
+  kind: doctype
+- id: process-deferred-accounting
+  name: Process Deferred Accounting
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/process_deferred_accounting
+  kind: doctype
+- id: process-payment-reconciliation
+  name: Process Payment Reconciliation
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/process_payment_reconciliation
+  kind: doctype
+- id: process-payment-reconciliation-log
+  name: Process Payment Reconciliation Log
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/process_payment_reconciliation_log
+  kind: doctype
+- id: process-payment-reconciliation-log-allocations
+  name: Process Payment Reconciliation Log Allocations
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/process_payment_reconciliation_log_allocations
+  kind: doctype
+- id: process-period-closing-voucher
+  name: Process Period Closing Voucher
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/process_period_closing_voucher
+  kind: doctype
+- id: process-period-closing-voucher-detail
+  name: Process Period Closing Voucher Detail
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/process_period_closing_voucher_detail
+  kind: doctype
+- id: process-statement-of-accounts
+  name: Process Statement Of Accounts
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/process_statement_of_accounts
+  kind: doctype
+- id: process-statement-of-accounts-cc
+  name: Process Statement Of Accounts CC
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/process_statement_of_accounts_cc
+  kind: doctype
+- id: process-statement-of-accounts-customer
+  name: Process Statement Of Accounts Customer
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/process_statement_of_accounts_customer
+  kind: doctype
+- id: process-subscription
+  name: Process Subscription
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/process_subscription
+  kind: doctype
+- id: promotional-scheme
+  name: Promotional Scheme
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/promotional_scheme
+  kind: doctype
+- id: promotional-scheme-price-discount
+  name: Promotional Scheme Price Discount
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/promotional_scheme_price_discount
+  kind: doctype
+- id: promotional-scheme-product-discount
+  name: Promotional Scheme Product Discount
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/promotional_scheme_product_discount
+  kind: doctype
+- id: psoa-cost-center
+  name: PSOA Cost Center
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/psoa_cost_center
+  kind: doctype
+- id: psoa-project
+  name: PSOA Project
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/psoa_project
+  kind: doctype
+- id: purchase-invoice
+  name: Purchase Invoice
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/purchase_invoice
+  kind: doctype
+- id: purchase-invoice-advance
+  name: Purchase Invoice Advance
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/purchase_invoice_advance
+  kind: doctype
+- id: purchase-invoice-item
+  name: Purchase Invoice Item
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/purchase_invoice_item
+  kind: doctype
+- id: purchase-taxes-and-charges
+  name: Purchase Taxes and Charges
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/purchase_taxes_and_charges
+  kind: doctype
+- id: purchase-taxes-and-charges-template
+  name: Purchase Taxes and Charges Template
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/purchase_taxes_and_charges_template
+  kind: doctype
+- id: repost-accounting-ledger
+  name: Repost Accounting Ledger
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/repost_accounting_ledger
+  kind: doctype
+- id: repost-accounting-ledger-items
+  name: Repost Accounting Ledger Items
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/repost_accounting_ledger_items
+  kind: doctype
+- id: repost-allowed-types
+  name: Repost Allowed Types
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/repost_allowed_types
+  kind: doctype
+- id: repost-payment-ledger
+  name: Repost Payment Ledger
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/repost_payment_ledger
+  kind: doctype
+- id: repost-payment-ledger-items
+  name: Repost Payment Ledger Items
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/repost_payment_ledger_items
+  kind: doctype
+- id: sales-invoice
+  name: Sales Invoice
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/sales_invoice
+  kind: doctype
+- id: sales-invoice-advance
+  name: Sales Invoice Advance
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/sales_invoice_advance
+  kind: doctype
+- id: sales-invoice-item
+  name: Sales Invoice Item
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/sales_invoice_item
+  kind: doctype
+- id: sales-invoice-payment
+  name: Sales Invoice Payment
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/sales_invoice_payment
+  kind: doctype
+- id: sales-invoice-reference
+  name: Sales Invoice Reference
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/sales_invoice_reference
+  kind: doctype
+- id: sales-invoice-timesheet
+  name: Sales Invoice Timesheet
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/sales_invoice_timesheet
+  kind: doctype
+- id: sales-partner-item
+  name: Sales Partner Item
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/sales_partner_item
+  kind: doctype
+- id: sales-taxes-and-charges
+  name: Sales Taxes and Charges
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/sales_taxes_and_charges
+  kind: doctype
+- id: sales-taxes-and-charges-template
+  name: Sales Taxes and Charges Template
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/sales_taxes_and_charges_template
+  kind: doctype
+- id: share-balance
+  name: Share Balance
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/share_balance
+  kind: doctype
+- id: share-transfer
+  name: Share Transfer
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/share_transfer
+  kind: doctype
+- id: share-type
+  name: Share Type
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/share_type
+  kind: doctype
+- id: shareholder
+  name: Shareholder
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/shareholder
+  kind: doctype
+- id: shipping-rule
+  name: Shipping Rule
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/shipping_rule
+  kind: doctype
+- id: shipping-rule-condition
+  name: Shipping Rule Condition
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/shipping_rule_condition
+  kind: doctype
+- id: shipping-rule-country
+  name: Shipping Rule Country
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/shipping_rule_country
+  kind: doctype
+- id: south-africa-vat-account
+  name: South Africa VAT Account
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/south_africa_vat_account
+  kind: doctype
+- id: subscription
+  name: Subscription
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/subscription
+  kind: doctype
+- id: subscription-invoice
+  name: Subscription Invoice
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/subscription_invoice
+  kind: doctype
+- id: subscription-plan
+  name: Subscription Plan
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/subscription_plan
+  kind: doctype
+- id: subscription-plan-detail
+  name: Subscription Plan Detail
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/subscription_plan_detail
+  kind: doctype
+- id: subscription-settings
+  name: Subscription Settings
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/subscription_settings
+  kind: doctype
+- id: supplier-group-item
+  name: Supplier Group Item
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/supplier_group_item
+  kind: doctype
+- id: supplier-item
+  name: Supplier Item
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/supplier_item
+  kind: doctype
+- id: tax-category
+  name: Tax Category
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/tax_category
+  kind: doctype
+- id: tax-rule
+  name: Tax Rule
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/tax_rule
+  kind: doctype
+- id: tax-withholding-account
+  name: Tax Withholding Account
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/tax_withholding_account
+  kind: doctype
+- id: tax-withholding-category
+  name: Tax Withholding Category
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/tax_withholding_category
+  kind: doctype
+- id: tax-withholding-entry
+  name: Tax Withholding Entry
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/tax_withholding_entry
+  kind: doctype
+- id: tax-withholding-group
+  name: Tax Withholding Group
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/tax_withholding_group
+  kind: doctype
+- id: tax-withholding-rate
+  name: Tax Withholding Rate
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/tax_withholding_rate
+  kind: doctype
+- id: territory-item
+  name: Territory Item
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/territory_item
+  kind: doctype
+- id: transaction-deletion-record-details
+  name: Transaction Deletion Record Details
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/transaction_deletion_record_details
+  kind: doctype
+- id: unreconcile-payment
+  name: Unreconcile Payment
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/unreconcile_payment
+  kind: doctype
+- id: unreconcile-payment-entries
+  name: Unreconcile Payment Entries
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/doctype/unreconcile_payment_entries
+  kind: doctype
+- id: asset
+  name: Asset
+  module: assets
+  pack: assets_quality
+  path: erpnext/assets/doctype/asset
+  kind: doctype
+- id: asset-activity
+  name: Asset Activity
+  module: assets
+  pack: assets_quality
+  path: erpnext/assets/doctype/asset_activity
+  kind: doctype
+- id: asset-capitalization
+  name: Asset Capitalization
+  module: assets
+  pack: assets_quality
+  path: erpnext/assets/doctype/asset_capitalization
+  kind: doctype
+- id: asset-capitalization-asset-item
+  name: Asset Capitalization Asset Item
+  module: assets
+  pack: assets_quality
+  path: erpnext/assets/doctype/asset_capitalization_asset_item
+  kind: doctype
+- id: asset-capitalization-service-item
+  name: Asset Capitalization Service Item
+  module: assets
+  pack: assets_quality
+  path: erpnext/assets/doctype/asset_capitalization_service_item
+  kind: doctype
+- id: asset-capitalization-stock-item
+  name: Asset Capitalization Stock Item
+  module: assets
+  pack: assets_quality
+  path: erpnext/assets/doctype/asset_capitalization_stock_item
+  kind: doctype
+- id: asset-category
+  name: Asset Category
+  module: assets
+  pack: assets_quality
+  path: erpnext/assets/doctype/asset_category
+  kind: doctype
+- id: asset-category-account
+  name: Asset Category Account
+  module: assets
+  pack: assets_quality
+  path: erpnext/assets/doctype/asset_category_account
+  kind: doctype
+- id: asset-depreciation-schedule
+  name: Asset Depreciation Schedule
+  module: assets
+  pack: assets_quality
+  path: erpnext/assets/doctype/asset_depreciation_schedule
+  kind: doctype
+- id: asset-finance-book
+  name: Asset Finance Book
+  module: assets
+  pack: assets_quality
+  path: erpnext/assets/doctype/asset_finance_book
+  kind: doctype
+- id: asset-maintenance
+  name: Asset Maintenance
+  module: assets
+  pack: assets_quality
+  path: erpnext/assets/doctype/asset_maintenance
+  kind: doctype
+- id: asset-maintenance-log
+  name: Asset Maintenance Log
+  module: assets
+  pack: assets_quality
+  path: erpnext/assets/doctype/asset_maintenance_log
+  kind: doctype
+- id: asset-maintenance-task
+  name: Asset Maintenance Task
+  module: assets
+  pack: assets_quality
+  path: erpnext/assets/doctype/asset_maintenance_task
+  kind: doctype
+- id: asset-maintenance-team
+  name: Asset Maintenance Team
+  module: assets
+  pack: assets_quality
+  path: erpnext/assets/doctype/asset_maintenance_team
+  kind: doctype
+- id: asset-movement
+  name: Asset Movement
+  module: assets
+  pack: assets_quality
+  path: erpnext/assets/doctype/asset_movement
+  kind: doctype
+- id: asset-movement-item
+  name: Asset Movement Item
+  module: assets
+  pack: assets_quality
+  path: erpnext/assets/doctype/asset_movement_item
+  kind: doctype
+- id: asset-repair
+  name: Asset Repair
+  module: assets
+  pack: assets_quality
+  path: erpnext/assets/doctype/asset_repair
+  kind: doctype
+- id: asset-repair-consumed-item
+  name: Asset Repair Consumed Item
+  module: assets
+  pack: assets_quality
+  path: erpnext/assets/doctype/asset_repair_consumed_item
+  kind: doctype
+- id: asset-repair-purchase-invoice
+  name: Asset Repair Purchase Invoice
+  module: assets
+  pack: assets_quality
+  path: erpnext/assets/doctype/asset_repair_purchase_invoice
+  kind: doctype
+- id: asset-shift-allocation
+  name: Asset Shift Allocation
+  module: assets
+  pack: assets_quality
+  path: erpnext/assets/doctype/asset_shift_allocation
+  kind: doctype
+- id: asset-shift-factor
+  name: Asset Shift Factor
+  module: assets
+  pack: assets_quality
+  path: erpnext/assets/doctype/asset_shift_factor
+  kind: doctype
+- id: asset-value-adjustment
+  name: Asset Value Adjustment
+  module: assets
+  pack: assets_quality
+  path: erpnext/assets/doctype/asset_value_adjustment
+  kind: doctype
+- id: depreciation-schedule
+  name: Depreciation Schedule
+  module: assets
+  pack: assets_quality
+  path: erpnext/assets/doctype/depreciation_schedule
+  kind: doctype
+- id: linked-location
+  name: Linked Location
+  module: assets
+  pack: assets_quality
+  path: erpnext/assets/doctype/linked_location
+  kind: doctype
+- id: location
+  name: Location
+  module: assets
+  pack: assets_quality
+  path: erpnext/assets/doctype/location
+  kind: doctype
+- id: maintenance-team-member
+  name: Maintenance Team Member
+  module: assets
+  pack: assets_quality
+  path: erpnext/assets/doctype/maintenance_team_member
+  kind: doctype
+- id: bulk-transaction-log
+  name: Bulk Transaction Log
+  module: bulk_transaction
+  pack: erp_masters
+  path: erpnext/bulk_transaction/doctype/bulk_transaction_log
+  kind: doctype
+- id: bulk-transaction-log-detail
+  name: Bulk Transaction Log Detail
+  module: bulk_transaction
+  pack: erp_masters
+  path: erpnext/bulk_transaction/doctype/bulk_transaction_log_detail
+  kind: doctype
+- id: buying-settings
+  name: Buying Settings
+  module: buying
+  pack: procure_to_pay
+  path: erpnext/buying/doctype/buying_settings
+  kind: doctype
+- id: customer-number-at-supplier
+  name: Customer Number At Supplier
+  module: buying
+  pack: procure_to_pay
+  path: erpnext/buying/doctype/customer_number_at_supplier
+  kind: doctype
+- id: purchase-order
+  name: Purchase Order
+  module: buying
+  pack: procure_to_pay
+  path: erpnext/buying/doctype/purchase_order
+  kind: doctype
+- id: purchase-order-item
+  name: Purchase Order Item
+  module: buying
+  pack: procure_to_pay
+  path: erpnext/buying/doctype/purchase_order_item
+  kind: doctype
+- id: purchase-receipt-item-supplied
+  name: Purchase Receipt Item Supplied
+  module: buying
+  pack: procure_to_pay
+  path: erpnext/buying/doctype/purchase_receipt_item_supplied
+  kind: doctype
+- id: request-for-quotation
+  name: Request for Quotation
+  module: buying
+  pack: procure_to_pay
+  path: erpnext/buying/doctype/request_for_quotation
+  kind: doctype
+- id: request-for-quotation-item
+  name: Request for Quotation Item
+  module: buying
+  pack: procure_to_pay
+  path: erpnext/buying/doctype/request_for_quotation_item
+  kind: doctype
+- id: request-for-quotation-supplier
+  name: Request for Quotation Supplier
+  module: buying
+  pack: procure_to_pay
+  path: erpnext/buying/doctype/request_for_quotation_supplier
+  kind: doctype
+- id: supplier
+  name: Supplier
+  module: buying
+  pack: procure_to_pay
+  path: erpnext/buying/doctype/supplier
+  kind: doctype
+- id: supplier-quotation
+  name: Supplier Quotation
+  module: buying
+  pack: procure_to_pay
+  path: erpnext/buying/doctype/supplier_quotation
+  kind: doctype
+- id: supplier-quotation-item
+  name: Supplier Quotation Item
+  module: buying
+  pack: procure_to_pay
+  path: erpnext/buying/doctype/supplier_quotation_item
+  kind: doctype
+- id: supplier-scorecard
+  name: Supplier Scorecard
+  module: buying
+  pack: procure_to_pay
+  path: erpnext/buying/doctype/supplier_scorecard
+  kind: doctype
+- id: supplier-scorecard-criteria
+  name: Supplier Scorecard Criteria
+  module: buying
+  pack: procure_to_pay
+  path: erpnext/buying/doctype/supplier_scorecard_criteria
+  kind: doctype
+- id: supplier-scorecard-period
+  name: Supplier Scorecard Period
+  module: buying
+  pack: procure_to_pay
+  path: erpnext/buying/doctype/supplier_scorecard_period
+  kind: doctype
+- id: supplier-scorecard-scoring-criteria
+  name: Supplier Scorecard Scoring Criteria
+  module: buying
+  pack: procure_to_pay
+  path: erpnext/buying/doctype/supplier_scorecard_scoring_criteria
+  kind: doctype
+- id: supplier-scorecard-scoring-standing
+  name: Supplier Scorecard Scoring Standing
+  module: buying
+  pack: procure_to_pay
+  path: erpnext/buying/doctype/supplier_scorecard_scoring_standing
+  kind: doctype
+- id: supplier-scorecard-scoring-variable
+  name: Supplier Scorecard Scoring Variable
+  module: buying
+  pack: procure_to_pay
+  path: erpnext/buying/doctype/supplier_scorecard_scoring_variable
+  kind: doctype
+- id: supplier-scorecard-standing
+  name: Supplier Scorecard Standing
+  module: buying
+  pack: procure_to_pay
+  path: erpnext/buying/doctype/supplier_scorecard_standing
+  kind: doctype
+- id: supplier-scorecard-variable
+  name: Supplier Scorecard Variable
+  module: buying
+  pack: procure_to_pay
+  path: erpnext/buying/doctype/supplier_scorecard_variable
+  kind: doctype
+- id: communication-medium
+  name: Communication Medium
+  module: communication
+  pack: crm_pipeline
+  path: erpnext/communication/doctype/communication_medium
+  kind: doctype
+- id: communication-medium-timeslot
+  name: Communication Medium Timeslot
+  module: communication
+  pack: crm_pipeline
+  path: erpnext/communication/doctype/communication_medium_timeslot
+  kind: doctype
+- id: appointment
+  name: Appointment
+  module: crm
+  pack: crm_pipeline
+  path: erpnext/crm/doctype/appointment
+  kind: doctype
+- id: appointment-booking-settings
+  name: Appointment Booking Settings
+  module: crm
+  pack: crm_pipeline
+  path: erpnext/crm/doctype/appointment_booking_settings
+  kind: doctype
+- id: appointment-booking-slots
+  name: Appointment Booking Slots
+  module: crm
+  pack: crm_pipeline
+  path: erpnext/crm/doctype/appointment_booking_slots
+  kind: doctype
+- id: availability-of-slots
+  name: Availability Of Slots
+  module: crm
+  pack: crm_pipeline
+  path: erpnext/crm/doctype/availability_of_slots
+  kind: doctype
+- id: campaign
+  name: Campaign
+  module: crm
+  pack: crm_pipeline
+  path: erpnext/crm/doctype/campaign
+  kind: doctype
+- id: campaign-email-schedule
+  name: Campaign Email Schedule
+  module: crm
+  pack: crm_pipeline
+  path: erpnext/crm/doctype/campaign_email_schedule
+  kind: doctype
+- id: competitor
+  name: Competitor
+  module: crm
+  pack: crm_pipeline
+  path: erpnext/crm/doctype/competitor
+  kind: doctype
+- id: competitor-detail
+  name: Competitor Detail
+  module: crm
+  pack: crm_pipeline
+  path: erpnext/crm/doctype/competitor_detail
+  kind: doctype
+- id: contract
+  name: Contract
+  module: crm
+  pack: crm_pipeline
+  path: erpnext/crm/doctype/contract
+  kind: doctype
+- id: contract-fulfilment-checklist
+  name: Contract Fulfilment Checklist
+  module: crm
+  pack: crm_pipeline
+  path: erpnext/crm/doctype/contract_fulfilment_checklist
+  kind: doctype
+- id: contract-template
+  name: Contract Template
+  module: crm
+  pack: crm_pipeline
+  path: erpnext/crm/doctype/contract_template
+  kind: doctype
+- id: contract-template-fulfilment-terms
+  name: Contract Template Fulfilment Terms
+  module: crm
+  pack: crm_pipeline
+  path: erpnext/crm/doctype/contract_template_fulfilment_terms
+  kind: doctype
+- id: crm-note
+  name: CRM Note
+  module: crm
+  pack: crm_pipeline
+  path: erpnext/crm/doctype/crm_note
+  kind: doctype
+- id: crm-settings
+  name: CRM Settings
+  module: crm
+  pack: crm_pipeline
+  path: erpnext/crm/doctype/crm_settings
+  kind: doctype
+- id: email-campaign
+  name: Email Campaign
+  module: crm
+  pack: crm_pipeline
+  path: erpnext/crm/doctype/email_campaign
+  kind: doctype
+- id: frappe-crm-allowed-user
+  name: Frappe CRM Allowed User
+  module: crm
+  pack: crm_pipeline
+  path: erpnext/crm/doctype/frappe_crm_allowed_user
+  kind: doctype
+- id: lead
+  name: Lead
+  module: crm
+  pack: crm_pipeline
+  path: erpnext/crm/doctype/lead
+  kind: doctype
+- id: lost-reason-detail
+  name: Lost Reason Detail
+  module: crm
+  pack: crm_pipeline
+  path: erpnext/crm/doctype/lost_reason_detail
+  kind: doctype
+- id: market-segment
+  name: Market Segment
+  module: crm
+  pack: crm_pipeline
+  path: erpnext/crm/doctype/market_segment
+  kind: doctype
+- id: opportunity
+  name: Opportunity
+  module: crm
+  pack: crm_pipeline
+  path: erpnext/crm/doctype/opportunity
+  kind: doctype
+- id: opportunity-item
+  name: Opportunity Item
+  module: crm
+  pack: crm_pipeline
+  path: erpnext/crm/doctype/opportunity_item
+  kind: doctype
+- id: opportunity-lost-reason
+  name: Opportunity Lost Reason
+  module: crm
+  pack: crm_pipeline
+  path: erpnext/crm/doctype/opportunity_lost_reason
+  kind: doctype
+- id: opportunity-lost-reason-detail
+  name: Opportunity Lost Reason Detail
+  module: crm
+  pack: crm_pipeline
+  path: erpnext/crm/doctype/opportunity_lost_reason_detail
+  kind: doctype
+- id: opportunity-type
+  name: Opportunity Type
+  module: crm
+  pack: crm_pipeline
+  path: erpnext/crm/doctype/opportunity_type
+  kind: doctype
+- id: prospect
+  name: Prospect
+  module: crm
+  pack: crm_pipeline
+  path: erpnext/crm/doctype/prospect
+  kind: doctype
+- id: prospect-lead
+  name: Prospect Lead
+  module: crm
+  pack: crm_pipeline
+  path: erpnext/crm/doctype/prospect_lead
+  kind: doctype
+- id: prospect-opportunity
+  name: Prospect Opportunity
+  module: crm
+  pack: crm_pipeline
+  path: erpnext/crm/doctype/prospect_opportunity
+  kind: doctype
+- id: sales-stage
+  name: Sales Stage
+  module: crm
+  pack: crm_pipeline
+  path: erpnext/crm/doctype/sales_stage
+  kind: doctype
+- id: code-list
+  name: Code List
+  module: edi
+  pack: procure_to_pay
+  path: erpnext/edi/doctype/code_list
+  kind: doctype
+- id: common-code
+  name: Common Code
+  module: edi
+  pack: procure_to_pay
+  path: erpnext/edi/doctype/common_code
+  kind: doctype
+- id: plaid-settings
+  name: Plaid Settings
+  module: erpnext_integrations
+  pack: erp_masters
+  path: erpnext/erpnext_integrations/doctype/plaid_settings
+  kind: doctype
+- id: maintenance-schedule
+  name: Maintenance Schedule
+  module: maintenance
+  pack: assets_quality
+  path: erpnext/maintenance/doctype/maintenance_schedule
+  kind: doctype
+- id: maintenance-schedule-detail
+  name: Maintenance Schedule Detail
+  module: maintenance
+  pack: assets_quality
+  path: erpnext/maintenance/doctype/maintenance_schedule_detail
+  kind: doctype
+- id: maintenance-schedule-item
+  name: Maintenance Schedule Item
+  module: maintenance
+  pack: assets_quality
+  path: erpnext/maintenance/doctype/maintenance_schedule_item
+  kind: doctype
+- id: maintenance-visit
+  name: Maintenance Visit
+  module: maintenance
+  pack: assets_quality
+  path: erpnext/maintenance/doctype/maintenance_visit
+  kind: doctype
+- id: maintenance-visit-purpose
+  name: Maintenance Visit Purpose
+  module: maintenance
+  pack: assets_quality
+  path: erpnext/maintenance/doctype/maintenance_visit_purpose
+  kind: doctype
+- id: blanket-order
+  name: Blanket Order
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/doctype/blanket_order
+  kind: doctype
+- id: blanket-order-item
+  name: Blanket Order Item
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/doctype/blanket_order_item
+  kind: doctype
+- id: bom
+  name: BOM
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/doctype/bom
+  kind: doctype
+- id: bom-creator
+  name: BOM Creator
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/doctype/bom_creator
+  kind: doctype
+- id: bom-creator-item
+  name: BOM Creator Item
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/doctype/bom_creator_item
+  kind: doctype
+- id: bom-explosion-item
+  name: BOM Explosion Item
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/doctype/bom_explosion_item
+  kind: doctype
+- id: bom-item
+  name: BOM Item
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/doctype/bom_item
+  kind: doctype
+- id: bom-operation
+  name: BOM Operation
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/doctype/bom_operation
+  kind: doctype
+- id: bom-secondary-item
+  name: BOM Secondary Item
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/doctype/bom_secondary_item
+  kind: doctype
+- id: bom-update-batch
+  name: BOM Update Batch
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/doctype/bom_update_batch
+  kind: doctype
+- id: bom-update-log
+  name: BOM Update Log
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/doctype/bom_update_log
+  kind: doctype
+- id: bom-update-tool
+  name: BOM Update Tool
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/doctype/bom_update_tool
+  kind: doctype
+- id: bom-website-item
+  name: BOM Website Item
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/doctype/bom_website_item
+  kind: doctype
+- id: bom-website-operation
+  name: BOM Website Operation
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/doctype/bom_website_operation
+  kind: doctype
+- id: downtime-entry
+  name: Downtime Entry
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/doctype/downtime_entry
+  kind: doctype
+- id: job-card
+  name: Job Card
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/doctype/job_card
+  kind: doctype
+- id: job-card-item
+  name: Job Card Item
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/doctype/job_card_item
+  kind: doctype
+- id: job-card-operation
+  name: Job Card Operation
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/doctype/job_card_operation
+  kind: doctype
+- id: job-card-scheduled-time
+  name: Job Card Scheduled Time
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/doctype/job_card_scheduled_time
+  kind: doctype
+- id: job-card-secondary-item
+  name: Job Card Secondary Item
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/doctype/job_card_secondary_item
+  kind: doctype
+- id: job-card-time-log
+  name: Job Card Time Log
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/doctype/job_card_time_log
+  kind: doctype
+- id: manufacturing-settings
+  name: Manufacturing Settings
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/doctype/manufacturing_settings
+  kind: doctype
+- id: master-production-schedule
+  name: Master Production Schedule
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/doctype/master_production_schedule
+  kind: doctype
+- id: master-production-schedule-item
+  name: Master Production Schedule Item
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/doctype/master_production_schedule_item
+  kind: doctype
+- id: material-request-plan-item
+  name: Material Request Plan Item
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/doctype/material_request_plan_item
+  kind: doctype
+- id: operation
+  name: Operation
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/doctype/operation
+  kind: doctype
+- id: plant-floor
+  name: Plant Floor
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/doctype/plant_floor
+  kind: doctype
+- id: production-plan
+  name: Production Plan
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/doctype/production_plan
+  kind: doctype
+- id: production-plan-item
+  name: Production Plan Item
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/doctype/production_plan_item
+  kind: doctype
+- id: production-plan-item-reference
+  name: Production Plan Item Reference
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/doctype/production_plan_item_reference
+  kind: doctype
+- id: production-plan-material-request
+  name: Production Plan Material Request
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/doctype/production_plan_material_request
+  kind: doctype
+- id: production-plan-material-request-warehouse
+  name: Production Plan Material Request Warehouse
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/doctype/production_plan_material_request_warehouse
+  kind: doctype
+- id: production-plan-sales-order
+  name: Production Plan Sales Order
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/doctype/production_plan_sales_order
+  kind: doctype
+- id: production-plan-schedule
+  name: Production Plan Schedule
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/doctype/production_plan_schedule
+  kind: doctype
+- id: production-plan-sub-assembly-item
+  name: Production Plan Sub Assembly Item
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/doctype/production_plan_sub_assembly_item
+  kind: doctype
+- id: routing
+  name: Routing
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/doctype/routing
+  kind: doctype
+- id: sales-forecast
+  name: Sales Forecast
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/doctype/sales_forecast
+  kind: doctype
+- id: sales-forecast-item
+  name: Sales Forecast Item
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/doctype/sales_forecast_item
+  kind: doctype
+- id: sub-operation
+  name: Sub Operation
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/doctype/sub_operation
+  kind: doctype
+- id: work-order
+  name: Work Order
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/doctype/work_order
+  kind: doctype
+- id: work-order-additional-item
+  name: Work Order Additional Item
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/doctype/work_order_additional_item
+  kind: doctype
+- id: work-order-item
+  name: Work Order Item
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/doctype/work_order_item
+  kind: doctype
+- id: work-order-operation
+  name: Work Order Operation
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/doctype/work_order_operation
+  kind: doctype
+- id: workstation
+  name: Workstation
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/doctype/workstation
+  kind: doctype
+- id: workstation-cost
+  name: Workstation Cost
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/doctype/workstation_cost
+  kind: doctype
+- id: workstation-operating-component
+  name: Workstation Operating Component
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/doctype/workstation_operating_component
+  kind: doctype
+- id: workstation-operating-component-account
+  name: Workstation Operating Component Account
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/doctype/workstation_operating_component_account
+  kind: doctype
+- id: workstation-type
+  name: Workstation Type
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/doctype/workstation_type
+  kind: doctype
+- id: workstation-working-hour
+  name: Workstation Working Hour
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/doctype/workstation_working_hour
+  kind: doctype
+- id: website-attribute
+  name: Website Attribute
+  module: portal
+  pack: erp_masters
+  path: erpnext/portal/doctype/website_attribute
+  kind: doctype
+- id: website-filter-field
+  name: Website Filter Field
+  module: portal
+  pack: erp_masters
+  path: erpnext/portal/doctype/website_filter_field
+  kind: doctype
+- id: activity-cost
+  name: Activity Cost
+  module: projects
+  pack: projects_delivery
+  path: erpnext/projects/doctype/activity_cost
+  kind: doctype
+- id: activity-type
+  name: Activity Type
+  module: projects
+  pack: projects_delivery
+  path: erpnext/projects/doctype/activity_type
+  kind: doctype
+- id: dependent-task
+  name: Dependent Task
+  module: projects
+  pack: projects_delivery
+  path: erpnext/projects/doctype/dependent_task
+  kind: doctype
+- id: project
+  name: Project
+  module: projects
+  pack: projects_delivery
+  path: erpnext/projects/doctype/project
+  kind: doctype
+- id: project-template
+  name: Project Template
+  module: projects
+  pack: projects_delivery
+  path: erpnext/projects/doctype/project_template
+  kind: doctype
+- id: project-template-task
+  name: Project Template Task
+  module: projects
+  pack: projects_delivery
+  path: erpnext/projects/doctype/project_template_task
+  kind: doctype
+- id: project-type
+  name: Project Type
+  module: projects
+  pack: projects_delivery
+  path: erpnext/projects/doctype/project_type
+  kind: doctype
+- id: project-update
+  name: Project Update
+  module: projects
+  pack: projects_delivery
+  path: erpnext/projects/doctype/project_update
+  kind: doctype
+- id: project-user
+  name: Project User
+  module: projects
+  pack: projects_delivery
+  path: erpnext/projects/doctype/project_user
+  kind: doctype
+- id: projects-settings
+  name: Projects Settings
+  module: projects
+  pack: projects_delivery
+  path: erpnext/projects/doctype/projects_settings
+  kind: doctype
+- id: task
+  name: Task
+  module: projects
+  pack: projects_delivery
+  path: erpnext/projects/doctype/task
+  kind: doctype
+- id: task-depends-on
+  name: Task Depends On
+  module: projects
+  pack: projects_delivery
+  path: erpnext/projects/doctype/task_depends_on
+  kind: doctype
+- id: task-type
+  name: Task Type
+  module: projects
+  pack: projects_delivery
+  path: erpnext/projects/doctype/task_type
+  kind: doctype
+- id: timesheet
+  name: Timesheet
+  module: projects
+  pack: projects_delivery
+  path: erpnext/projects/doctype/timesheet
+  kind: doctype
+- id: timesheet-detail
+  name: Timesheet Detail
+  module: projects
+  pack: projects_delivery
+  path: erpnext/projects/doctype/timesheet_detail
+  kind: doctype
+- id: non-conformance
+  name: Non Conformance
+  module: quality_management
+  pack: assets_quality
+  path: erpnext/quality_management/doctype/non_conformance
+  kind: doctype
+- id: quality-action
+  name: Quality Action
+  module: quality_management
+  pack: assets_quality
+  path: erpnext/quality_management/doctype/quality_action
+  kind: doctype
+- id: quality-action-resolution
+  name: Quality Action Resolution
+  module: quality_management
+  pack: assets_quality
+  path: erpnext/quality_management/doctype/quality_action_resolution
+  kind: doctype
+- id: quality-feedback
+  name: Quality Feedback
+  module: quality_management
+  pack: assets_quality
+  path: erpnext/quality_management/doctype/quality_feedback
+  kind: doctype
+- id: quality-feedback-parameter
+  name: Quality Feedback Parameter
+  module: quality_management
+  pack: assets_quality
+  path: erpnext/quality_management/doctype/quality_feedback_parameter
+  kind: doctype
+- id: quality-feedback-template
+  name: Quality Feedback Template
+  module: quality_management
+  pack: assets_quality
+  path: erpnext/quality_management/doctype/quality_feedback_template
+  kind: doctype
+- id: quality-feedback-template-parameter
+  name: Quality Feedback Template Parameter
+  module: quality_management
+  pack: assets_quality
+  path: erpnext/quality_management/doctype/quality_feedback_template_parameter
+  kind: doctype
+- id: quality-goal
+  name: Quality Goal
+  module: quality_management
+  pack: assets_quality
+  path: erpnext/quality_management/doctype/quality_goal
+  kind: doctype
+- id: quality-goal-objective
+  name: Quality Goal Objective
+  module: quality_management
+  pack: assets_quality
+  path: erpnext/quality_management/doctype/quality_goal_objective
+  kind: doctype
+- id: quality-meeting
+  name: Quality Meeting
+  module: quality_management
+  pack: assets_quality
+  path: erpnext/quality_management/doctype/quality_meeting
+  kind: doctype
+- id: quality-meeting-agenda
+  name: Quality Meeting Agenda
+  module: quality_management
+  pack: assets_quality
+  path: erpnext/quality_management/doctype/quality_meeting_agenda
+  kind: doctype
+- id: quality-meeting-minutes
+  name: Quality Meeting Minutes
+  module: quality_management
+  pack: assets_quality
+  path: erpnext/quality_management/doctype/quality_meeting_minutes
+  kind: doctype
+- id: quality-procedure
+  name: Quality Procedure
+  module: quality_management
+  pack: assets_quality
+  path: erpnext/quality_management/doctype/quality_procedure
+  kind: doctype
+- id: quality-procedure-process
+  name: Quality Procedure Process
+  module: quality_management
+  pack: assets_quality
+  path: erpnext/quality_management/doctype/quality_procedure_process
+  kind: doctype
+- id: quality-review
+  name: Quality Review
+  module: quality_management
+  pack: assets_quality
+  path: erpnext/quality_management/doctype/quality_review
+  kind: doctype
+- id: quality-review-objective
+  name: Quality Review Objective
+  module: quality_management
+  pack: assets_quality
+  path: erpnext/quality_management/doctype/quality_review_objective
+  kind: doctype
+- id: import-supplier-invoice
+  name: Import Supplier Invoice
+  module: regional
+  pack: reporting_analytics
+  path: erpnext/regional/doctype/import_supplier_invoice
+  kind: doctype
+- id: lower-deduction-certificate
+  name: Lower Deduction Certificate
+  module: regional
+  pack: reporting_analytics
+  path: erpnext/regional/doctype/lower_deduction_certificate
+  kind: doctype
+- id: south-africa-vat-settings
+  name: South Africa VAT Settings
+  module: regional
+  pack: reporting_analytics
+  path: erpnext/regional/doctype/south_africa_vat_settings
+  kind: doctype
+- id: uae-vat-account
+  name: UAE VAT Account
+  module: regional
+  pack: reporting_analytics
+  path: erpnext/regional/doctype/uae_vat_account
+  kind: doctype
+- id: uae-vat-settings
+  name: UAE VAT Settings
+  module: regional
+  pack: reporting_analytics
+  path: erpnext/regional/doctype/uae_vat_settings
+  kind: doctype
+- id: customer
+  name: Customer
+  module: selling
+  pack: order_to_cash
+  path: erpnext/selling/doctype/customer
+  kind: doctype
+- id: customer-credit-limit
+  name: Customer Credit Limit
+  module: selling
+  pack: order_to_cash
+  path: erpnext/selling/doctype/customer_credit_limit
+  kind: doctype
+- id: delivery-schedule-item
+  name: Delivery Schedule Item
+  module: selling
+  pack: order_to_cash
+  path: erpnext/selling/doctype/delivery_schedule_item
+  kind: doctype
+- id: industry-type
+  name: Industry Type
+  module: selling
+  pack: order_to_cash
+  path: erpnext/selling/doctype/industry_type
+  kind: doctype
+- id: installation-note
+  name: Installation Note
+  module: selling
+  pack: order_to_cash
+  path: erpnext/selling/doctype/installation_note
+  kind: doctype
+- id: installation-note-item
+  name: Installation Note Item
+  module: selling
+  pack: order_to_cash
+  path: erpnext/selling/doctype/installation_note_item
+  kind: doctype
+- id: party-specific-item
+  name: Party Specific Item
+  module: selling
+  pack: order_to_cash
+  path: erpnext/selling/doctype/party_specific_item
+  kind: doctype
+- id: product-bundle
+  name: Product Bundle
+  module: selling
+  pack: order_to_cash
+  path: erpnext/selling/doctype/product_bundle
+  kind: doctype
+- id: product-bundle-item
+  name: Product Bundle Item
+  module: selling
+  pack: order_to_cash
+  path: erpnext/selling/doctype/product_bundle_item
+  kind: doctype
+- id: proforma-invoice
+  name: Proforma Invoice
+  module: selling
+  pack: order_to_cash
+  path: erpnext/selling/doctype/proforma_invoice
+  kind: doctype
+- id: proforma-invoice-item
+  name: Proforma Invoice Item
+  module: selling
+  pack: order_to_cash
+  path: erpnext/selling/doctype/proforma_invoice_item
+  kind: doctype
+- id: quotation
+  name: Quotation
+  module: selling
+  pack: order_to_cash
+  path: erpnext/selling/doctype/quotation
+  kind: doctype
+- id: quotation-item
+  name: Quotation Item
+  module: selling
+  pack: order_to_cash
+  path: erpnext/selling/doctype/quotation_item
+  kind: doctype
+- id: sales-order
+  name: Sales Order
+  module: selling
+  pack: order_to_cash
+  path: erpnext/selling/doctype/sales_order
+  kind: doctype
+- id: sales-order-item
+  name: Sales Order Item
+  module: selling
+  pack: order_to_cash
+  path: erpnext/selling/doctype/sales_order_item
+  kind: doctype
+- id: sales-partner-type
+  name: Sales Partner Type
+  module: selling
+  pack: order_to_cash
+  path: erpnext/selling/doctype/sales_partner_type
+  kind: doctype
+- id: sales-team
+  name: Sales Team
+  module: selling
+  pack: order_to_cash
+  path: erpnext/selling/doctype/sales_team
+  kind: doctype
+- id: selling-settings
+  name: Selling Settings
+  module: selling
+  pack: order_to_cash
+  path: erpnext/selling/doctype/selling_settings
+  kind: doctype
+- id: sms-center
+  name: SMS Center
+  module: selling
+  pack: order_to_cash
+  path: erpnext/selling/doctype/sms_center
+  kind: doctype
+- id: supplier-number-at-customer
+  name: Supplier Number At Customer
+  module: selling
+  pack: order_to_cash
+  path: erpnext/selling/doctype/supplier_number_at_customer
+  kind: doctype
+- id: authorization-control
+  name: Authorization Control
+  module: setup
+  pack: erp_masters
+  path: erpnext/setup/doctype/authorization_control
+  kind: doctype
+- id: authorization-rule
+  name: Authorization Rule
+  module: setup
+  pack: erp_masters
+  path: erpnext/setup/doctype/authorization_rule
+  kind: doctype
+- id: branch
+  name: Branch
+  module: setup
+  pack: erp_masters
+  path: erpnext/setup/doctype/branch
+  kind: doctype
+- id: brand
+  name: Brand
+  module: setup
+  pack: erp_masters
+  path: erpnext/setup/doctype/brand
+  kind: doctype
+- id: company
+  name: Company
+  module: setup
+  pack: erp_masters
+  path: erpnext/setup/doctype/company
+  kind: doctype
+- id: currency-exchange
+  name: Currency Exchange
+  module: setup
+  pack: erp_masters
+  path: erpnext/setup/doctype/currency_exchange
+  kind: doctype
+- id: customer-group
+  name: Customer Group
+  module: setup
+  pack: erp_masters
+  path: erpnext/setup/doctype/customer_group
+  kind: doctype
+- id: department
+  name: Department
+  module: setup
+  pack: erp_masters
+  path: erpnext/setup/doctype/department
+  kind: doctype
+- id: designation
+  name: Designation
+  module: setup
+  pack: erp_masters
+  path: erpnext/setup/doctype/designation
+  kind: doctype
+- id: driver
+  name: Driver
+  module: setup
+  pack: erp_masters
+  path: erpnext/setup/doctype/driver
+  kind: doctype
+- id: driving-license-category
+  name: Driving License Category
+  module: setup
+  pack: erp_masters
+  path: erpnext/setup/doctype/driving_license_category
+  kind: doctype
+- id: email-digest
+  name: Email Digest
+  module: setup
+  pack: erp_masters
+  path: erpnext/setup/doctype/email_digest
+  kind: doctype
+- id: email-digest-recipient
+  name: Email Digest Recipient
+  module: setup
+  pack: erp_masters
+  path: erpnext/setup/doctype/email_digest_recipient
+  kind: doctype
+- id: employee
+  name: Employee
+  module: setup
+  pack: erp_masters
+  path: erpnext/setup/doctype/employee
+  kind: doctype
+- id: employee-education
+  name: Employee Education
+  module: setup
+  pack: erp_masters
+  path: erpnext/setup/doctype/employee_education
+  kind: doctype
+- id: employee-external-work-history
+  name: Employee External Work History
+  module: setup
+  pack: erp_masters
+  path: erpnext/setup/doctype/employee_external_work_history
+  kind: doctype
+- id: employee-group
+  name: Employee Group
+  module: setup
+  pack: erp_masters
+  path: erpnext/setup/doctype/employee_group
+  kind: doctype
+- id: employee-group-table
+  name: Employee Group Table
+  module: setup
+  pack: erp_masters
+  path: erpnext/setup/doctype/employee_group_table
+  kind: doctype
+- id: employee-internal-work-history
+  name: Employee Internal Work History
+  module: setup
+  pack: erp_masters
+  path: erpnext/setup/doctype/employee_internal_work_history
+  kind: doctype
+- id: global-defaults
+  name: Global Defaults
+  module: setup
+  pack: erp_masters
+  path: erpnext/setup/doctype/global_defaults
+  kind: doctype
+- id: holiday
+  name: Holiday
+  module: setup
+  pack: erp_masters
+  path: erpnext/setup/doctype/holiday
+  kind: doctype
+- id: holiday-list
+  name: Holiday List
+  module: setup
+  pack: erp_masters
+  path: erpnext/setup/doctype/holiday_list
+  kind: doctype
+- id: incoterm
+  name: Incoterm
+  module: setup
+  pack: erp_masters
+  path: erpnext/setup/doctype/incoterm
+  kind: doctype
+- id: item-group
+  name: Item Group
+  module: setup
+  pack: erp_masters
+  path: erpnext/setup/doctype/item_group
+  kind: doctype
+- id: party-type
+  name: Party Type
+  module: setup
+  pack: erp_masters
+  path: erpnext/setup/doctype/party_type
+  kind: doctype
+- id: quotation-lost-reason
+  name: Quotation Lost Reason
+  module: setup
+  pack: erp_masters
+  path: erpnext/setup/doctype/quotation_lost_reason
+  kind: doctype
+- id: quotation-lost-reason-detail
+  name: Quotation Lost Reason Detail
+  module: setup
+  pack: erp_masters
+  path: erpnext/setup/doctype/quotation_lost_reason_detail
+  kind: doctype
+- id: sales-partner
+  name: Sales Partner
+  module: setup
+  pack: erp_masters
+  path: erpnext/setup/doctype/sales_partner
+  kind: doctype
+- id: sales-person
+  name: Sales Person
+  module: setup
+  pack: erp_masters
+  path: erpnext/setup/doctype/sales_person
+  kind: doctype
+- id: supplier-group
+  name: Supplier Group
+  module: setup
+  pack: erp_masters
+  path: erpnext/setup/doctype/supplier_group
+  kind: doctype
+- id: target-detail
+  name: Target Detail
+  module: setup
+  pack: erp_masters
+  path: erpnext/setup/doctype/target_detail
+  kind: doctype
+- id: terms-and-conditions
+  name: Terms and Conditions
+  module: setup
+  pack: erp_masters
+  path: erpnext/setup/doctype/terms_and_conditions
+  kind: doctype
+- id: territory
+  name: Territory
+  module: setup
+  pack: erp_masters
+  path: erpnext/setup/doctype/territory
+  kind: doctype
+- id: transaction-deletion-record
+  name: Transaction Deletion Record
+  module: setup
+  pack: erp_masters
+  path: erpnext/setup/doctype/transaction_deletion_record
+  kind: doctype
+- id: transaction-deletion-record-item
+  name: Transaction Deletion Record Item
+  module: setup
+  pack: erp_masters
+  path: erpnext/setup/doctype/transaction_deletion_record_item
+  kind: doctype
+- id: transaction-deletion-record-to-delete
+  name: Transaction Deletion Record To Delete
+  module: setup
+  pack: erp_masters
+  path: erpnext/setup/doctype/transaction_deletion_record_to_delete
+  kind: doctype
+- id: uom
+  name: UOM
+  module: setup
+  pack: erp_masters
+  path: erpnext/setup/doctype/uom
+  kind: doctype
+- id: uom-conversion-factor
+  name: UOM Conversion Factor
+  module: setup
+  pack: erp_masters
+  path: erpnext/setup/doctype/uom_conversion_factor
+  kind: doctype
+- id: vehicle
+  name: Vehicle
+  module: setup
+  pack: erp_masters
+  path: erpnext/setup/doctype/vehicle
+  kind: doctype
+- id: website-item-group
+  name: Website Item Group
+  module: setup
+  pack: erp_masters
+  path: erpnext/setup/doctype/website_item_group
+  kind: doctype
+- id: batch
+  name: Batch
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/batch
+  kind: doctype
+- id: bin
+  name: Bin
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/bin
+  kind: doctype
+- id: company-restriction
+  name: Company Restriction
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/company_restriction
+  kind: doctype
+- id: customs-tariff-number
+  name: Customs Tariff Number
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/customs_tariff_number
+  kind: doctype
+- id: delivery-note
+  name: Delivery Note
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/delivery_note
+  kind: doctype
+- id: delivery-note-item
+  name: Delivery Note Item
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/delivery_note_item
+  kind: doctype
+- id: delivery-settings
+  name: Delivery Settings
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/delivery_settings
+  kind: doctype
+- id: delivery-stop
+  name: Delivery Stop
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/delivery_stop
+  kind: doctype
+- id: delivery-trip
+  name: Delivery Trip
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/delivery_trip
+  kind: doctype
+- id: inventory-dimension
+  name: Inventory Dimension
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/inventory_dimension
+  kind: doctype
+- id: item
+  name: Item
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/item
+  kind: doctype
+- id: item-alternative
+  name: Item Alternative
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/item_alternative
+  kind: doctype
+- id: item-attribute
+  name: Item Attribute
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/item_attribute
+  kind: doctype
+- id: item-attribute-value
+  name: Item Attribute Value
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/item_attribute_value
+  kind: doctype
+- id: item-barcode
+  name: Item Barcode
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/item_barcode
+  kind: doctype
+- id: item-customer-detail
+  name: Item Customer Detail
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/item_customer_detail
+  kind: doctype
+- id: item-default
+  name: Item Default
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/item_default
+  kind: doctype
+- id: item-lead-time
+  name: Item Lead Time
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/item_lead_time
+  kind: doctype
+- id: item-lead-time-supplier
+  name: Item Lead Time Supplier
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/item_lead_time_supplier
+  kind: doctype
+- id: item-manufacturer
+  name: Item Manufacturer
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/item_manufacturer
+  kind: doctype
+- id: item-price
+  name: Item Price
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/item_price
+  kind: doctype
+- id: item-quality-inspection-parameter
+  name: Item Quality Inspection Parameter
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/item_quality_inspection_parameter
+  kind: doctype
+- id: item-reorder
+  name: Item Reorder
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/item_reorder
+  kind: doctype
+- id: item-standard-cost
+  name: Item Standard Cost
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/item_standard_cost
+  kind: doctype
+- id: item-supplier
+  name: Item Supplier
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/item_supplier
+  kind: doctype
+- id: item-tax
+  name: Item Tax
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/item_tax
+  kind: doctype
+- id: item-variant
+  name: Item Variant
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/item_variant
+  kind: doctype
+- id: item-variant-attribute
+  name: Item Variant Attribute
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/item_variant_attribute
+  kind: doctype
+- id: item-variant-settings
+  name: Item Variant Settings
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/item_variant_settings
+  kind: doctype
+- id: item-website-specification
+  name: Item Website Specification
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/item_website_specification
+  kind: doctype
+- id: landed-cost-item
+  name: Landed Cost Item
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/landed_cost_item
+  kind: doctype
+- id: landed-cost-purchase-receipt
+  name: Landed Cost Purchase Receipt
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/landed_cost_purchase_receipt
+  kind: doctype
+- id: landed-cost-taxes-and-charges
+  name: Landed Cost Taxes and Charges
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/landed_cost_taxes_and_charges
+  kind: doctype
+- id: landed-cost-vendor-invoice
+  name: Landed Cost Vendor Invoice
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/landed_cost_vendor_invoice
+  kind: doctype
+- id: landed-cost-voucher
+  name: Landed Cost Voucher
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/landed_cost_voucher
+  kind: doctype
+- id: manufacturer
+  name: Manufacturer
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/manufacturer
+  kind: doctype
+- id: material-request
+  name: Material Request
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/material_request
+  kind: doctype
+- id: material-request-item
+  name: Material Request Item
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/material_request_item
+  kind: doctype
+- id: packed-item
+  name: Packed Item
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/packed_item
+  kind: doctype
+- id: packing-slip
+  name: Packing Slip
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/packing_slip
+  kind: doctype
+- id: packing-slip-item
+  name: Packing Slip Item
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/packing_slip_item
+  kind: doctype
+- id: pick-list
+  name: Pick List
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/pick_list
+  kind: doctype
+- id: pick-list-item
+  name: Pick List Item
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/pick_list_item
+  kind: doctype
+- id: price-list
+  name: Price List
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/price_list
+  kind: doctype
+- id: price-list-country
+  name: Price List Country
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/price_list_country
+  kind: doctype
+- id: purchase-receipt
+  name: Purchase Receipt
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/purchase_receipt
+  kind: doctype
+- id: purchase-receipt-item
+  name: Purchase Receipt Item
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/purchase_receipt_item
+  kind: doctype
+- id: putaway-rule
+  name: Putaway Rule
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/putaway_rule
+  kind: doctype
+- id: quality-inspection
+  name: Quality Inspection
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/quality_inspection
+  kind: doctype
+- id: quality-inspection-parameter
+  name: Quality Inspection Parameter
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/quality_inspection_parameter
+  kind: doctype
+- id: quality-inspection-parameter-group
+  name: Quality Inspection Parameter Group
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/quality_inspection_parameter_group
+  kind: doctype
+- id: quality-inspection-reading
+  name: Quality Inspection Reading
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/quality_inspection_reading
+  kind: doctype
+- id: quality-inspection-template
+  name: Quality Inspection Template
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/quality_inspection_template
+  kind: doctype
+- id: quick-stock-balance
+  name: Quick Stock Balance
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/quick_stock_balance
+  kind: doctype
+- id: repost-item-valuation
+  name: Repost Item Valuation
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/repost_item_valuation
+  kind: doctype
+- id: sales-bom
+  name: Sales Bom
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/sales_bom
+  kind: doctype
+- id: sales-bom-item
+  name: Sales Bom Item
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/sales_bom_item
+  kind: doctype
+- id: serial-and-batch-bundle
+  name: Serial and Batch Bundle
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/serial_and_batch_bundle
+  kind: doctype
+- id: serial-and-batch-entry
+  name: Serial and Batch Entry
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/serial_and_batch_entry
+  kind: doctype
+- id: serial-no
+  name: Serial No
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/serial_no
+  kind: doctype
+- id: shipment
+  name: Shipment
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/shipment
+  kind: doctype
+- id: shipment-delivery-note
+  name: Shipment Delivery Note
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/shipment_delivery_note
+  kind: doctype
+- id: shipment-parcel
+  name: Shipment Parcel
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/shipment_parcel
+  kind: doctype
+- id: shipment-parcel-template
+  name: Shipment Parcel Template
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/shipment_parcel_template
+  kind: doctype
+- id: stock-closing-balance
+  name: Stock Closing Balance
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/stock_closing_balance
+  kind: doctype
+- id: stock-closing-entry
+  name: Stock Closing Entry
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/stock_closing_entry
+  kind: doctype
+- id: stock-entry
+  name: Stock Entry
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/stock_entry
+  kind: doctype
+- id: stock-entry-detail
+  name: Stock Entry Detail
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/stock_entry_detail
+  kind: doctype
+- id: stock-entry-type
+  name: Stock Entry Type
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/stock_entry_type
+  kind: doctype
+- id: stock-ledger-entry
+  name: Stock Ledger Entry
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/stock_ledger_entry
+  kind: doctype
+- id: stock-reconciliation
+  name: Stock Reconciliation
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/stock_reconciliation
+  kind: doctype
+- id: stock-reconciliation-item
+  name: Stock Reconciliation Item
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/stock_reconciliation_item
+  kind: doctype
+- id: stock-reposting-settings
+  name: Stock Reposting Settings
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/stock_reposting_settings
+  kind: doctype
+- id: stock-reservation-entry
+  name: Stock Reservation Entry
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/stock_reservation_entry
+  kind: doctype
+- id: stock-settings
+  name: Stock Settings
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/stock_settings
+  kind: doctype
+- id: uom-category
+  name: UOM Category
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/uom_category
+  kind: doctype
+- id: uom-conversion-detail
+  name: UOM Conversion Detail
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/uom_conversion_detail
+  kind: doctype
+- id: variant-field
+  name: Variant Field
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/variant_field
+  kind: doctype
+- id: warehouse
+  name: Warehouse
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/warehouse
+  kind: doctype
+- id: warehouse-type
+  name: Warehouse Type
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/doctype/warehouse_type
+  kind: doctype
+- id: subcontracting-bom
+  name: Subcontracting BOM
+  module: subcontracting
+  pack: manufacturing_ops
+  path: erpnext/subcontracting/doctype/subcontracting_bom
+  kind: doctype
+- id: subcontracting-inward-order
+  name: Subcontracting Inward Order
+  module: subcontracting
+  pack: manufacturing_ops
+  path: erpnext/subcontracting/doctype/subcontracting_inward_order
+  kind: doctype
+- id: subcontracting-inward-order-item
+  name: Subcontracting Inward Order Item
+  module: subcontracting
+  pack: manufacturing_ops
+  path: erpnext/subcontracting/doctype/subcontracting_inward_order_item
+  kind: doctype
+- id: subcontracting-inward-order-received-item
+  name: Subcontracting Inward Order Received Item
+  module: subcontracting
+  pack: manufacturing_ops
+  path: erpnext/subcontracting/doctype/subcontracting_inward_order_received_item
+  kind: doctype
+- id: subcontracting-inward-order-secondary-item
+  name: Subcontracting Inward Order Secondary Item
+  module: subcontracting
+  pack: manufacturing_ops
+  path: erpnext/subcontracting/doctype/subcontracting_inward_order_secondary_item
+  kind: doctype
+- id: subcontracting-inward-order-service-item
+  name: Subcontracting Inward Order Service Item
+  module: subcontracting
+  pack: manufacturing_ops
+  path: erpnext/subcontracting/doctype/subcontracting_inward_order_service_item
+  kind: doctype
+- id: subcontracting-order
+  name: Subcontracting Order
+  module: subcontracting
+  pack: manufacturing_ops
+  path: erpnext/subcontracting/doctype/subcontracting_order
+  kind: doctype
+- id: subcontracting-order-item
+  name: Subcontracting Order Item
+  module: subcontracting
+  pack: manufacturing_ops
+  path: erpnext/subcontracting/doctype/subcontracting_order_item
+  kind: doctype
+- id: subcontracting-order-service-item
+  name: Subcontracting Order Service Item
+  module: subcontracting
+  pack: manufacturing_ops
+  path: erpnext/subcontracting/doctype/subcontracting_order_service_item
+  kind: doctype
+- id: subcontracting-order-supplied-item
+  name: Subcontracting Order Supplied Item
+  module: subcontracting
+  pack: manufacturing_ops
+  path: erpnext/subcontracting/doctype/subcontracting_order_supplied_item
+  kind: doctype
+- id: subcontracting-receipt
+  name: Subcontracting Receipt
+  module: subcontracting
+  pack: manufacturing_ops
+  path: erpnext/subcontracting/doctype/subcontracting_receipt
+  kind: doctype
+- id: subcontracting-receipt-item
+  name: Subcontracting Receipt Item
+  module: subcontracting
+  pack: manufacturing_ops
+  path: erpnext/subcontracting/doctype/subcontracting_receipt_item
+  kind: doctype
+- id: subcontracting-receipt-supplied-item
+  name: Subcontracting Receipt Supplied Item
+  module: subcontracting
+  pack: manufacturing_ops
+  path: erpnext/subcontracting/doctype/subcontracting_receipt_supplied_item
+  kind: doctype
+- id: issue
+  name: Issue
+  module: support
+  pack: support_sla
+  path: erpnext/support/doctype/issue
+  kind: doctype
+- id: issue-priority
+  name: Issue Priority
+  module: support
+  pack: support_sla
+  path: erpnext/support/doctype/issue_priority
+  kind: doctype
+- id: issue-type
+  name: Issue Type
+  module: support
+  pack: support_sla
+  path: erpnext/support/doctype/issue_type
+  kind: doctype
+- id: pause-sla-on-status
+  name: Pause SLA On Status
+  module: support
+  pack: support_sla
+  path: erpnext/support/doctype/pause_sla_on_status
+  kind: doctype
+- id: service-day
+  name: Service Day
+  module: support
+  pack: support_sla
+  path: erpnext/support/doctype/service_day
+  kind: doctype
+- id: service-level-agreement
+  name: Service Level Agreement
+  module: support
+  pack: support_sla
+  path: erpnext/support/doctype/service_level_agreement
+  kind: doctype
+- id: service-level-priority
+  name: Service Level Priority
+  module: support
+  pack: support_sla
+  path: erpnext/support/doctype/service_level_priority
+  kind: doctype
+- id: sla-fulfilled-on-status
+  name: SLA Fulfilled On Status
+  module: support
+  pack: support_sla
+  path: erpnext/support/doctype/sla_fulfilled_on_status
+  kind: doctype
+- id: support-search-source
+  name: Support Search Source
+  module: support
+  pack: support_sla
+  path: erpnext/support/doctype/support_search_source
+  kind: doctype
+- id: support-settings
+  name: Support Settings
+  module: support
+  pack: support_sla
+  path: erpnext/support/doctype/support_settings
+  kind: doctype
+- id: warranty-claim
+  name: Warranty Claim
+  module: support
+  pack: support_sla
+  path: erpnext/support/doctype/warranty_claim
+  kind: doctype
+- id: call-log
+  name: Call Log
+  module: telephony
+  pack: support_sla
+  path: erpnext/telephony/doctype/call_log
+  kind: doctype
+- id: incoming-call-handling-schedule
+  name: Incoming Call Handling Schedule
+  module: telephony
+  pack: support_sla
+  path: erpnext/telephony/doctype/incoming_call_handling_schedule
+  kind: doctype
+- id: incoming-call-settings
+  name: Incoming Call Settings
+  module: telephony
+  pack: support_sla
+  path: erpnext/telephony/doctype/incoming_call_settings
+  kind: doctype
+- id: telephony-call-type
+  name: Telephony Call Type
+  module: telephony
+  pack: support_sla
+  path: erpnext/telephony/doctype/telephony_call_type
+  kind: doctype
+- id: voice-call-settings
+  name: Voice Call Settings
+  module: telephony
+  pack: support_sla
+  path: erpnext/telephony/doctype/voice_call_settings
+  kind: doctype
+- id: portal-user
+  name: Portal User
+  module: utilities
+  pack: erp_masters
+  path: erpnext/utilities/doctype/portal_user
+  kind: doctype
+- id: rename-tool
+  name: Rename Tool
+  module: utilities
+  pack: erp_masters
+  path: erpnext/utilities/doctype/rename_tool
+  kind: doctype
+- id: video
+  name: Video
+  module: utilities
+  pack: erp_masters
+  path: erpnext/utilities/doctype/video
+  kind: doctype
+- id: video-settings
+  name: Video Settings
+  module: utilities
+  pack: erp_masters
+  path: erpnext/utilities/doctype/video_settings
+  kind: doctype
+- id: account-balance
+  name: Account Balance
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/account_balance/account_balance.py
+  kind: report
+- id: accounts-payable
+  name: Accounts Payable
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/accounts_payable/accounts_payable.py
+  kind: report
+- id: accounts-payable-summary
+  name: Accounts Payable Summary
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/accounts_payable_summary/accounts_payable_summary.py
+  kind: report
+- id: accounts-receivable
+  name: Accounts Receivable
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/accounts_receivable/accounts_receivable.py
+  kind: report
+- id: accounts-receivable-summary
+  name: Accounts Receivable Summary
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/accounts_receivable_summary/accounts_receivable_summary.py
+  kind: report
+- id: asset-depreciation-ledger
+  name: Asset Depreciation Ledger
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/asset_depreciation_ledger/asset_depreciation_ledger.py
+  kind: report
+- id: asset-depreciations-and-balances
+  name: Asset Depreciations And Balances
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/asset_depreciations_and_balances/asset_depreciations_and_balances.py
+  kind: report
+- id: balance-sheet
+  name: Balance Sheet
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/balance_sheet/balance_sheet.py
+  kind: report
+- id: bank-clearance-summary
+  name: Bank Clearance Summary
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/bank_clearance_summary/bank_clearance_summary.py
+  kind: report
+- id: bank-reconciliation-statement
+  name: Bank Reconciliation Statement
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/bank_reconciliation_statement/bank_reconciliation_statement.py
+  kind: report
+- id: billed-items-to-be-received
+  name: Billed Items To Be Received
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/billed_items_to_be_received/billed_items_to_be_received.py
+  kind: report
+- id: budget-variance-report
+  name: Budget Variance Report
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/budget_variance_report/budget_variance_report.py
+  kind: report
+- id: calculated-discount-mismatch
+  name: Calculated Discount Mismatch
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/calculated_discount_mismatch/calculated_discount_mismatch.py
+  kind: report
+- id: cash-flow
+  name: Cash Flow
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/cash_flow/cash_flow.py
+  kind: report
+- id: cheques-and-deposits-incorrectly-cleared
+  name: Cheques And Deposits Incorrectly Cleared
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/cheques_and_deposits_incorrectly_cleared/cheques_and_deposits_incorrectly_cleared.py
+  kind: report
+- id: consolidated-financial-statement
+  name: Consolidated Financial Statement
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/consolidated_financial_statement/consolidated_financial_statement.py
+  kind: report
+- id: consolidated-trial-balance
+  name: Consolidated Trial Balance
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/consolidated_trial_balance/consolidated_trial_balance.py
+  kind: report
+- id: custom-financial-statement
+  name: Custom Financial Statement
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/custom_financial_statement/custom_financial_statement.py
+  kind: report
+- id: customer-ledger-summary
+  name: Customer Ledger Summary
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/customer_ledger_summary/customer_ledger_summary.py
+  kind: report
+- id: deferred-revenue-and-expense
+  name: Deferred Revenue And Expense
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/deferred_revenue_and_expense/deferred_revenue_and_expense.py
+  kind: report
+- id: delivered-items-to-be-billed
+  name: Delivered Items To Be Billed
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/delivered_items_to_be_billed/delivered_items_to_be_billed.py
+  kind: report
+- id: dimension-wise-accounts-balance-report
+  name: Dimension Wise Accounts Balance Report
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/dimension_wise_accounts_balance_report/dimension_wise_accounts_balance_report.py
+  kind: report
+- id: financial-ratios
+  name: Financial Ratios
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/financial_ratios/financial_ratios.py
+  kind: report
+- id: report
+  name: Report
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/financial_statements.py
+  kind: report
+- id: general-and-payment-ledger-comparison
+  name: General And Payment Ledger Comparison
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/general_and_payment_ledger_comparison/general_and_payment_ledger_comparison.py
+  kind: report
+- id: general-ledger
+  name: General Ledger
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/general_ledger/general_ledger.py
+  kind: report
+- id: gross-and-net-profit-report
+  name: Gross And Net Profit Report
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/gross_and_net_profit_report/gross_and_net_profit_report.py
+  kind: report
+- id: gross-profit
+  name: Gross Profit
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/gross_profit/gross_profit.py
+  kind: report
+- id: inactive-sales-items
+  name: Inactive Sales Items
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/inactive_sales_items/inactive_sales_items.py
+  kind: report
+- id: invalid-ledger-entries
+  name: Invalid Ledger Entries
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/invalid_ledger_entries/invalid_ledger_entries.py
+  kind: report
+- id: item-wise-purchase-register
+  name: Item Wise Purchase Register
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/item_wise_purchase_register/item_wise_purchase_register.py
+  kind: report
+- id: item-wise-sales-register
+  name: Item Wise Sales Register
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/item_wise_sales_register/item_wise_sales_register.py
+  kind: report
+- id: report
+  name: Report
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/non_billed_report.py
+  kind: report
+- id: payment-ledger
+  name: Payment Ledger
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/payment_ledger/payment_ledger.py
+  kind: report
+- id: payment-period-based-on-invoice-date
+  name: Payment Period Based On Invoice Date
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/payment_period_based_on_invoice_date/payment_period_based_on_invoice_date.py
+  kind: report
+- id: pos-register
+  name: Pos Register
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/pos_register/pos_register.py
+  kind: report
+- id: profit-and-loss-statement
+  name: Profit And Loss Statement
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/profit_and_loss_statement/profit_and_loss_statement.py
+  kind: report
+- id: profitability-analysis
+  name: Profitability Analysis
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/profitability_analysis/profitability_analysis.py
+  kind: report
+- id: purchase-invoice-trends
+  name: Purchase Invoice Trends
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/purchase_invoice_trends/purchase_invoice_trends.py
+  kind: report
+- id: purchase-register
+  name: Purchase Register
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/purchase_register/purchase_register.py
+  kind: report
+- id: received-items-to-be-billed
+  name: Received Items To Be Billed
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/received_items_to_be_billed/received_items_to_be_billed.py
+  kind: report
+- id: sales-invoice-trends
+  name: Sales Invoice Trends
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/sales_invoice_trends/sales_invoice_trends.py
+  kind: report
+- id: sales-payment-summary
+  name: Sales Payment Summary
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/sales_payment_summary/sales_payment_summary.py
+  kind: report
+- id: sales-register
+  name: Sales Register
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/sales_register/sales_register.py
+  kind: report
+- id: share-balance
+  name: Share Balance
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/share_balance/share_balance.py
+  kind: report
+- id: share-ledger
+  name: Share Ledger
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/share_ledger/share_ledger.py
+  kind: report
+- id: supplier-ledger-summary
+  name: Supplier Ledger Summary
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/supplier_ledger_summary/supplier_ledger_summary.py
+  kind: report
+- id: tax-withholding-details
+  name: Tax Withholding Details
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/tax_withholding_details/tax_withholding_details.py
+  kind: report
+- id: tds-computation-summary
+  name: Tds Computation Summary
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/tds_computation_summary/tds_computation_summary.py
+  kind: report
+- id: trial-balance
+  name: Trial Balance
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/trial_balance/trial_balance.py
+  kind: report
+- id: trial-balance-for-party
+  name: Trial Balance For Party
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/trial_balance_for_party/trial_balance_for_party.py
+  kind: report
+- id: report
+  name: Report
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/utils.py
+  kind: report
+- id: voucher-wise-balance
+  name: Voucher Wise Balance
+  module: accounts
+  pack: financial_accounting
+  path: erpnext/accounts/report/voucher_wise_balance/voucher_wise_balance.py
+  kind: report
+- id: fixed-asset-register
+  name: Fixed Asset Register
+  module: assets
+  pack: assets_quality
+  path: erpnext/assets/report/fixed_asset_register/fixed_asset_register.py
+  kind: report
+- id: item-wise-purchase-history
+  name: Item Wise Purchase History
+  module: buying
+  pack: procure_to_pay
+  path: erpnext/buying/report/item_wise_purchase_history/item_wise_purchase_history.py
+  kind: report
+- id: procurement-tracker
+  name: Procurement Tracker
+  module: buying
+  pack: procure_to_pay
+  path: erpnext/buying/report/procurement_tracker/procurement_tracker.py
+  kind: report
+- id: purchase-analytics
+  name: Purchase Analytics
+  module: buying
+  pack: procure_to_pay
+  path: erpnext/buying/report/purchase_analytics/purchase_analytics.py
+  kind: report
+- id: purchase-order-analysis
+  name: Purchase Order Analysis
+  module: buying
+  pack: procure_to_pay
+  path: erpnext/buying/report/purchase_order_analysis/purchase_order_analysis.py
+  kind: report
+- id: purchase-order-trends
+  name: Purchase Order Trends
+  module: buying
+  pack: procure_to_pay
+  path: erpnext/buying/report/purchase_order_trends/purchase_order_trends.py
+  kind: report
+- id: requested-items-to-order-and-receive
+  name: Requested Items To Order And Receive
+  module: buying
+  pack: procure_to_pay
+  path: erpnext/buying/report/requested_items_to_order_and_receive/requested_items_to_order_and_receive.py
+  kind: report
+- id: subcontract-order-summary
+  name: Subcontract Order Summary
+  module: buying
+  pack: procure_to_pay
+  path: erpnext/buying/report/subcontract_order_summary/subcontract_order_summary.py
+  kind: report
+- id: subcontracted-item-to-be-received
+  name: Subcontracted Item To Be Received
+  module: buying
+  pack: procure_to_pay
+  path: erpnext/buying/report/subcontracted_item_to_be_received/subcontracted_item_to_be_received.py
+  kind: report
+- id: subcontracted-raw-materials-to-be-transferred
+  name: Subcontracted Raw Materials To Be Transferred
+  module: buying
+  pack: procure_to_pay
+  path: erpnext/buying/report/subcontracted_raw_materials_to_be_transferred/subcontracted_raw_materials_to_be_transferred.py
+  kind: report
+- id: supplier-quotation-comparison
+  name: Supplier Quotation Comparison
+  module: buying
+  pack: procure_to_pay
+  path: erpnext/buying/report/supplier_quotation_comparison/supplier_quotation_comparison.py
+  kind: report
+- id: campaign-efficiency
+  name: Campaign Efficiency
+  module: crm
+  pack: crm_pipeline
+  path: erpnext/crm/report/campaign_efficiency/campaign_efficiency.py
+  kind: report
+- id: first-response-time-for-opportunity
+  name: First Response Time For Opportunity
+  module: crm
+  pack: crm_pipeline
+  path: erpnext/crm/report/first_response_time_for_opportunity/first_response_time_for_opportunity.py
+  kind: report
+- id: lead-conversion-time
+  name: Lead Conversion Time
+  module: crm
+  pack: crm_pipeline
+  path: erpnext/crm/report/lead_conversion_time/lead_conversion_time.py
+  kind: report
+- id: lead-details
+  name: Lead Details
+  module: crm
+  pack: crm_pipeline
+  path: erpnext/crm/report/lead_details/lead_details.py
+  kind: report
+- id: lead-owner-efficiency
+  name: Lead Owner Efficiency
+  module: crm
+  pack: crm_pipeline
+  path: erpnext/crm/report/lead_owner_efficiency/lead_owner_efficiency.py
+  kind: report
+- id: lost-opportunity
+  name: Lost Opportunity
+  module: crm
+  pack: crm_pipeline
+  path: erpnext/crm/report/lost_opportunity/lost_opportunity.py
+  kind: report
+- id: opportunity-summary-by-sales-stage
+  name: Opportunity Summary By Sales Stage
+  module: crm
+  pack: crm_pipeline
+  path: erpnext/crm/report/opportunity_summary_by_sales_stage/opportunity_summary_by_sales_stage.py
+  kind: report
+- id: prospects-engaged-but-not-converted
+  name: Prospects Engaged But Not Converted
+  module: crm
+  pack: crm_pipeline
+  path: erpnext/crm/report/prospects_engaged_but_not_converted/prospects_engaged_but_not_converted.py
+  kind: report
+- id: sales-pipeline-analytics
+  name: Sales Pipeline Analytics
+  module: crm
+  pack: crm_pipeline
+  path: erpnext/crm/report/sales_pipeline_analytics/sales_pipeline_analytics.py
+  kind: report
+- id: bom-explorer
+  name: Bom Explorer
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/report/bom_explorer/bom_explorer.py
+  kind: report
+- id: bom-operations-time
+  name: Bom Operations Time
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/report/bom_operations_time/bom_operations_time.py
+  kind: report
+- id: bom-stock-analysis
+  name: Bom Stock Analysis
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/report/bom_stock_analysis/bom_stock_analysis.py
+  kind: report
+- id: bom-variance-report
+  name: Bom Variance Report
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/report/bom_variance_report/bom_variance_report.py
+  kind: report
+- id: cost-of-poor-quality-report
+  name: Cost Of Poor Quality Report
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/report/cost_of_poor_quality_report/cost_of_poor_quality_report.py
+  kind: report
+- id: downtime-analysis
+  name: Downtime Analysis
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/report/downtime_analysis/downtime_analysis.py
+  kind: report
+- id: exponential-smoothing-forecasting
+  name: Exponential Smoothing Forecasting
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/report/exponential_smoothing_forecasting/exponential_smoothing_forecasting.py
+  kind: report
+- id: job-card-summary
+  name: Job Card Summary
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/report/job_card_summary/job_card_summary.py
+  kind: report
+- id: material-requirements-planning-report
+  name: Material Requirements Planning Report
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/report/material_requirements_planning_report/material_requirements_planning_report.py
+  kind: report
+- id: process-loss-report
+  name: Process Loss Report
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/report/process_loss_report/process_loss_report.py
+  kind: report
+- id: production-analytics
+  name: Production Analytics
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/report/production_analytics/production_analytics.py
+  kind: report
+- id: production-plan-summary
+  name: Production Plan Summary
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/report/production_plan_summary/production_plan_summary.py
+  kind: report
+- id: production-planning-report
+  name: Production Planning Report
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/report/production_planning_report/production_planning_report.py
+  kind: report
+- id: quality-inspection-summary
+  name: Quality Inspection Summary
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/report/quality_inspection_summary/quality_inspection_summary.py
+  kind: report
+- id: work-order-consumed-materials
+  name: Work Order Consumed Materials
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/report/work_order_consumed_materials/work_order_consumed_materials.py
+  kind: report
+- id: work-order-stock-report
+  name: Work Order Stock Report
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/report/work_order_stock_report/work_order_stock_report.py
+  kind: report
+- id: work-order-summary
+  name: Work Order Summary
+  module: manufacturing
+  pack: manufacturing_ops
+  path: erpnext/manufacturing/report/work_order_summary/work_order_summary.py
+  kind: report
+- id: daily-timesheet-summary
+  name: Daily Timesheet Summary
+  module: projects
+  pack: projects_delivery
+  path: erpnext/projects/report/daily_timesheet_summary/daily_timesheet_summary.py
+  kind: report
+- id: delayed-tasks-summary
+  name: Delayed Tasks Summary
+  module: projects
+  pack: projects_delivery
+  path: erpnext/projects/report/delayed_tasks_summary/delayed_tasks_summary.py
+  kind: report
+- id: project-summary
+  name: Project Summary
+  module: projects
+  pack: projects_delivery
+  path: erpnext/projects/report/project_summary/project_summary.py
+  kind: report
+- id: project-wise-stock-tracking
+  name: Project Wise Stock Tracking
+  module: projects
+  pack: projects_delivery
+  path: erpnext/projects/report/project_wise_stock_tracking/project_wise_stock_tracking.py
+  kind: report
+- id: timesheet-billing-summary
+  name: Timesheet Billing Summary
+  module: projects
+  pack: projects_delivery
+  path: erpnext/projects/report/timesheet_billing_summary/timesheet_billing_summary.py
+  kind: report
+- id: electronic-invoice-register
+  name: Electronic Invoice Register
+  module: regional
+  pack: reporting_analytics
+  path: erpnext/regional/report/electronic_invoice_register/electronic_invoice_register.py
+  kind: report
+- id: irs-1099
+  name: Irs 1099
+  module: regional
+  pack: reporting_analytics
+  path: erpnext/regional/report/irs_1099/irs_1099.py
+  kind: report
+- id: uae-vat-201
+  name: Uae Vat 201
+  module: regional
+  pack: reporting_analytics
+  path: erpnext/regional/report/uae_vat_201/uae_vat_201.py
+  kind: report
+- id: vat-audit-report
+  name: Vat Audit Report
+  module: regional
+  pack: reporting_analytics
+  path: erpnext/regional/report/vat_audit_report/vat_audit_report.py
+  kind: report
+- id: address-and-contacts
+  name: Address And Contacts
+  module: selling
+  pack: order_to_cash
+  path: erpnext/selling/report/address_and_contacts/address_and_contacts.py
+  kind: report
+- id: available-stock-for-packing-items
+  name: Available Stock For Packing Items
+  module: selling
+  pack: order_to_cash
+  path: erpnext/selling/report/available_stock_for_packing_items/available_stock_for_packing_items.py
+  kind: report
+- id: customer-acquisition-and-loyalty
+  name: Customer Acquisition And Loyalty
+  module: selling
+  pack: order_to_cash
+  path: erpnext/selling/report/customer_acquisition_and_loyalty/customer_acquisition_and_loyalty.py
+  kind: report
+- id: customer-credit-balance
+  name: Customer Credit Balance
+  module: selling
+  pack: order_to_cash
+  path: erpnext/selling/report/customer_credit_balance/customer_credit_balance.py
+  kind: report
+- id: customer-wise-item-price
+  name: Customer Wise Item Price
+  module: selling
+  pack: order_to_cash
+  path: erpnext/selling/report/customer_wise_item_price/customer_wise_item_price.py
+  kind: report
+- id: inactive-customers
+  name: Inactive Customers
+  module: selling
+  pack: order_to_cash
+  path: erpnext/selling/report/inactive_customers/inactive_customers.py
+  kind: report
+- id: item-wise-sales-history
+  name: Item Wise Sales History
+  module: selling
+  pack: order_to_cash
+  path: erpnext/selling/report/item_wise_sales_history/item_wise_sales_history.py
+  kind: report
+- id: lost-quotations
+  name: Lost Quotations
+  module: selling
+  pack: order_to_cash
+  path: erpnext/selling/report/lost_quotations/lost_quotations.py
+  kind: report
+- id: payment-terms-status-for-sales-order
+  name: Payment Terms Status For Sales Order
+  module: selling
+  pack: order_to_cash
+  path: erpnext/selling/report/payment_terms_status_for_sales_order/payment_terms_status_for_sales_order.py
+  kind: report
+- id: pending-so-items-for-purchase-request
+  name: Pending So Items For Purchase Request
+  module: selling
+  pack: order_to_cash
+  path: erpnext/selling/report/pending_so_items_for_purchase_request/pending_so_items_for_purchase_request.py
+  kind: report
+- id: quotation-trends
+  name: Quotation Trends
+  module: selling
+  pack: order_to_cash
+  path: erpnext/selling/report/quotation_trends/quotation_trends.py
+  kind: report
+- id: sales-analytics
+  name: Sales Analytics
+  module: selling
+  pack: order_to_cash
+  path: erpnext/selling/report/sales_analytics/sales_analytics.py
+  kind: report
+- id: sales-order-analysis
+  name: Sales Order Analysis
+  module: selling
+  pack: order_to_cash
+  path: erpnext/selling/report/sales_order_analysis/sales_order_analysis.py
+  kind: report
+- id: sales-order-trends
+  name: Sales Order Trends
+  module: selling
+  pack: order_to_cash
+  path: erpnext/selling/report/sales_order_trends/sales_order_trends.py
+  kind: report
+- id: sales-partner-commission-summary
+  name: Sales Partner Commission Summary
+  module: selling
+  pack: order_to_cash
+  path: erpnext/selling/report/sales_partner_commission_summary/sales_partner_commission_summary.py
+  kind: report
+- id: sales-partner-target-variance-based-on-item-group
+  name: Sales Partner Target Variance Based On Item Group
+  module: selling
+  pack: order_to_cash
+  path: erpnext/selling/report/sales_partner_target_variance_based_on_item_group/item_group_wise_sales_target_variance.py
+  kind: report
+- id: sales-partner-target-variance-based-on-item-group
+  name: Sales Partner Target Variance Based On Item Group
+  module: selling
+  pack: order_to_cash
+  path: erpnext/selling/report/sales_partner_target_variance_based_on_item_group/sales_partner_target_variance_based_on_item_group.py
+  kind: report
+- id: sales-partner-transaction-summary
+  name: Sales Partner Transaction Summary
+  module: selling
+  pack: order_to_cash
+  path: erpnext/selling/report/sales_partner_transaction_summary/sales_partner_transaction_summary.py
+  kind: report
+- id: sales-person-commission-summary
+  name: Sales Person Commission Summary
+  module: selling
+  pack: order_to_cash
+  path: erpnext/selling/report/sales_person_commission_summary/sales_person_commission_summary.py
+  kind: report
+- id: sales-person-target-variance-based-on-item-group
+  name: Sales Person Target Variance Based On Item Group
+  module: selling
+  pack: order_to_cash
+  path: erpnext/selling/report/sales_person_target_variance_based_on_item_group/sales_person_target_variance_based_on_item_group.py
+  kind: report
+- id: sales-person-wise-transaction-summary
+  name: Sales Person Wise Transaction Summary
+  module: selling
+  pack: order_to_cash
+  path: erpnext/selling/report/sales_person_wise_transaction_summary/sales_person_wise_transaction_summary.py
+  kind: report
+- id: territory-target-variance-based-on-item-group
+  name: Territory Target Variance Based On Item Group
+  module: selling
+  pack: order_to_cash
+  path: erpnext/selling/report/territory_target_variance_based_on_item_group/territory_target_variance_based_on_item_group.py
+  kind: report
+- id: territory-wise-sales
+  name: Territory Wise Sales
+  module: selling
+  pack: order_to_cash
+  path: erpnext/selling/report/territory_wise_sales/territory_wise_sales.py
+  kind: report
+- id: available-batch-report
+  name: Available Batch Report
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/report/available_batch_report/available_batch_report.py
+  kind: report
+- id: available-serial-no
+  name: Available Serial No
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/report/available_serial_no/available_serial_no.py
+  kind: report
+- id: batch-item-expiry-status
+  name: Batch Item Expiry Status
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/report/batch_item_expiry_status/batch_item_expiry_status.py
+  kind: report
+- id: batch-split-tree
+  name: Batch Split Tree
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/report/batch_split_tree/batch_split_tree.py
+  kind: report
+- id: batch-wise-balance-history
+  name: Batch Wise Balance History
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/report/batch_wise_balance_history/batch_wise_balance_history.py
+  kind: report
+- id: bom-search
+  name: Bom Search
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/report/bom_search/bom_search.py
+  kind: report
+- id: cogs-by-item-group
+  name: Cogs By Item Group
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/report/cogs_by_item_group/cogs_by_item_group.py
+  kind: report
+- id: delayed-item-report
+  name: Delayed Item Report
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/report/delayed_item_report/delayed_item_report.py
+  kind: report
+- id: delayed-order-report
+  name: Delayed Order Report
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/report/delayed_order_report/delayed_order_report.py
+  kind: report
+- id: delivery-note-trends
+  name: Delivery Note Trends
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/report/delivery_note_trends/delivery_note_trends.py
+  kind: report
+- id: fifo-queue-vs-qty-after-transaction-comparison
+  name: Fifo Queue Vs Qty After Transaction Comparison
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/report/fifo_queue_vs_qty_after_transaction_comparison/fifo_queue_vs_qty_after_transaction_comparison.py
+  kind: report
+- id: incorrect-balance-qty-after-transaction
+  name: Incorrect Balance Qty After Transaction
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/report/incorrect_balance_qty_after_transaction/incorrect_balance_qty_after_transaction.py
+  kind: report
+- id: incorrect-serial-and-batch-bundle
+  name: Incorrect Serial And Batch Bundle
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/report/incorrect_serial_and_batch_bundle/incorrect_serial_and_batch_bundle.py
+  kind: report
+- id: incorrect-serial-no-valuation
+  name: Incorrect Serial No Valuation
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/report/incorrect_serial_no_valuation/incorrect_serial_no_valuation.py
+  kind: report
+- id: incorrect-stock-value-report
+  name: Incorrect Stock Value Report
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/report/incorrect_stock_value_report/incorrect_stock_value_report.py
+  kind: report
+- id: item-price-stock
+  name: Item Price Stock
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/report/item_price_stock/item_price_stock.py
+  kind: report
+- id: item-prices
+  name: Item Prices
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/report/item_prices/item_prices.py
+  kind: report
+- id: item-shortage-report
+  name: Item Shortage Report
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/report/item_shortage_report/item_shortage_report.py
+  kind: report
+- id: item-variant-details
+  name: Item Variant Details
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/report/item_variant_details/item_variant_details.py
+  kind: report
+- id: item-where-used
+  name: Item Where Used
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/report/item_where_used/item_where_used.py
+  kind: report
+- id: item-wise-consumption
+  name: Item Wise Consumption
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/report/item_wise_consumption/item_wise_consumption.py
+  kind: report
+- id: itemwise-recommended-reorder-level
+  name: Itemwise Recommended Reorder Level
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/report/itemwise_recommended_reorder_level/itemwise_recommended_reorder_level.py
+  kind: report
+- id: landed-cost-report
+  name: Landed Cost Report
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/report/landed_cost_report/landed_cost_report.py
+  kind: report
+- id: negative-batch-report
+  name: Negative Batch Report
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/report/negative_batch_report/negative_batch_report.py
+  kind: report
+- id: product-bundle-balance
+  name: Product Bundle Balance
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/report/product_bundle_balance/product_bundle_balance.py
+  kind: report
+- id: purchase-receipt-trends
+  name: Purchase Receipt Trends
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/report/purchase_receipt_trends/purchase_receipt_trends.py
+  kind: report
+- id: reserved-stock
+  name: Reserved Stock
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/report/reserved_stock/reserved_stock.py
+  kind: report
+- id: serial-and-batch-summary
+  name: Serial And Batch Summary
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/report/serial_and_batch_summary/serial_and_batch_summary.py
+  kind: report
+- id: serial-no-and-batch-traceability
+  name: Serial No And Batch Traceability
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/report/serial_no_and_batch_traceability/serial_no_and_batch_traceability.py
+  kind: report
+- id: serial-no-ledger
+  name: Serial No Ledger
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/report/serial_no_ledger/serial_no_ledger.py
+  kind: report
+- id: stock-ageing
+  name: Stock Ageing
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/report/stock_ageing/stock_ageing.py
+  kind: report
+- id: stock-analytics
+  name: Stock Analytics
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/report/stock_analytics/stock_analytics.py
+  kind: report
+- id: stock-and-account-value-comparison
+  name: Stock And Account Value Comparison
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/report/stock_and_account_value_comparison/stock_and_account_value_comparison.py
+  kind: report
+- id: stock-balance
+  name: Stock Balance
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/report/stock_balance/stock_balance.py
+  kind: report
+- id: stock-ledger
+  name: Stock Ledger
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/report/stock_ledger/stock_ledger.py
+  kind: report
+- id: stock-ledger-invariant-check
+  name: Stock Ledger Invariant Check
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/report/stock_ledger_invariant_check/stock_ledger_invariant_check.py
+  kind: report
+- id: stock-ledger-variance
+  name: Stock Ledger Variance
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/report/stock_ledger_variance/stock_ledger_variance.py
+  kind: report
+- id: stock-projected-qty
+  name: Stock Projected Qty
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/report/stock_projected_qty/stock_projected_qty.py
+  kind: report
+- id: stock-qty-vs-batch-qty
+  name: Stock Qty Vs Batch Qty
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/report/stock_qty_vs_batch_qty/stock_qty_vs_batch_qty.py
+  kind: report
+- id: stock-qty-vs-serial-no-count
+  name: Stock Qty Vs Serial No Count
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/report/stock_qty_vs_serial_no_count/stock_qty_vs_serial_no_count.py
+  kind: report
+- id: total-stock-summary
+  name: Total Stock Summary
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/report/total_stock_summary/total_stock_summary.py
+  kind: report
+- id: warehouse-wise-item-balance-age-and-value
+  name: Warehouse Wise Item Balance Age And Value
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/report/warehouse_wise_item_balance_age_and_value/warehouse_wise_item_balance_age_and_value.py
+  kind: report
+- id: warehouse-wise-stock-balance
+  name: Warehouse Wise Stock Balance
+  module: stock
+  pack: inventory_management
+  path: erpnext/stock/report/warehouse_wise_stock_balance/warehouse_wise_stock_balance.py
+  kind: report
+- id: first-response-time-for-issues
+  name: First Response Time For Issues
+  module: support
+  pack: support_sla
+  path: erpnext/support/report/first_response_time_for_issues/first_response_time_for_issues.py
+  kind: report
+- id: issue-analytics
+  name: Issue Analytics
+  module: support
+  pack: support_sla
+  path: erpnext/support/report/issue_analytics/issue_analytics.py
+  kind: report
+- id: issue-summary
+  name: Issue Summary
+  module: support
+  pack: support_sla
+  path: erpnext/support/report/issue_summary/issue_summary.py
+  kind: report
+- id: support-hour-distribution
+  name: Support Hour Distribution
+  module: support
+  pack: support_sla
+  path: erpnext/support/report/support_hour_distribution/support_hour_distribution.py
+  kind: report
+- id: youtube-interactions
+  name: Youtube Interactions
+  module: utilities
+  pack: erp_masters
+  path: erpnext/utilities/report/youtube_interactions/youtube_interactions.py
+  kind: report
+not_portable:
+- frappe.get_doc / Document ORM lifecycle (submit/cancel/amend)
+- DocType JSON schema → port to SQLAlchemy + Pydantic
+- frappe.model.mapper.get_mapped_doc → explicit transform services
+- frappe.qb query builder → SQLAlchemy 2.0
+- Desk UI (*.js), print formats, website portal routes
+- Role/profile permission system → FastAPI RBAC deps

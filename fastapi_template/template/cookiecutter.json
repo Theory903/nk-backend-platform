@@ -110,6 +110,7 @@
         "frontend/node_modules/**",
         "deploy/helm/*",
         "deploy/helm/**",
-        "*/static/studio/dist/*"
+        "*/static/studio/dist/*",
+        "agents/skills/self-improving-agent-skills/frontend/**"
     ]
 }

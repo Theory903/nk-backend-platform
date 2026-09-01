@@ -9,6 +9,11 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from {{cookiecutter.project_name}}.agents.security_rag import (
+    format_retrieved_chunk,
+    wrap_retrieved_context,
+)
+from {{cookiecutter.project_name}}.agents.security_loader import load_security_manifest
 from {{cookiecutter.project_name}}.platform.contracts import (
     CacheKey,
     CacheProvider,
@@ -220,17 +225,24 @@ def _fit_context(
     hits: list[RetrievalHit],
     max_chars: int,
 ) -> tuple[str, list[RetrievalHit]]:
+    manifest = load_security_manifest()
     selected: list[RetrievalHit] = []
     parts: list[str] = []
     used = 0
     for hit in hits:
-        part = f"[{hit.chunk.chunk_id}] {hit.chunk.text}"
+        if manifest.rag_sanitize_chunks:
+            part = format_retrieved_chunk(hit.chunk.chunk_id, hit.chunk.text)
+        else:
+            part = f"[{hit.chunk.chunk_id}] {hit.chunk.text}"
         if selected and used + len(part) > max_chars:
             break
         selected.append(hit)
         parts.append(part)
         used += len(part)
-    return "\n\n".join(parts), selected
+    context = "\n\n".join(parts)
+    if manifest.rag_data_boundary and context:
+        context = wrap_retrieved_context(context)
+    return context, selected
 
 
 __all__ = [

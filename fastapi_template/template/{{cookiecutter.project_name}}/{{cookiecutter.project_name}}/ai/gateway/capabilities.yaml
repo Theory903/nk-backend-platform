@@ -1,0 +1,33 @@
+# Capability-based model routes (P2).
+#
+# Callers request capabilities (`chat`, `reasoning`, `fast`) — not raw model names.
+# The gateway resolves provider/model + ordered fallbacks from this manifest.
+#
+# Override path via env: {{cookiecutter.project_name | upper}}_LLM_CAPABILITIES_FILE
+
+capabilities:
+  chat:
+    provider: ollama
+    model: llama3.2
+    fallback: []
+
+  reasoning:
+    provider: ollama
+    model: llama3.2
+    fallback: []
+
+  fast:
+    provider: ollama
+    model: llama3.2
+    fallback: []
+
+  tools:
+    provider: ollama
+    model: llama3.2
+    fallback: []
+
+# Legacy task aliases used by feature packs map to these capabilities.
+task_aliases:
+  default: chat
+  reasoning: reasoning
+  fast: fast

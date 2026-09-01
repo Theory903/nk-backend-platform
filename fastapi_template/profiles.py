@@ -46,6 +46,19 @@ _AGENTIC: dict[str, Any] = {
     "enable_graphrag": True,
 }
 
+_PRODUCTION_AI: dict[str, Any] = {
+    **_AGENTIC,
+    "enable_audit": True,
+    "enable_idempotency": True,
+    "enable_nats": True,
+}
+
+_PRODUCTION_AI_LOCAL: dict[str, Any] = {
+    **_AGENTIC,
+    "enable_audit": True,
+    "profile": "production-ai-local",
+}
+
 _FINTECH: dict[str, Any] = {
     **_SAAS,
     "enable_audit": True,
@@ -59,6 +72,8 @@ PROFILES: dict[str, dict[str, Any]] = {
     "saas": _SAAS,
     "ai-saas": _AI_SAAS,
     "agentic": _AGENTIC,
+    "production-ai": _PRODUCTION_AI,
+    "production-ai-local": _PRODUCTION_AI_LOCAL,
     "fintech": _FINTECH,
 }
 
@@ -70,6 +85,12 @@ PROFILE_DESCRIPTIONS: dict[str, str] = {
     ),
     "ai-saas": "SaaS baseline + LLM + vector storage + traditional RAG",
     "agentic": "AI SaaS + agent runtime + GraphRAG",
+    "production-ai": (
+        "Agentic stack + audit + idempotency + NATS (NK-native AI modules)"
+    ),
+    "production-ai-local": (
+        "Agentic stack + audit, Ollama-only — no external API keys required"
+    ),
     "fintech": "SaaS baseline + audit trail + idempotency + fintech primitives",
 }
 
@@ -88,6 +109,8 @@ USE_CASE_PROFILES: dict[str, str | None] = {
     "ai-saas": "ai-saas",
     "ai-knowledge": "ai-saas",
     "agentic": "agentic",
+    "production-ai": "production-ai",
+    "production-ai-local": "production-ai-local",
     "automation-platform": "saas",
     "event-platform": "saas",
     "fintech": "fintech",
@@ -110,6 +133,7 @@ USE_CASE_DESCRIPTIONS: dict[str, str] = {
     "ai-saas": "AI-powered SaaS applications",
     "ai-knowledge": "RAG and enterprise knowledge systems",
     "agentic": "Tool-using AI applications",
+    "production-ai": "Production AI platform with full catalog and scale controls",
     "automation-platform": "Workflow and task automation",
     "event-platform": "Event-driven and message-based systems",
     "fintech": "Transactional and financial workloads",

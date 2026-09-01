@@ -8,8 +8,10 @@ from {{cookiecutter.project_name}}.ai.gateway.router import (
     ModelRouter,
     get_router,
 )
+from {{cookiecutter.project_name}}.ai.gateway.capabilities import resolve_capability
 
 __all__ = [
     "ModelRouter",
     "get_router",
+    "resolve_capability",
 ]

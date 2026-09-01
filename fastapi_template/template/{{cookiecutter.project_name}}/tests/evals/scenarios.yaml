@@ -1,0 +1,12 @@
+# Harness scenarios (P14) — run via: uv run nk ai harness run
+scenarios:
+  - name: smoke-agent
+    description: Basic agent smoke with substring expectations
+    runtime_mode: loop
+    cases:
+      - name: health-of-agent
+        input: "Explain that this is an NK Backend OS agent."
+        expected_contains:
+          - "NK"
+        metadata:
+          category: smoke

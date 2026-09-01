@@ -36,6 +36,30 @@ The API documentation surfaces are:
 - `/api/swagger` — interactive Swagger explorer
 - `/api/redoc` — reference-oriented ReDoc view
 
+Export a machine-readable OpenAPI document for Postman, Insomnia, Bruno, or
+Hoppscotch (no server required). New routes appear automatically after you
+regenerate:
+
+```bash
+uv run nk export-openapi
+```
+
+This writes:
+
+- `docs/openapi.json` — Postman-ready OpenAPI with server variables, auth
+  examples, and corrected JWT token URL
+- `docs/postman-environment.json` — variables (`baseUrl`, `testEmail`,
+  `testPassword`, `accessToken`, …)
+
+**Postman import (in order):**
+
+1. **Environments** → Import `docs/postman-environment.json` → select **NK Local Dev**
+2. **Collections** → Import `docs/openapi.json`
+3. Run **Register**, then **JWT Login** (form body — `username` is the email)
+4. Copy `access_token` into the `accessToken` environment variable
+
+Import `docs/openapi.json` in Postman via **File → Import**.
+
 The generated project logo is served from
 `/static/branding/logo.png`; replace that asset to apply your own branding.
 
@@ -63,6 +87,28 @@ point.
 | `uv run nk dev --otlp` | Include the local OpenTelemetry/Grafana overlay |
 | `uv run nk build` | Build the production Docker target |
 | `uv run nk generate …` | Scaffold a business module |
+| `uv run nk export-openapi` | Write `docs/openapi.json` for Postman / Insomnia / Bruno |
+| `./scripts/e2e_postman.sh` | Full API smoke via Postman CLI + curl (requires Compose stack) |
+
+## End-to-end API smoke (Postman CLI)
+
+With the Compose dev stack running (`uv run nk dev` or `docker compose … up`):
+
+```bash
+# Install Postman CLI once: https://learning.postman.com/docs/postman-cli/postman-cli-overview/
+./scripts/e2e_postman.sh
+```
+
+The script waits for `/api/ready`, exercises auth, infra (Redis/Kafka/Rabbit/NATS when
+enabled), SCIM, files, MCP, and cookie auth. In dev, privileged routes use an ApiKey
+printed at startup:
+
+```bash
+docker logs {{cookiecutter.project_name}}-api-1 2>&1 | rg '\[dev e2e\]'
+```
+
+Restart the API container after code changes so the bootstrap key is re-emitted.
+Override the container name with `API_CONTAINER=…` or pass `E2E_API_KEY=…` directly.
 
 ## Docker
 

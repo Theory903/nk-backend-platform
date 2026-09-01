@@ -1,0 +1,3212 @@
+upstream: frappe/erpnext
+doctype_count: 534
+implemented_count: 26
+specialized_table_count: 26
+universal_api_count: 534
+coverage_pct: 100.0
+specialized_coverage_pct: 4.9
+doctypes:
+- name: Account
+  module: accounts
+  field_count: 21
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/account/account.json
+- name: Account Category
+  module: accounts
+  field_count: 4
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/account_category/account_category.json
+- name: Account Closing Balance
+  module: accounts
+  field_count: 16
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/account_closing_balance/account_closing_balance.json
+- name: Accounting Dimension
+  module: accounts
+  field_count: 5
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/accounting_dimension/accounting_dimension.json
+- name: Accounting Dimension Detail
+  module: accounts
+  field_count: 8
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/accounting_dimension_detail/accounting_dimension_detail.json
+- name: Accounting Dimension Filter
+  module: accounts
+  field_count: 13
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/accounting_dimension_filter/accounting_dimension_filter.json
+- name: Accounting Period
+  module: accounts
+  field_count: 9
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/accounting_period/accounting_period.json
+- name: Accounts Settings
+  module: accounts
+  field_count: 113
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/accounts_settings/accounts_settings.json
+- name: Advance Payment Ledger Entry
+  module: accounts
+  field_count: 11
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/advance_payment_ledger_entry/advance_payment_ledger_entry.json
+- name: Advance Taxes and Charges
+  module: accounts
+  field_count: 24
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/advance_taxes_and_charges/advance_taxes_and_charges.json
+- name: Allowed Dimension
+  module: accounts
+  field_count: 2
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/allowed_dimension/allowed_dimension.json
+- name: Allowed To Transact With
+  module: accounts
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/allowed_to_transact_with/allowed_to_transact_with.json
+- name: Applicable On Account
+  module: accounts
+  field_count: 2
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/applicable_on_account/applicable_on_account.json
+- name: Bank
+  module: accounts
+  field_count: 13
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/bank/bank.json
+- name: Bank Account
+  module: accounts
+  field_count: 30
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/bank_account/bank_account.json
+- name: Bank Account Balance
+  module: accounts
+  field_count: 4
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/bank_account_balance/bank_account_balance.json
+- name: Bank Account Subtype
+  module: accounts
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/bank_account_subtype/bank_account_subtype.json
+- name: Bank Account Type
+  module: accounts
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/bank_account_type/bank_account_type.json
+- name: Bank Clearance
+  module: accounts
+  field_count: 10
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/bank_clearance/bank_clearance.json
+- name: Bank Clearance Detail
+  module: accounts
+  field_count: 9
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/bank_clearance_detail/bank_clearance_detail.json
+- name: Bank Guarantee
+  module: accounts
+  field_count: 30
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/bank_guarantee/bank_guarantee.json
+- name: Bank Reconciliation Tool
+  module: accounts
+  field_count: 16
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/bank_reconciliation_tool/bank_reconciliation_tool.json
+- name: Bank Statement Import
+  module: accounts
+  field_count: 27
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/bank_statement_import/bank_statement_import.json
+- name: Bank Statement Import Log
+  module: accounts
+  field_count: 24
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/bank_statement_import_log/bank_statement_import_log.json
+- name: Bank Statement Import Log Column Map
+  module: accounts
+  field_count: 4
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/bank_statement_import_log_column_map/bank_statement_import_log_column_map.json
+- name: Bank Transaction
+  module: accounts
+  field_count: 37
+  is_submittable: true
+  nk_table: erp_bank_transaction
+  upstream_path: erpnext/accounts/doctype/bank_transaction/bank_transaction.json
+- name: Bank Transaction Mapping
+  module: accounts
+  field_count: 2
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/bank_transaction_mapping/bank_transaction_mapping.json
+- name: Bank Transaction Payments
+  module: accounts
+  field_count: 5
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/bank_transaction_payments/bank_transaction_payments.json
+- name: Bank Transaction Rule
+  module: accounts
+  field_count: 19
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/bank_transaction_rule/bank_transaction_rule.json
+- name: Bank Transaction Rule Accounts
+  module: accounts
+  field_count: 6
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/bank_transaction_rule_accounts/bank_transaction_rule_accounts.json
+- name: Bank Transaction Rule Description Conditions
+  module: accounts
+  field_count: 2
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/bank_transaction_rule_description_conditions/bank_transaction_rule_description_conditions.json
+- name: Bisect Accounting Statements
+  module: accounts
+  field_count: 27
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/bisect_accounting_statements/bisect_accounting_statements.json
+- name: Bisect Nodes
+  module: accounts
+  field_count: 9
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/bisect_nodes/bisect_nodes.json
+- name: Budget
+  module: accounts
+  field_count: 40
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/budget/budget.json
+- name: Budget Account
+  module: accounts
+  field_count: 2
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/budget_account/budget_account.json
+- name: Budget Distribution
+  module: accounts
+  field_count: 4
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/budget_distribution/budget_distribution.json
+- name: Campaign Item
+  module: accounts
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/campaign_item/campaign_item.json
+- name: Cashier Closing
+  module: accounts
+  field_count: 12
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/cashier_closing/cashier_closing.json
+- name: Cashier Closing Payments
+  module: accounts
+  field_count: 2
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/cashier_closing_payments/cashier_closing_payments.json
+- name: Chart of Accounts Importer
+  module: accounts
+  field_count: 5
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/chart_of_accounts_importer/chart_of_accounts_importer.json
+- name: Cheque Print Template
+  module: accounts
+  field_count: 39
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/cheque_print_template/cheque_print_template.json
+- name: Closed Document
+  module: accounts
+  field_count: 2
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/closed_document/closed_document.json
+- name: Cost Center
+  module: accounts
+  field_count: 11
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/cost_center/cost_center.json
+- name: Cost Center Allocation
+  module: accounts
+  field_count: 7
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/cost_center_allocation/cost_center_allocation.json
+- name: Cost Center Allocation Percentage
+  module: accounts
+  field_count: 2
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/cost_center_allocation_percentage/cost_center_allocation_percentage.json
+- name: Coupon Code
+  module: accounts
+  field_count: 15
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/coupon_code/coupon_code.json
+- name: Currency Exchange Settings
+  module: accounts
+  field_count: 13
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/currency_exchange_settings/currency_exchange_settings.json
+- name: Currency Exchange Settings Details
+  module: accounts
+  field_count: 2
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/currency_exchange_settings_details/currency_exchange_settings_details.json
+- name: Currency Exchange Settings Result
+  module: accounts
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/currency_exchange_settings_result/currency_exchange_settings_result.json
+- name: Customer Group Item
+  module: accounts
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/customer_group_item/customer_group_item.json
+- name: Customer Item
+  module: accounts
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/customer_item/customer_item.json
+- name: Discounted Invoice
+  module: accounts
+  field_count: 6
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/discounted_invoice/discounted_invoice.json
+- name: Dunning
+  module: accounts
+  field_count: 54
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/dunning/dunning.json
+- name: Dunning Letter Text
+  module: accounts
+  field_count: 7
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/dunning_letter_text/dunning_letter_text.json
+- name: Dunning Type
+  module: accounts
+  field_count: 14
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/dunning_type/dunning_type.json
+- name: Exchange Rate Revaluation
+  module: accounts
+  field_count: 13
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/exchange_rate_revaluation/exchange_rate_revaluation.json
+- name: Exchange Rate Revaluation Account
+  module: accounts
+  field_count: 20
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/exchange_rate_revaluation_account/exchange_rate_revaluation_account.json
+- name: Finance Book
+  module: accounts
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/finance_book/finance_book.json
+- name: Financial Report Row
+  module: accounts
+  field_count: 21
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/financial_report_row/financial_report_row.json
+- name: Financial Report Template
+  module: accounts
+  field_count: 7
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/financial_report_template/financial_report_template.json
+- name: Fiscal Year
+  module: accounts
+  field_count: 7
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/fiscal_year/fiscal_year.json
+- name: Fiscal Year Company
+  module: accounts
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/fiscal_year_company/fiscal_year_company.json
+- name: GL Entry
+  module: accounts
+  field_count: 47
+  is_submittable: true
+  nk_table: erp_gl_entry
+  upstream_path: erpnext/accounts/doctype/gl_entry/gl_entry.json
+- name: Invoice Discounting
+  module: accounts
+  field_count: 22
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/invoice_discounting/invoice_discounting.json
+- name: Item Tax Template
+  module: accounts
+  field_count: 6
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/item_tax_template/item_tax_template.json
+- name: Item Tax Template Detail
+  module: accounts
+  field_count: 3
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/item_tax_template_detail/item_tax_template_detail.json
+- name: Item Wise Tax Detail
+  module: accounts
+  field_count: 5
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/item_wise_tax_detail/item_wise_tax_detail.json
+- name: Journal Entry
+  module: accounts
+  field_count: 74
+  is_submittable: true
+  nk_table: erp_gl_entry
+  upstream_path: erpnext/accounts/doctype/journal_entry/journal_entry.json
+- name: Journal Entry Account
+  module: accounts
+  field_count: 32
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/journal_entry_account/journal_entry_account.json
+- name: Journal Entry Template
+  module: accounts
+  field_count: 10
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/journal_entry_template/journal_entry_template.json
+- name: Journal Entry Template Account
+  module: accounts
+  field_count: 7
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/journal_entry_template_account/journal_entry_template_account.json
+- name: Ledger Health
+  module: accounts
+  field_count: 5
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/ledger_health/ledger_health.json
+- name: Ledger Health Monitor
+  module: accounts
+  field_count: 7
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/ledger_health_monitor/ledger_health_monitor.json
+- name: Ledger Health Monitor Company
+  module: accounts
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/ledger_health_monitor_company/ledger_health_monitor_company.json
+- name: Ledger Merge
+  module: accounts
+  field_count: 10
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/ledger_merge/ledger_merge.json
+- name: Ledger Merge Accounts
+  module: accounts
+  field_count: 3
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/ledger_merge_accounts/ledger_merge_accounts.json
+- name: Loyalty Point Entry
+  module: accounts
+  field_count: 12
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/loyalty_point_entry/loyalty_point_entry.json
+- name: Loyalty Point Entry Redemption
+  module: accounts
+  field_count: 3
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/loyalty_point_entry_redemption/loyalty_point_entry_redemption.json
+- name: Loyalty Program
+  module: accounts
+  field_count: 22
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/loyalty_program/loyalty_program.json
+- name: Loyalty Program Collection
+  module: accounts
+  field_count: 4
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/loyalty_program_collection/loyalty_program_collection.json
+- name: Mode of Payment
+  module: accounts
+  field_count: 4
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/mode_of_payment/mode_of_payment.json
+- name: Mode of Payment Account
+  module: accounts
+  field_count: 2
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/mode_of_payment_account/mode_of_payment_account.json
+- name: Monthly Distribution
+  module: accounts
+  field_count: 3
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/monthly_distribution/monthly_distribution.json
+- name: Monthly Distribution Percentage
+  module: accounts
+  field_count: 2
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/monthly_distribution_percentage/monthly_distribution_percentage.json
+- name: Opening Invoice Creation Tool
+  module: accounts
+  field_count: 11
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/opening_invoice_creation_tool/opening_invoice_creation_tool.json
+- name: Opening Invoice Creation Tool Item
+  module: accounts
+  field_count: 18
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/opening_invoice_creation_tool_item/opening_invoice_creation_tool_item.json
+- name: Overdue Payment
+  module: accounts
+  field_count: 18
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/overdue_payment/overdue_payment.json
+- name: Party Account
+  module: accounts
+  field_count: 3
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/party_account/party_account.json
+- name: Party Link
+  module: accounts
+  field_count: 5
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/party_link/party_link.json
+- name: Payment Entry
+  module: accounts
+  field_count: 93
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/payment_entry/payment_entry.json
+- name: Payment Entry Deduction
+  module: accounts
+  field_count: 6
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/payment_entry_deduction/payment_entry_deduction.json
+- name: Payment Entry Reference
+  module: accounts
+  field_count: 20
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/payment_entry_reference/payment_entry_reference.json
+- name: Payment Gateway Account
+  module: accounts
+  field_count: 10
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/payment_gateway_account/payment_gateway_account.json
+- name: Payment Ledger Entry
+  module: accounts
+  field_count: 20
+  is_submittable: true
+  nk_table: erp_payment_ledger
+  upstream_path: erpnext/accounts/doctype/payment_ledger_entry/payment_ledger_entry.json
+- name: Payment Order
+  module: accounts
+  field_count: 12
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/payment_order/payment_order.json
+- name: Payment Order Reference
+  module: accounts
+  field_count: 12
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/payment_order_reference/payment_order_reference.json
+- name: Payment Reconciliation
+  module: accounts
+  field_count: 32
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/payment_reconciliation/payment_reconciliation.json
+- name: Payment Reconciliation Allocation
+  module: accounts
+  field_count: 23
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/payment_reconciliation_allocation/payment_reconciliation_allocation.json
+- name: Payment Reconciliation Invoice
+  module: accounts
+  field_count: 8
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/payment_reconciliation_invoice/payment_reconciliation_invoice.json
+- name: Payment Reconciliation Payment
+  module: accounts
+  field_count: 13
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/payment_reconciliation_payment/payment_reconciliation_payment.json
+- name: Payment Reference
+  module: accounts
+  field_count: 10
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/payment_reference/payment_reference.json
+- name: Payment Request
+  module: accounts
+  field_count: 60
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/payment_request/payment_request.json
+- name: Payment Schedule
+  module: accounts
+  field_count: 27
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/payment_schedule/payment_schedule.json
+- name: Payment Term
+  module: accounts
+  field_count: 15
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/payment_term/payment_term.json
+- name: Payment Terms Template
+  module: accounts
+  field_count: 3
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/payment_terms_template/payment_terms_template.json
+- name: Payment Terms Template Detail
+  module: accounts
+  field_count: 16
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/payment_terms_template_detail/payment_terms_template_detail.json
+- name: Pegged Currencies
+  module: accounts
+  field_count: 2
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/pegged_currencies/pegged_currencies.json
+- name: Pegged Currency Details
+  module: accounts
+  field_count: 3
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/pegged_currency_details/pegged_currency_details.json
+- name: Period Closing Voucher
+  module: accounts
+  field_count: 11
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/period_closing_voucher/period_closing_voucher.json
+- name: POS Closing Entry
+  module: accounts
+  field_count: 31
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/pos_closing_entry/pos_closing_entry.json
+- name: POS Closing Entry Detail
+  module: accounts
+  field_count: 5
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/pos_closing_entry_detail/pos_closing_entry_detail.json
+- name: POS Closing Entry Taxes
+  module: accounts
+  field_count: 2
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/pos_closing_entry_taxes/pos_closing_entry_taxes.json
+- name: POS Customer Group
+  module: accounts
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/pos_customer_group/pos_customer_group.json
+- name: POS Field
+  module: accounts
+  field_count: 8
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/pos_field/pos_field.json
+- name: POS Invoice
+  module: accounts
+  field_count: 185
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/pos_invoice/pos_invoice.json
+- name: POS Invoice Item
+  module: accounts
+  field_count: 102
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/pos_invoice_item/pos_invoice_item.json
+- name: POS Invoice Merge Log
+  module: accounts
+  field_count: 15
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/pos_invoice_merge_log/pos_invoice_merge_log.json
+- name: POS Invoice Reference
+  module: accounts
+  field_count: 7
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/pos_invoice_reference/pos_invoice_reference.json
+- name: POS Item Group
+  module: accounts
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/pos_item_group/pos_item_group.json
+- name: POS Opening Entry
+  module: accounts
+  field_count: 16
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/pos_opening_entry/pos_opening_entry.json
+- name: POS Opening Entry Detail
+  module: accounts
+  field_count: 2
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/pos_opening_entry_detail/pos_opening_entry_detail.json
+- name: POS Payment Method
+  module: accounts
+  field_count: 3
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/pos_payment_method/pos_payment_method.json
+- name: POS Profile
+  module: accounts
+  field_count: 78
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/pos_profile/pos_profile.json
+- name: POS Profile User
+  module: accounts
+  field_count: 2
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/pos_profile_user/pos_profile_user.json
+- name: POS Search Fields
+  module: accounts
+  field_count: 2
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/pos_search_fields/pos_search_fields.json
+- name: POS Settings
+  module: accounts
+  field_count: 6
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/pos_settings/pos_settings.json
+- name: Pricing Rule
+  module: accounts
+  field_count: 88
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/pricing_rule/pricing_rule.json
+- name: Pricing Rule Brand
+  module: accounts
+  field_count: 2
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/pricing_rule_brand/pricing_rule_brand.json
+- name: Pricing Rule Detail
+  module: accounts
+  field_count: 6
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/pricing_rule_detail/pricing_rule_detail.json
+- name: Pricing Rule Item Code
+  module: accounts
+  field_count: 2
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/pricing_rule_item_code/pricing_rule_item_code.json
+- name: Pricing Rule Item Group
+  module: accounts
+  field_count: 2
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/pricing_rule_item_group/pricing_rule_item_group.json
+- name: Process Deferred Accounting
+  module: accounts
+  field_count: 8
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/process_deferred_accounting/process_deferred_accounting.json
+- name: Process Payment Reconciliation
+  module: accounts
+  field_count: 20
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/process_payment_reconciliation/process_payment_reconciliation.json
+- name: Process Payment Reconciliation Log
+  module: accounts
+  field_count: 13
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/process_payment_reconciliation_log/process_payment_reconciliation_log.json
+- name: Process Payment Reconciliation Log Allocations
+  module: accounts
+  field_count: 20
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/process_payment_reconciliation_log_allocations/process_payment_reconciliation_log_allocations.json
+- name: Process Period Closing Voucher
+  module: accounts
+  field_count: 9
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/process_period_closing_voucher/process_period_closing_voucher.json
+- name: Process Period Closing Voucher Detail
+  module: accounts
+  field_count: 4
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/process_period_closing_voucher_detail/process_period_closing_voucher_detail.json
+- name: Process Statement Of Accounts
+  module: accounts
+  field_count: 58
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/process_statement_of_accounts/process_statement_of_accounts.json
+- name: Process Statement Of Accounts CC
+  module: accounts
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/process_statement_of_accounts_cc/process_statement_of_accounts_cc.json
+- name: Process Statement Of Accounts Customer
+  module: accounts
+  field_count: 4
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/process_statement_of_accounts_customer/process_statement_of_accounts_customer.json
+- name: Process Subscription
+  module: accounts
+  field_count: 3
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/process_subscription/process_subscription.json
+- name: Promotional Scheme
+  module: accounts
+  field_count: 37
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/promotional_scheme/promotional_scheme.json
+- name: Promotional Scheme Price Discount
+  module: accounts
+  field_count: 24
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/promotional_scheme_price_discount/promotional_scheme_price_discount.json
+- name: Promotional Scheme Product Discount
+  module: accounts
+  field_count: 26
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/promotional_scheme_product_discount/promotional_scheme_product_discount.json
+- name: PSOA Cost Center
+  module: accounts
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/psoa_cost_center/psoa_cost_center.json
+- name: PSOA Project
+  module: accounts
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/psoa_project/psoa_project.json
+- name: Purchase Invoice
+  module: accounts
+  field_count: 199
+  is_submittable: true
+  nk_table: erp_document
+  upstream_path: erpnext/accounts/doctype/purchase_invoice/purchase_invoice.json
+- name: Purchase Invoice Advance
+  module: accounts
+  field_count: 10
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/purchase_invoice_advance/purchase_invoice_advance.json
+- name: Purchase Invoice Item
+  module: accounts
+  field_count: 118
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/purchase_invoice_item/purchase_invoice_item.json
+- name: Purchase Taxes and Charges
+  module: accounts
+  field_count: 32
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/purchase_taxes_and_charges/purchase_taxes_and_charges.json
+- name: Purchase Taxes and Charges Template
+  module: accounts
+  field_count: 8
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/purchase_taxes_and_charges_template/purchase_taxes_and_charges_template.json
+- name: Repost Accounting Ledger
+  module: accounts
+  field_count: 12
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/repost_accounting_ledger/repost_accounting_ledger.json
+- name: Repost Accounting Ledger Items
+  module: accounts
+  field_count: 6
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/repost_accounting_ledger_items/repost_accounting_ledger_items.json
+- name: Repost Allowed Types
+  module: accounts
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/repost_allowed_types/repost_allowed_types.json
+- name: Repost Payment Ledger
+  module: accounts
+  field_count: 12
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/repost_payment_ledger/repost_payment_ledger.json
+- name: Repost Payment Ledger Items
+  module: accounts
+  field_count: 2
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/repost_payment_ledger_items/repost_payment_ledger_items.json
+- name: Sales Invoice
+  module: accounts
+  field_count: 235
+  is_submittable: true
+  nk_table: erp_document
+  upstream_path: erpnext/accounts/doctype/sales_invoice/sales_invoice.json
+- name: Sales Invoice Advance
+  module: accounts
+  field_count: 10
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/sales_invoice_advance/sales_invoice_advance.json
+- name: Sales Invoice Item
+  module: accounts
+  field_count: 121
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/sales_invoice_item/sales_invoice_item.json
+- name: Sales Invoice Payment
+  module: accounts
+  field_count: 9
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/sales_invoice_payment/sales_invoice_payment.json
+- name: Sales Invoice Reference
+  module: accounts
+  field_count: 7
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/sales_invoice_reference/sales_invoice_reference.json
+- name: Sales Invoice Timesheet
+  module: accounts
+  field_count: 15
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/sales_invoice_timesheet/sales_invoice_timesheet.json
+- name: Sales Partner Item
+  module: accounts
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/sales_partner_item/sales_partner_item.json
+- name: Sales Taxes and Charges
+  module: accounts
+  field_count: 27
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/sales_taxes_and_charges/sales_taxes_and_charges.json
+- name: Sales Taxes and Charges Template
+  module: accounts
+  field_count: 8
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/sales_taxes_and_charges_template/sales_taxes_and_charges_template.json
+- name: Share Balance
+  module: accounts
+  field_count: 10
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/share_balance/share_balance.json
+- name: Share Transfer
+  module: accounts
+  field_count: 26
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/share_transfer/share_transfer.json
+- name: Share Type
+  module: accounts
+  field_count: 2
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/share_type/share_type.json
+- name: Shareholder
+  module: accounts
+  field_count: 15
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/shareholder/shareholder.json
+- name: Shipping Rule
+  module: accounts
+  field_count: 20
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/shipping_rule/shipping_rule.json
+- name: Shipping Rule Condition
+  module: accounts
+  field_count: 3
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/shipping_rule_condition/shipping_rule_condition.json
+- name: Shipping Rule Country
+  module: accounts
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/shipping_rule_country/shipping_rule_country.json
+- name: South Africa VAT Account
+  module: accounts
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/south_africa_vat_account/south_africa_vat_account.json
+- name: Subscription
+  module: accounts
+  field_count: 40
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/subscription/subscription.json
+- name: Subscription Invoice
+  module: accounts
+  field_count: 2
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/subscription_invoice/subscription_invoice.json
+- name: Subscription Plan
+  module: accounts
+  field_count: 20
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/subscription_plan/subscription_plan.json
+- name: Subscription Plan Detail
+  module: accounts
+  field_count: 2
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/subscription_plan_detail/subscription_plan_detail.json
+- name: Subscription Settings
+  module: accounts
+  field_count: 3
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/subscription_settings/subscription_settings.json
+- name: Supplier Group Item
+  module: accounts
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/supplier_group_item/supplier_group_item.json
+- name: Supplier Item
+  module: accounts
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/supplier_item/supplier_item.json
+- name: Tax Category
+  module: accounts
+  field_count: 2
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/tax_category/tax_category.json
+- name: Tax Rule
+  module: accounts
+  field_count: 32
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/tax_rule/tax_rule.json
+- name: Tax Withholding Account
+  module: accounts
+  field_count: 2
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/tax_withholding_account/tax_withholding_account.json
+- name: Tax Withholding Category
+  module: accounts
+  field_count: 12
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/tax_withholding_category/tax_withholding_category.json
+- name: Tax Withholding Entry
+  module: accounts
+  field_count: 29
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/tax_withholding_entry/tax_withholding_entry.json
+- name: Tax Withholding Group
+  module: accounts
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/tax_withholding_group/tax_withholding_group.json
+- name: Tax Withholding Rate
+  module: accounts
+  field_count: 7
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/tax_withholding_rate/tax_withholding_rate.json
+- name: Territory Item
+  module: accounts
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/territory_item/territory_item.json
+- name: Transaction Deletion Record Details
+  module: accounts
+  field_count: 4
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/transaction_deletion_record_details/transaction_deletion_record_details.json
+- name: Unreconcile Payment
+  module: accounts
+  field_count: 6
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/unreconcile_payment/unreconcile_payment.json
+- name: Unreconcile Payment Entries
+  module: accounts
+  field_count: 8
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/accounts/doctype/unreconcile_payment_entries/unreconcile_payment_entries.json
+- name: Asset
+  module: assets
+  field_count: 76
+  is_submittable: true
+  nk_table: erp_asset
+  upstream_path: erpnext/assets/doctype/asset/asset.json
+- name: Asset Activity
+  module: assets
+  field_count: 7
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/assets/doctype/asset_activity/asset_activity.json
+- name: Asset Capitalization
+  module: assets
+  field_count: 39
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/assets/doctype/asset_capitalization/asset_capitalization.json
+- name: Asset Capitalization Asset Item
+  module: assets
+  field_count: 15
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/assets/doctype/asset_capitalization_asset_item/asset_capitalization_asset_item.json
+- name: Asset Capitalization Service Item
+  module: assets
+  field_count: 13
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/assets/doctype/asset_capitalization_service_item/asset_capitalization_service_item.json
+- name: Asset Capitalization Stock Item
+  module: assets
+  field_count: 25
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/assets/doctype/asset_capitalization_stock_item/asset_capitalization_stock_item.json
+- name: Asset Category
+  module: assets
+  field_count: 9
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/assets/doctype/asset_category/asset_category.json
+- name: Asset Category Account
+  module: assets
+  field_count: 5
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/assets/doctype/asset_category_account/asset_category_account.json
+- name: Asset Depreciation Schedule
+  module: assets
+  field_count: 25
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/assets/doctype/asset_depreciation_schedule/asset_depreciation_schedule.json
+- name: Asset Finance Book
+  module: assets
+  field_count: 16
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/assets/doctype/asset_finance_book/asset_finance_book.json
+- name: Asset Maintenance
+  module: assets
+  field_count: 13
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/assets/doctype/asset_maintenance/asset_maintenance.json
+- name: Asset Maintenance Log
+  module: assets
+  field_count: 23
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/assets/doctype/asset_maintenance_log/asset_maintenance_log.json
+- name: Asset Maintenance Task
+  module: assets
+  field_count: 20
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/assets/doctype/asset_maintenance_task/asset_maintenance_task.json
+- name: Asset Maintenance Team
+  module: assets
+  field_count: 7
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/assets/doctype/asset_maintenance_team/asset_maintenance_team.json
+- name: Asset Movement
+  module: assets
+  field_count: 11
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/assets/doctype/asset_movement/asset_movement.json
+- name: Asset Movement Item
+  module: assets
+  field_count: 8
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/assets/doctype/asset_movement_item/asset_movement_item.json
+- name: Asset Repair
+  module: assets
+  field_count: 37
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/assets/doctype/asset_repair/asset_repair.json
+- name: Asset Repair Consumed Item
+  module: assets
+  field_count: 11
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/assets/doctype/asset_repair_consumed_item/asset_repair_consumed_item.json
+- name: Asset Repair Purchase Invoice
+  module: assets
+  field_count: 3
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/assets/doctype/asset_repair_purchase_invoice/asset_repair_purchase_invoice.json
+- name: Asset Shift Allocation
+  module: assets
+  field_count: 9
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/assets/doctype/asset_shift_allocation/asset_shift_allocation.json
+- name: Asset Shift Factor
+  module: assets
+  field_count: 3
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/assets/doctype/asset_shift_factor/asset_shift_factor.json
+- name: Asset Value Adjustment
+  module: assets
+  field_count: 17
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/assets/doctype/asset_value_adjustment/asset_value_adjustment.json
+- name: Depreciation Schedule
+  module: assets
+  field_count: 7
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/assets/doctype/depreciation_schedule/depreciation_schedule.json
+- name: Linked Location
+  module: assets
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/assets/doctype/linked_location/linked_location.json
+- name: Location
+  module: assets
+  field_count: 17
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/assets/doctype/location/location.json
+- name: Maintenance Team Member
+  module: assets
+  field_count: 3
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/assets/doctype/maintenance_team_member/maintenance_team_member.json
+- name: Bulk Transaction Log
+  module: bulk_transaction
+  field_count: 7
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/bulk_transaction/doctype/bulk_transaction_log/bulk_transaction_log.json
+- name: Bulk Transaction Log Detail
+  module: bulk_transaction
+  field_count: 8
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/bulk_transaction/doctype/bulk_transaction_log_detail/bulk_transaction_log_detail.json
+- name: Buying Settings
+  module: buying
+  field_count: 47
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/buying/doctype/buying_settings/buying_settings.json
+- name: Customer Number At Supplier
+  module: buying
+  field_count: 2
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/buying/doctype/customer_number_at_supplier/customer_number_at_supplier.json
+- name: Purchase Order
+  module: buying
+  field_count: 154
+  is_submittable: true
+  nk_table: erp_document
+  upstream_path: erpnext/buying/doctype/purchase_order/purchase_order.json
+- name: Purchase Order Item
+  module: buying
+  field_count: 107
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/buying/doctype/purchase_order_item/purchase_order_item.json
+- name: Purchase Receipt Item Supplied
+  module: buying
+  field_count: 23
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/buying/doctype/purchase_receipt_item_supplied/purchase_receipt_item_supplied.json
+- name: Request for Quotation
+  module: buying
+  field_count: 42
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/buying/doctype/request_for_quotation/request_for_quotation.json
+- name: Request for Quotation Item
+  module: buying
+  field_count: 30
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/buying/doctype/request_for_quotation_item/request_for_quotation_item.json
+- name: Request for Quotation Supplier
+  module: buying
+  field_count: 8
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/buying/doctype/request_for_quotation_supplier/request_for_quotation_supplier.json
+- name: Supplier
+  module: buying
+  field_count: 75
+  is_submittable: false
+  nk_table: erp_supplier
+  upstream_path: erpnext/buying/doctype/supplier/supplier.json
+- name: Supplier Quotation
+  module: buying
+  field_count: 111
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/buying/doctype/supplier_quotation/supplier_quotation.json
+- name: Supplier Quotation Item
+  module: buying
+  field_count: 72
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/buying/doctype/supplier_quotation_item/supplier_quotation_item.json
+- name: Supplier Scorecard
+  module: buying
+  field_count: 21
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/buying/doctype/supplier_scorecard/supplier_scorecard.json
+- name: Supplier Scorecard Criteria
+  module: buying
+  field_count: 4
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/buying/doctype/supplier_scorecard_criteria/supplier_scorecard_criteria.json
+- name: Supplier Scorecard Period
+  module: buying
+  field_count: 12
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/buying/doctype/supplier_scorecard_period/supplier_scorecard_period.json
+- name: Supplier Scorecard Scoring Criteria
+  module: buying
+  field_count: 7
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/buying/doctype/supplier_scorecard_scoring_criteria/supplier_scorecard_scoring_criteria.json
+- name: Supplier Scorecard Scoring Standing
+  module: buying
+  field_count: 15
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/buying/doctype/supplier_scorecard_scoring_standing/supplier_scorecard_scoring_standing.json
+- name: Supplier Scorecard Scoring Variable
+  module: buying
+  field_count: 5
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/buying/doctype/supplier_scorecard_scoring_variable/supplier_scorecard_scoring_variable.json
+- name: Supplier Scorecard Standing
+  module: buying
+  field_count: 12
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/buying/doctype/supplier_scorecard_standing/supplier_scorecard_standing.json
+- name: Supplier Scorecard Variable
+  module: buying
+  field_count: 6
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/buying/doctype/supplier_scorecard_variable/supplier_scorecard_variable.json
+- name: Communication Medium
+  module: communication
+  field_count: 8
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/communication/doctype/communication_medium/communication_medium.json
+- name: Communication Medium Timeslot
+  module: communication
+  field_count: 4
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/communication/doctype/communication_medium_timeslot/communication_medium_timeslot.json
+- name: Appointment
+  module: crm
+  field_count: 18
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/crm/doctype/appointment/appointment.json
+- name: Appointment Booking Settings
+  module: crm
+  field_count: 20
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/crm/doctype/appointment_booking_settings/appointment_booking_settings.json
+- name: Appointment Booking Slots
+  module: crm
+  field_count: 3
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/crm/doctype/appointment_booking_slots/appointment_booking_slots.json
+- name: Availability Of Slots
+  module: crm
+  field_count: 3
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/crm/doctype/availability_of_slots/availability_of_slots.json
+- name: Campaign
+  module: crm
+  field_count: 7
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/crm/doctype/campaign/campaign.json
+- name: Campaign Email Schedule
+  module: crm
+  field_count: 2
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/crm/doctype/campaign_email_schedule/campaign_email_schedule.json
+- name: Competitor
+  module: crm
+  field_count: 2
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/crm/doctype/competitor/competitor.json
+- name: Competitor Detail
+  module: crm
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/crm/doctype/competitor_detail/competitor_detail.json
+- name: Contract
+  module: crm
+  field_count: 32
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/crm/doctype/contract/contract.json
+- name: Contract Fulfilment Checklist
+  module: crm
+  field_count: 6
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/crm/doctype/contract_fulfilment_checklist/contract_fulfilment_checklist.json
+- name: Contract Template
+  module: crm
+  field_count: 7
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/crm/doctype/contract_template/contract_template.json
+- name: Contract Template Fulfilment Terms
+  module: crm
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/crm/doctype/contract_template_fulfilment_terms/contract_template_fulfilment_terms.json
+- name: CRM Note
+  module: crm
+  field_count: 3
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/crm/doctype/crm_note/crm_note.json
+- name: CRM Settings
+  module: crm
+  field_count: 19
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/crm/doctype/crm_settings/crm_settings.json
+- name: Email Campaign
+  module: crm
+  field_count: 8
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/crm/doctype/email_campaign/email_campaign.json
+- name: Frappe CRM Allowed User
+  module: crm
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/crm/doctype/frappe_crm_allowed_user/frappe_crm_allowed_user.json
+- name: Lead
+  module: crm
+  field_count: 71
+  is_submittable: false
+  nk_table: erp_lead
+  upstream_path: erpnext/crm/doctype/lead/lead.json
+- name: Lost Reason Detail
+  module: crm
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/crm/doctype/lost_reason_detail/lost_reason_detail.json
+- name: Market Segment
+  module: crm
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/crm/doctype/market_segment/market_segment.json
+- name: Opportunity
+  module: crm
+  field_count: 83
+  is_submittable: false
+  nk_table: erp_opportunity
+  upstream_path: erpnext/crm/doctype/opportunity/opportunity.json
+- name: Opportunity Item
+  module: crm
+  field_count: 18
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/crm/doctype/opportunity_item/opportunity_item.json
+- name: Opportunity Lost Reason
+  module: crm
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/crm/doctype/opportunity_lost_reason/opportunity_lost_reason.json
+- name: Opportunity Lost Reason Detail
+  module: crm
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/crm/doctype/opportunity_lost_reason_detail/opportunity_lost_reason_detail.json
+- name: Opportunity Type
+  module: crm
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/crm/doctype/opportunity_type/opportunity_type.json
+- name: Prospect
+  module: crm
+  field_count: 31
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/crm/doctype/prospect/prospect.json
+- name: Prospect Lead
+  module: crm
+  field_count: 7
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/crm/doctype/prospect_lead/prospect_lead.json
+- name: Prospect Opportunity
+  module: crm
+  field_count: 9
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/crm/doctype/prospect_opportunity/prospect_opportunity.json
+- name: Sales Stage
+  module: crm
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/crm/doctype/sales_stage/sales_stage.json
+- name: Code List
+  module: edi
+  field_count: 10
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/edi/doctype/code_list/code_list.json
+- name: Common Code
+  module: edi
+  field_count: 9
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/edi/doctype/common_code/common_code.json
+- name: Plaid Settings
+  module: erpnext_integrations
+  field_count: 9
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/erpnext_integrations/doctype/plaid_settings/plaid_settings.json
+- name: Maintenance Schedule
+  module: maintenance
+  field_count: 24
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/maintenance/doctype/maintenance_schedule/maintenance_schedule.json
+- name: Maintenance Schedule Detail
+  module: maintenance
+  field_count: 12
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/maintenance/doctype/maintenance_schedule_detail/maintenance_schedule_detail.json
+- name: Maintenance Schedule Item
+  module: maintenance
+  field_count: 16
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/maintenance/doctype/maintenance_schedule_item/maintenance_schedule_item.json
+- name: Maintenance Visit
+  module: maintenance
+  field_count: 32
+  is_submittable: true
+  nk_table: erp_maintenance_visit
+  upstream_path: erpnext/maintenance/doctype/maintenance_visit/maintenance_visit.json
+- name: Maintenance Visit Purpose
+  module: maintenance
+  field_count: 12
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/maintenance/doctype/maintenance_visit_purpose/maintenance_visit_purpose.json
+- name: Blanket Order
+  module: manufacturing
+  field_count: 26
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/manufacturing/doctype/blanket_order/blanket_order.json
+- name: Blanket Order Item
+  module: manufacturing
+  field_count: 12
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/manufacturing/doctype/blanket_order_item/blanket_order_item.json
+- name: BOM
+  module: manufacturing
+  field_count: 95
+  is_submittable: true
+  nk_table: erp_bom
+  upstream_path: erpnext/manufacturing/doctype/bom/bom.json
+- name: BOM Creator
+  module: manufacturing
+  field_count: 40
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/manufacturing/doctype/bom_creator/bom_creator.json
+- name: BOM Creator Item
+  module: manufacturing
+  field_count: 34
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/manufacturing/doctype/bom_creator_item/bom_creator_item.json
+- name: BOM Explosion Item
+  module: manufacturing
+  field_count: 20
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/manufacturing/doctype/bom_explosion_item/bom_explosion_item.json
+- name: BOM Item
+  module: manufacturing
+  field_count: 40
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/manufacturing/doctype/bom_item/bom_item.json
+- name: BOM Operation
+  module: manufacturing
+  field_count: 37
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/manufacturing/doctype/bom_operation/bom_operation.json
+- name: BOM Secondary Item
+  module: manufacturing
+  field_count: 23
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/manufacturing/doctype/bom_secondary_item/bom_secondary_item.json
+- name: BOM Update Batch
+  module: manufacturing
+  field_count: 4
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/manufacturing/doctype/bom_update_batch/bom_update_batch.json
+- name: BOM Update Log
+  module: manufacturing
+  field_count: 11
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/manufacturing/doctype/bom_update_log/bom_update_log.json
+- name: BOM Update Tool
+  module: manufacturing
+  field_count: 6
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/manufacturing/doctype/bom_update_tool/bom_update_tool.json
+- name: BOM Website Item
+  module: manufacturing
+  field_count: 5
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/manufacturing/doctype/bom_website_item/bom_website_item.json
+- name: BOM Website Operation
+  module: manufacturing
+  field_count: 5
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/manufacturing/doctype/bom_website_operation/bom_website_operation.json
+- name: Downtime Entry
+  module: manufacturing
+  field_count: 11
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/manufacturing/doctype/downtime_entry/downtime_entry.json
+- name: Job Card
+  module: manufacturing
+  field_count: 97
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/manufacturing/doctype/job_card/job_card.json
+- name: Job Card Item
+  module: manufacturing
+  field_count: 14
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/manufacturing/doctype/job_card_item/job_card_item.json
+- name: Job Card Operation
+  module: manufacturing
+  field_count: 4
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/manufacturing/doctype/job_card_operation/job_card_operation.json
+- name: Job Card Scheduled Time
+  module: manufacturing
+  field_count: 3
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/manufacturing/doctype/job_card_scheduled_time/job_card_scheduled_time.json
+- name: Job Card Secondary Item
+  module: manufacturing
+  field_count: 10
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/manufacturing/doctype/job_card_secondary_item/job_card_secondary_item.json
+- name: Job Card Time Log
+  module: manufacturing
+  field_count: 7
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/manufacturing/doctype/job_card_time_log/job_card_time_log.json
+- name: Manufacturing Settings
+  module: manufacturing
+  field_count: 35
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/manufacturing/doctype/manufacturing_settings/manufacturing_settings.json
+- name: Master Production Schedule
+  module: manufacturing
+  field_count: 27
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/manufacturing/doctype/master_production_schedule/master_production_schedule.json
+- name: Master Production Schedule Item
+  module: manufacturing
+  field_count: 9
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/manufacturing/doctype/master_production_schedule_item/master_production_schedule_item.json
+- name: Material Request Plan Item
+  module: manufacturing
+  field_count: 33
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/manufacturing/doctype/material_request_plan_item/material_request_plan_item.json
+- name: Operation
+  module: manufacturing
+  field_count: 14
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/manufacturing/doctype/operation/operation.json
+- name: Plant Floor
+  module: manufacturing
+  field_count: 9
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/manufacturing/doctype/plant_floor/plant_floor.json
+- name: Production Plan
+  module: manufacturing
+  field_count: 60
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/manufacturing/doctype/production_plan/production_plan.json
+- name: Production Plan Item
+  module: manufacturing
+  field_count: 24
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/manufacturing/doctype/production_plan_item/production_plan_item.json
+- name: Production Plan Item Reference
+  module: manufacturing
+  field_count: 4
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/manufacturing/doctype/production_plan_item_reference/production_plan_item_reference.json
+- name: Production Plan Material Request
+  module: manufacturing
+  field_count: 3
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/manufacturing/doctype/production_plan_material_request/production_plan_material_request.json
+- name: Production Plan Material Request Warehouse
+  module: manufacturing
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/manufacturing/doctype/production_plan_material_request_warehouse/production_plan_material_request_warehouse.json
+- name: Production Plan Sales Order
+  module: manufacturing
+  field_count: 6
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/manufacturing/doctype/production_plan_sales_order/production_plan_sales_order.json
+- name: Production Plan Schedule
+  module: manufacturing
+  field_count: 19
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/manufacturing/doctype/production_plan_schedule/production_plan_schedule.json
+- name: Production Plan Sub Assembly Item
+  module: manufacturing
+  field_count: 35
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/manufacturing/doctype/production_plan_sub_assembly_item/production_plan_sub_assembly_item.json
+- name: Routing
+  module: manufacturing
+  field_count: 3
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/manufacturing/doctype/routing/routing.json
+- name: Sales Forecast
+  module: manufacturing
+  field_count: 20
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/manufacturing/doctype/sales_forecast/sales_forecast.json
+- name: Sales Forecast Item
+  module: manufacturing
+  field_count: 6
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/manufacturing/doctype/sales_forecast_item/sales_forecast_item.json
+- name: Sub Operation
+  module: manufacturing
+  field_count: 4
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/manufacturing/doctype/sub_operation/sub_operation.json
+- name: Work Order
+  module: manufacturing
+  field_count: 86
+  is_submittable: true
+  nk_table: erp_work_order
+  upstream_path: erpnext/manufacturing/doctype/work_order/work_order.json
+- name: Work Order Additional Item
+  module: manufacturing
+  field_count: 7
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/manufacturing/doctype/work_order_additional_item/work_order_additional_item.json
+- name: Work Order Item
+  module: manufacturing
+  field_count: 28
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/manufacturing/doctype/work_order_item/work_order_item.json
+- name: Work Order Operation
+  module: manufacturing
+  field_count: 40
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/manufacturing/doctype/work_order_operation/work_order_operation.json
+- name: Workstation
+  module: manufacturing
+  field_count: 27
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/manufacturing/doctype/workstation/workstation.json
+- name: Workstation Cost
+  module: manufacturing
+  field_count: 2
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/manufacturing/doctype/workstation_cost/workstation_cost.json
+- name: Workstation Operating Component
+  module: manufacturing
+  field_count: 3
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/manufacturing/doctype/workstation_operating_component/workstation_operating_component.json
+- name: Workstation Operating Component Account
+  module: manufacturing
+  field_count: 2
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/manufacturing/doctype/workstation_operating_component_account/workstation_operating_component_account.json
+- name: Workstation Type
+  module: manufacturing
+  field_count: 7
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/manufacturing/doctype/workstation_type/workstation_type.json
+- name: Workstation Working Hour
+  module: manufacturing
+  field_count: 5
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/manufacturing/doctype/workstation_working_hour/workstation_working_hour.json
+- name: Website Attribute
+  module: portal
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/portal/doctype/website_attribute/website_attribute.json
+- name: Website Filter Field
+  module: portal
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/portal/doctype/website_filter_field/website_filter_field.json
+- name: Activity Cost
+  module: projects
+  field_count: 10
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/projects/doctype/activity_cost/activity_cost.json
+- name: Activity Type
+  module: projects
+  field_count: 5
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/projects/doctype/activity_type/activity_type.json
+- name: Dependent Task
+  module: projects
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/projects/doctype/dependent_task/dependent_task.json
+- name: Project
+  module: projects
+  field_count: 59
+  is_submittable: false
+  nk_table: erp_project
+  upstream_path: erpnext/projects/doctype/project/project.json
+- name: Project Template
+  module: projects
+  field_count: 3
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/projects/doctype/project_template/project_template.json
+- name: Project Template Task
+  module: projects
+  field_count: 2
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/projects/doctype/project_template_task/project_template_task.json
+- name: Project Type
+  module: projects
+  field_count: 2
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/projects/doctype/project_type/project_type.json
+- name: Project Update
+  module: projects
+  field_count: 9
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/projects/doctype/project_update/project_update.json
+- name: Project User
+  module: projects
+  field_count: 10
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/projects/doctype/project_user/project_user.json
+- name: Projects Settings
+  module: projects
+  field_count: 5
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/projects/doctype/projects_settings/projects_settings.json
+- name: Task
+  module: projects
+  field_count: 51
+  is_submittable: false
+  nk_table: erp_task
+  upstream_path: erpnext/projects/doctype/task/task.json
+- name: Task Depends On
+  module: projects
+  field_count: 4
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/projects/doctype/task_depends_on/task_depends_on.json
+- name: Task Type
+  module: projects
+  field_count: 2
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/projects/doctype/task_type/task_type.json
+- name: Timesheet
+  module: projects
+  field_count: 37
+  is_submittable: true
+  nk_table: erp_timesheet
+  upstream_path: erpnext/projects/doctype/timesheet/timesheet.json
+- name: Timesheet Detail
+  module: projects
+  field_count: 28
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/projects/doctype/timesheet_detail/timesheet_detail.json
+- name: Non Conformance
+  module: quality_management
+  field_count: 10
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/quality_management/doctype/non_conformance/non_conformance.json
+- name: Quality Action
+  module: quality_management
+  field_count: 10
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/quality_management/doctype/quality_action/quality_action.json
+- name: Quality Action Resolution
+  module: quality_management
+  field_count: 5
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/quality_management/doctype/quality_action_resolution/quality_action_resolution.json
+- name: Quality Feedback
+  module: quality_management
+  field_count: 6
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/quality_management/doctype/quality_feedback/quality_feedback.json
+- name: Quality Feedback Parameter
+  module: quality_management
+  field_count: 5
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/quality_management/doctype/quality_feedback_parameter/quality_feedback_parameter.json
+- name: Quality Feedback Template
+  module: quality_management
+  field_count: 3
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/quality_management/doctype/quality_feedback_template/quality_feedback_template.json
+- name: Quality Feedback Template Parameter
+  module: quality_management
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/quality_management/doctype/quality_feedback_template_parameter/quality_feedback_template_parameter.json
+- name: Quality Goal
+  module: quality_management
+  field_count: 8
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/quality_management/doctype/quality_goal/quality_goal.json
+- name: Quality Goal Objective
+  module: quality_management
+  field_count: 4
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/quality_management/doctype/quality_goal_objective/quality_goal_objective.json
+- name: Quality Meeting
+  module: quality_management
+  field_count: 6
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/quality_management/doctype/quality_meeting/quality_meeting.json
+- name: Quality Meeting Agenda
+  module: quality_management
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/quality_management/doctype/quality_meeting_agenda/quality_meeting_agenda.json
+- name: Quality Meeting Minutes
+  module: quality_management
+  field_count: 5
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/quality_management/doctype/quality_meeting_minutes/quality_meeting_minutes.json
+- name: Quality Procedure
+  module: quality_management
+  field_count: 11
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/quality_management/doctype/quality_procedure/quality_procedure.json
+- name: Quality Procedure Process
+  module: quality_management
+  field_count: 2
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/quality_management/doctype/quality_procedure_process/quality_procedure_process.json
+- name: Quality Review
+  module: quality_management
+  field_count: 9
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/quality_management/doctype/quality_review/quality_review.json
+- name: Quality Review Objective
+  module: quality_management
+  field_count: 7
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/quality_management/doctype/quality_review_objective/quality_review_objective.json
+- name: Import Supplier Invoice
+  module: regional
+  field_count: 11
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/regional/doctype/import_supplier_invoice/import_supplier_invoice.json
+- name: Lower Deduction Certificate
+  module: regional
+  field_count: 18
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/regional/doctype/lower_deduction_certificate/lower_deduction_certificate.json
+- name: South Africa VAT Settings
+  module: regional
+  field_count: 2
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/regional/doctype/south_africa_vat_settings/south_africa_vat_settings.json
+- name: UAE VAT Account
+  module: regional
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/regional/doctype/uae_vat_account/uae_vat_account.json
+- name: UAE VAT Settings
+  module: regional
+  field_count: 2
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/regional/doctype/uae_vat_settings/uae_vat_settings.json
+- name: Customer
+  module: selling
+  field_count: 91
+  is_submittable: false
+  nk_table: erp_customer
+  upstream_path: erpnext/selling/doctype/customer/customer.json
+- name: Customer Credit Limit
+  module: selling
+  field_count: 5
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/selling/doctype/customer_credit_limit/customer_credit_limit.json
+- name: Delivery Schedule Item
+  module: selling
+  field_count: 13
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/selling/doctype/delivery_schedule_item/delivery_schedule_item.json
+- name: Industry Type
+  module: selling
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/selling/doctype/industry_type/industry_type.json
+- name: Installation Note
+  module: selling
+  field_count: 23
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/selling/doctype/installation_note/installation_note.json
+- name: Installation Note Item
+  module: selling
+  field_count: 8
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/selling/doctype/installation_note_item/installation_note_item.json
+- name: Party Specific Item
+  module: selling
+  field_count: 5
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/selling/doctype/party_specific_item/party_specific_item.json
+- name: Product Bundle
+  module: selling
+  field_count: 11
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/selling/doctype/product_bundle/product_bundle.json
+- name: Product Bundle Item
+  module: selling
+  field_count: 5
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/selling/doctype/product_bundle_item/product_bundle_item.json
+- name: Proforma Invoice
+  module: selling
+  field_count: 29
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/selling/doctype/proforma_invoice/proforma_invoice.json
+- name: Proforma Invoice Item
+  module: selling
+  field_count: 8
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/selling/doctype/proforma_invoice_item/proforma_invoice_item.json
+- name: Quotation
+  module: selling
+  field_count: 132
+  is_submittable: true
+  nk_table: erp_document
+  upstream_path: erpnext/selling/doctype/quotation/quotation.json
+- name: Quotation Item
+  module: selling
+  field_count: 79
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/selling/doctype/quotation_item/quotation_item.json
+- name: Sales Order
+  module: selling
+  field_count: 176
+  is_submittable: true
+  nk_table: erp_document
+  upstream_path: erpnext/selling/doctype/sales_order/sales_order.json
+- name: Sales Order Item
+  module: selling
+  field_count: 115
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/selling/doctype/sales_order_item/sales_order_item.json
+- name: Sales Partner Type
+  module: selling
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/selling/doctype/sales_partner_type/sales_partner_type.json
+- name: Sales Team
+  module: selling
+  field_count: 6
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/selling/doctype/sales_team/sales_team.json
+- name: Selling Settings
+  module: selling
+  field_count: 60
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/selling/doctype/selling_settings/selling_settings.json
+- name: SMS Center
+  module: selling
+  field_count: 13
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/selling/doctype/sms_center/sms_center.json
+- name: Supplier Number At Customer
+  module: selling
+  field_count: 2
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/selling/doctype/supplier_number_at_customer/supplier_number_at_customer.json
+- name: Authorization Control
+  module: setup
+  field_count: 0
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/setup/doctype/authorization_control/authorization_control.json
+- name: Authorization Rule
+  module: setup
+  field_count: 18
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/setup/doctype/authorization_rule/authorization_rule.json
+- name: Branch
+  module: setup
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/setup/doctype/branch/branch.json
+- name: Brand
+  module: setup
+  field_count: 5
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/setup/doctype/brand/brand.json
+- name: Company
+  module: setup
+  field_count: 145
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/setup/doctype/company/company.json
+- name: Currency Exchange
+  module: setup
+  field_count: 7
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/setup/doctype/currency_exchange/currency_exchange.json
+- name: Customer Group
+  module: setup
+  field_count: 13
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/setup/doctype/customer_group/customer_group.json
+- name: Department
+  module: setup
+  field_count: 9
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/setup/doctype/department/department.json
+- name: Designation
+  module: setup
+  field_count: 2
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/setup/doctype/designation/designation.json
+- name: Driver
+  module: setup
+  field_count: 17
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/setup/doctype/driver/driver.json
+- name: Driving License Category
+  module: setup
+  field_count: 4
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/setup/doctype/driving_license_category/driving_license_category.json
+- name: Email Digest
+  module: setup
+  field_count: 43
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/setup/doctype/email_digest/email_digest.json
+- name: Email Digest Recipient
+  module: setup
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/setup/doctype/email_digest_recipient/email_digest_recipient.json
+- name: Employee
+  module: setup
+  field_count: 109
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/setup/doctype/employee/employee.json
+- name: Employee Education
+  module: setup
+  field_count: 6
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/setup/doctype/employee_education/employee_education.json
+- name: Employee External Work History
+  module: setup
+  field_count: 6
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/setup/doctype/employee_external_work_history/employee_external_work_history.json
+- name: Employee Group
+  module: setup
+  field_count: 3
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/setup/doctype/employee_group/employee_group.json
+- name: Employee Group Table
+  module: setup
+  field_count: 3
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/setup/doctype/employee_group_table/employee_group_table.json
+- name: Employee Internal Work History
+  module: setup
+  field_count: 5
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/setup/doctype/employee_internal_work_history/employee_internal_work_history.json
+- name: Global Defaults
+  module: setup
+  field_count: 13
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/setup/doctype/global_defaults/global_defaults.json
+- name: Holiday
+  module: setup
+  field_count: 6
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/setup/doctype/holiday/holiday.json
+- name: Holiday List
+  module: setup
+  field_count: 19
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/setup/doctype/holiday_list/holiday_list.json
+- name: Incoterm
+  module: setup
+  field_count: 3
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/setup/doctype/incoterm/incoterm.json
+- name: Item Group
+  module: setup
+  field_count: 13
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/setup/doctype/item_group/item_group.json
+- name: Party Type
+  module: setup
+  field_count: 2
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/setup/doctype/party_type/party_type.json
+- name: Quotation Lost Reason
+  module: setup
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/setup/doctype/quotation_lost_reason/quotation_lost_reason.json
+- name: Quotation Lost Reason Detail
+  module: setup
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/setup/doctype/quotation_lost_reason_detail/quotation_lost_reason_detail.json
+- name: Sales Partner
+  module: setup
+  field_count: 25
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/setup/doctype/sales_partner/sales_partner.json
+- name: Sales Person
+  module: setup
+  field_count: 14
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/setup/doctype/sales_person/sales_person.json
+- name: Supplier Group
+  module: setup
+  field_count: 10
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/setup/doctype/supplier_group/supplier_group.json
+- name: Target Detail
+  module: setup
+  field_count: 5
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/setup/doctype/target_detail/target_detail.json
+- name: Terms and Conditions
+  module: setup
+  field_count: 10
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/setup/doctype/terms_and_conditions/terms_and_conditions.json
+- name: Territory
+  module: setup
+  field_count: 10
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/setup/doctype/territory/territory.json
+- name: Transaction Deletion Record
+  module: setup
+  field_count: 19
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/setup/doctype/transaction_deletion_record/transaction_deletion_record.json
+- name: Transaction Deletion Record Item
+  module: setup
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/setup/doctype/transaction_deletion_record_item/transaction_deletion_record_item.json
+- name: Transaction Deletion Record To Delete
+  module: setup
+  field_count: 5
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/setup/doctype/transaction_deletion_record_to_delete/transaction_deletion_record_to_delete.json
+- name: UOM
+  module: setup
+  field_count: 8
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/setup/doctype/uom/uom.json
+- name: UOM Conversion Factor
+  module: setup
+  field_count: 5
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/setup/doctype/uom_conversion_factor/uom_conversion_factor.json
+- name: Vehicle
+  module: setup
+  field_count: 28
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/setup/doctype/vehicle/vehicle.json
+- name: Website Item Group
+  module: setup
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/setup/doctype/website_item_group/website_item_group.json
+- name: Batch
+  module: stock
+  field_count: 26
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/batch/batch.json
+- name: Bin
+  module: stock
+  field_count: 26
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/bin/bin.json
+- name: Company Restriction
+  module: stock
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/company_restriction/company_restriction.json
+- name: Customs Tariff Number
+  module: stock
+  field_count: 2
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/customs_tariff_number/customs_tariff_number.json
+- name: Delivery Note
+  module: stock
+  field_count: 169
+  is_submittable: true
+  nk_table: erp_document
+  upstream_path: erpnext/stock/doctype/delivery_note/delivery_note.json
+- name: Delivery Note Item
+  module: stock
+  field_count: 112
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/delivery_note_item/delivery_note_item.json
+- name: Delivery Settings
+  module: stock
+  field_count: 6
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/delivery_settings/delivery_settings.json
+- name: Delivery Stop
+  module: stock
+  field_count: 24
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/delivery_stop/delivery_stop.json
+- name: Delivery Trip
+  module: stock
+  field_count: 23
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/delivery_trip/delivery_trip.json
+- name: Inventory Dimension
+  module: stock
+  field_count: 24
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/inventory_dimension/inventory_dimension.json
+- name: Item
+  module: stock
+  field_count: 135
+  is_submittable: false
+  nk_table: erp_item
+  upstream_path: erpnext/stock/doctype/item/item.json
+- name: Item Alternative
+  module: stock
+  field_count: 6
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/item_alternative/item_alternative.json
+- name: Item Attribute
+  module: stock
+  field_count: 11
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/item_attribute/item_attribute.json
+- name: Item Attribute Value
+  module: stock
+  field_count: 2
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/item_attribute_value/item_attribute_value.json
+- name: Item Barcode
+  module: stock
+  field_count: 3
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/item_barcode/item_barcode.json
+- name: Item Customer Detail
+  module: stock
+  field_count: 3
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/item_customer_detail/item_customer_detail.json
+- name: Item Default
+  module: stock
+  field_count: 54
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/item_default/item_default.json
+- name: Item Lead Time
+  module: stock
+  field_count: 27
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/item_lead_time/item_lead_time.json
+- name: Item Lead Time Supplier
+  module: stock
+  field_count: 4
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/item_lead_time_supplier/item_lead_time_supplier.json
+- name: Item Manufacturer
+  module: stock
+  field_count: 7
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/item_manufacturer/item_manufacturer.json
+- name: Item Price
+  module: stock
+  field_count: 27
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/item_price/item_price.json
+- name: Item Quality Inspection Parameter
+  module: stock
+  field_count: 9
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/item_quality_inspection_parameter/item_quality_inspection_parameter.json
+- name: Item Reorder
+  module: stock
+  field_count: 5
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/item_reorder/item_reorder.json
+- name: Item Standard Cost
+  module: stock
+  field_count: 9
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/item_standard_cost/item_standard_cost.json
+- name: Item Supplier
+  module: stock
+  field_count: 3
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/item_supplier/item_supplier.json
+- name: Item Tax
+  module: stock
+  field_count: 5
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/item_tax/item_tax.json
+- name: Item Variant
+  module: stock
+  field_count: 2
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/item_variant/item_variant.json
+- name: Item Variant Attribute
+  module: stock
+  field_count: 11
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/item_variant_attribute/item_variant_attribute.json
+- name: Item Variant Settings
+  module: stock
+  field_count: 6
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/item_variant_settings/item_variant_settings.json
+- name: Item Website Specification
+  module: stock
+  field_count: 2
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/item_website_specification/item_website_specification.json
+- name: Landed Cost Item
+  module: stock
+  field_count: 15
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/landed_cost_item/landed_cost_item.json
+- name: Landed Cost Purchase Receipt
+  module: stock
+  field_count: 6
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/landed_cost_purchase_receipt/landed_cost_purchase_receipt.json
+- name: Landed Cost Taxes and Charges
+  module: stock
+  field_count: 16
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/landed_cost_taxes_and_charges/landed_cost_taxes_and_charges.json
+- name: Landed Cost Vendor Invoice
+  module: stock
+  field_count: 2
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/landed_cost_vendor_invoice/landed_cost_vendor_invoice.json
+- name: Landed Cost Voucher
+  module: stock
+  field_count: 20
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/landed_cost_voucher/landed_cost_voucher.json
+- name: Manufacturer
+  module: stock
+  field_count: 11
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/manufacturer/manufacturer.json
+- name: Material Request
+  module: stock
+  field_count: 40
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/material_request/material_request.json
+- name: Material Request Item
+  module: stock
+  field_count: 61
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/material_request_item/material_request_item.json
+- name: Packed Item
+  module: stock
+  field_count: 40
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/packed_item/packed_item.json
+- name: Packing Slip
+  module: stock
+  field_count: 22
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/packing_slip/packing_slip.json
+- name: Packing Slip Item
+  module: stock
+  field_count: 15
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/packing_slip_item/packing_slip_item.json
+- name: Pick List
+  module: stock
+  field_count: 35
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/pick_list/pick_list.json
+- name: Pick List Item
+  module: stock
+  field_count: 39
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/pick_list_item/pick_list_item.json
+- name: Price List
+  module: stock
+  field_count: 9
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/price_list/price_list.json
+- name: Price List Country
+  module: stock
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/price_list_country/price_list_country.json
+- name: Purchase Receipt
+  module: stock
+  field_count: 147
+  is_submittable: true
+  nk_table: erp_document
+  upstream_path: erpnext/stock/doctype/purchase_receipt/purchase_receipt.json
+- name: Purchase Receipt Item
+  module: stock
+  field_count: 128
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/purchase_receipt_item/purchase_receipt_item.json
+- name: Putaway Rule
+  module: stock
+  field_count: 12
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/putaway_rule/putaway_rule.json
+- name: Quality Inspection
+  module: stock
+  field_count: 30
+  is_submittable: true
+  nk_table: erp_quality_inspection
+  upstream_path: erpnext/stock/doctype/quality_inspection/quality_inspection.json
+- name: Quality Inspection Parameter
+  module: stock
+  field_count: 3
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/quality_inspection_parameter/quality_inspection_parameter.json
+- name: Quality Inspection Parameter Group
+  module: stock
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/quality_inspection_parameter_group/quality_inspection_parameter_group.json
+- name: Quality Inspection Reading
+  module: stock
+  field_count: 26
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/quality_inspection_reading/quality_inspection_reading.json
+- name: Quality Inspection Template
+  module: stock
+  field_count: 2
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/quality_inspection_template/quality_inspection_template.json
+- name: Quick Stock Balance
+  module: stock
+  field_count: 12
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/quick_stock_balance/quick_stock_balance.json
+- name: Repost Item Valuation
+  module: stock
+  field_count: 31
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/repost_item_valuation/repost_item_valuation.json
+- name: Serial and Batch Bundle
+  module: stock
+  field_count: 30
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/serial_and_batch_bundle/serial_and_batch_bundle.json
+- name: Serial and Batch Entry
+  module: stock
+  field_count: 23
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/serial_and_batch_entry/serial_and_batch_entry.json
+- name: Serial No
+  module: stock
+  field_count: 36
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/serial_no/serial_no.json
+- name: Shipment
+  module: stock
+  field_count: 56
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/shipment/shipment.json
+- name: Shipment Delivery Note
+  module: stock
+  field_count: 2
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/shipment_delivery_note/shipment_delivery_note.json
+- name: Shipment Parcel
+  module: stock
+  field_count: 5
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/shipment_parcel/shipment_parcel.json
+- name: Shipment Parcel Template
+  module: stock
+  field_count: 5
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/shipment_parcel_template/shipment_parcel_template.json
+- name: Stock Closing Balance
+  module: stock
+  field_count: 25
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/stock_closing_balance/stock_closing_balance.json
+- name: Stock Closing Entry
+  module: stock
+  field_count: 7
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/stock_closing_entry/stock_closing_entry.json
+- name: Stock Entry
+  module: stock
+  field_count: 90
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/stock_entry/stock_entry.json
+- name: Stock Entry Detail
+  module: stock
+  field_count: 80
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/stock_entry_detail/stock_entry_detail.json
+- name: Stock Entry Type
+  module: stock
+  field_count: 4
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/stock_entry_type/stock_entry_type.json
+- name: Stock Ledger Entry
+  module: stock
+  field_count: 36
+  is_submittable: true
+  nk_table: erp_stock_ledger_entry
+  upstream_path: erpnext/stock/doctype/stock_ledger_entry/stock_ledger_entry.json
+- name: Stock Reconciliation
+  module: stock
+  field_count: 24
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/stock_reconciliation/stock_reconciliation.json
+- name: Stock Reconciliation Item
+  module: stock
+  field_count: 35
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/stock_reconciliation_item/stock_reconciliation_item.json
+- name: Stock Reposting Settings
+  module: stock
+  field_count: 17
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/stock_reposting_settings/stock_reposting_settings.json
+- name: Stock Reservation Entry
+  module: stock
+  field_count: 34
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/stock_reservation_entry/stock_reservation_entry.json
+- name: Stock Settings
+  module: stock
+  field_count: 80
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/stock_settings/stock_settings.json
+- name: UOM Category
+  module: stock
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/uom_category/uom_category.json
+- name: UOM Conversion Detail
+  module: stock
+  field_count: 3
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/uom_conversion_detail/uom_conversion_detail.json
+- name: Variant Field
+  module: stock
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/variant_field/variant_field.json
+- name: Warehouse
+  module: stock
+  field_count: 35
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/warehouse/warehouse.json
+- name: Warehouse Type
+  module: stock
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/stock/doctype/warehouse_type/warehouse_type.json
+- name: Subcontracting BOM
+  module: subcontracting
+  field_count: 13
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/subcontracting/doctype/subcontracting_bom/subcontracting_bom.json
+- name: Subcontracting Inward Order
+  module: subcontracting
+  field_count: 31
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/subcontracting/doctype/subcontracting_inward_order/subcontracting_inward_order.json
+- name: Subcontracting Inward Order Item
+  module: subcontracting
+  field_count: 17
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/subcontracting/doctype/subcontracting_inward_order_item/subcontracting_inward_order_item.json
+- name: Subcontracting Inward Order Received Item
+  module: subcontracting
+  field_count: 20
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/subcontracting/doctype/subcontracting_inward_order_received_item/subcontracting_inward_order_received_item.json
+- name: Subcontracting Inward Order Secondary Item
+  module: subcontracting
+  field_count: 13
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/subcontracting/doctype/subcontracting_inward_order_secondary_item/subcontracting_inward_order_secondary_item.json
+- name: Subcontracting Inward Order Service Item
+  module: subcontracting
+  field_count: 14
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/subcontracting/doctype/subcontracting_inward_order_service_item/subcontracting_inward_order_service_item.json
+- name: Subcontracting Order
+  module: subcontracting
+  field_count: 57
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/subcontracting/doctype/subcontracting_order/subcontracting_order.json
+- name: Subcontracting Order Item
+  module: subcontracting
+  field_count: 50
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/subcontracting/doctype/subcontracting_order_item/subcontracting_order_item.json
+- name: Subcontracting Order Service Item
+  module: subcontracting
+  field_count: 18
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/subcontracting/doctype/subcontracting_order_service_item/subcontracting_order_service_item.json
+- name: Subcontracting Order Supplied Item
+  module: subcontracting
+  field_count: 21
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/subcontracting/doctype/subcontracting_order_supplied_item/subcontracting_order_supplied_item.json
+- name: Subcontracting Receipt
+  module: subcontracting
+  field_count: 80
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/subcontracting/doctype/subcontracting_receipt/subcontracting_receipt.json
+- name: Subcontracting Receipt Item
+  module: subcontracting
+  field_count: 76
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/subcontracting/doctype/subcontracting_receipt_item/subcontracting_receipt_item.json
+- name: Subcontracting Receipt Supplied Item
+  module: subcontracting
+  field_count: 35
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/subcontracting/doctype/subcontracting_receipt_supplied_item/subcontracting_receipt_supplied_item.json
+- name: Issue
+  module: support
+  field_count: 46
+  is_submittable: false
+  nk_table: erp_issue
+  upstream_path: erpnext/support/doctype/issue/issue.json
+- name: Issue Priority
+  module: support
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/support/doctype/issue_priority/issue_priority.json
+- name: Issue Type
+  module: support
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/support/doctype/issue_type/issue_type.json
+- name: Pause SLA On Status
+  module: support
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/support/doctype/pause_sla_on_status/pause_sla_on_status.json
+- name: Service Day
+  module: support
+  field_count: 5
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/support/doctype/service_day/service_day.json
+- name: Service Level Agreement
+  module: support
+  field_count: 25
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/support/doctype/service_level_agreement/service_level_agreement.json
+- name: Service Level Priority
+  module: support
+  field_count: 7
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/support/doctype/service_level_priority/service_level_priority.json
+- name: SLA Fulfilled On Status
+  module: support
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/support/doctype/sla_fulfilled_on_status/sla_fulfilled_on_status.json
+- name: Support Search Source
+  module: support
+  field_count: 20
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/support/doctype/support_search_source/support_search_source.json
+- name: Support Settings
+  module: support
+  field_count: 23
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/support/doctype/support_settings/support_settings.json
+- name: Warranty Claim
+  module: support
+  field_count: 38
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/support/doctype/warranty_claim/warranty_claim.json
+- name: Call Log
+  module: telephony
+  field_count: 21
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/telephony/doctype/call_log/call_log.json
+- name: Incoming Call Handling Schedule
+  module: telephony
+  field_count: 4
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/telephony/doctype/incoming_call_handling_schedule/incoming_call_handling_schedule.json
+- name: Incoming Call Settings
+  module: telephony
+  field_count: 7
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/telephony/doctype/incoming_call_settings/incoming_call_settings.json
+- name: Telephony Call Type
+  module: telephony
+  field_count: 2
+  is_submittable: true
+  nk_table: null
+  upstream_path: erpnext/telephony/doctype/telephony_call_type/telephony_call_type.json
+- name: Voice Call Settings
+  module: telephony
+  field_count: 6
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/telephony/doctype/voice_call_settings/voice_call_settings.json
+- name: Portal User
+  module: utilities
+  field_count: 1
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/utilities/doctype/portal_user/portal_user.json
+- name: Rename Tool
+  module: utilities
+  field_count: 3
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/utilities/doctype/rename_tool/rename_tool.json
+- name: Video
+  module: utilities
+  field_count: 16
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/utilities/doctype/video/video.json
+- name: Video Settings
+  module: utilities
+  field_count: 3
+  is_submittable: false
+  nk_table: null
+  upstream_path: erpnext/utilities/doctype/video_settings/video_settings.json

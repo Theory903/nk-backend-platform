@@ -1,0 +1,15 @@
+# NK skill presets (P22) — gstack-compatible mapping (reference only, NK-native skills).
+presets:
+  gstack-compatible:
+    description: Engineering workflow skills mapped to bundled NK equivalents
+    skills:
+      - platform-guide
+      - commit-archaeologist
+      - dependency-doctor
+      - scope-creep-detector
+      - thinking-out-loud
+
+  minimal:
+    description: Safe default skill set for demos
+    skills:
+      - platform-guide

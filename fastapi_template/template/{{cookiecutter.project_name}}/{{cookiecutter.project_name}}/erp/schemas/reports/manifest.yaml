@@ -1,0 +1,1305 @@
+version: 1
+source: temp/erpnext
+report_count: 185
+reports:
+- id: account-balance
+  name: Account Balance
+  module: accounts
+  ref_doctype: Bank Account
+  report_type: Script Report
+  upstream_path: erpnext/accounts/report/account_balance/account_balance.json
+  filters: []
+- id: accounts-payable
+  name: Accounts Payable
+  module: accounts
+  ref_doctype: Purchase Invoice
+  report_type: Script Report
+  upstream_path: erpnext/accounts/report/accounts_payable/accounts_payable.json
+  filters: []
+- id: accounts-payable-summary
+  name: Accounts Payable Summary
+  module: accounts
+  ref_doctype: Purchase Invoice
+  report_type: Script Report
+  upstream_path: erpnext/accounts/report/accounts_payable_summary/accounts_payable_summary.json
+  filters: []
+- id: accounts-receivable
+  name: Accounts Receivable
+  module: accounts
+  ref_doctype: Sales Invoice
+  report_type: Script Report
+  upstream_path: erpnext/accounts/report/accounts_receivable/accounts_receivable.json
+  filters: []
+- id: accounts-receivable-summary
+  name: Accounts Receivable Summary
+  module: accounts
+  ref_doctype: Sales Invoice
+  report_type: Script Report
+  upstream_path: erpnext/accounts/report/accounts_receivable_summary/accounts_receivable_summary.json
+  filters: []
+- id: asset-depreciation-ledger
+  name: Asset Depreciation Ledger
+  module: accounts
+  ref_doctype: Asset
+  report_type: Script Report
+  upstream_path: erpnext/accounts/report/asset_depreciation_ledger/asset_depreciation_ledger.json
+  filters: []
+- id: asset-depreciations-and-balances
+  name: Asset Depreciations and Balances
+  module: accounts
+  ref_doctype: Asset
+  report_type: Script Report
+  upstream_path: erpnext/accounts/report/asset_depreciations_and_balances/asset_depreciations_and_balances.json
+  filters: []
+- id: balance-sheet
+  name: Balance Sheet
+  module: accounts
+  ref_doctype: GL Entry
+  report_type: Script Report
+  upstream_path: erpnext/accounts/report/balance_sheet/balance_sheet.json
+  filters: []
+- id: bank-clearance-summary
+  name: Bank Clearance Summary
+  module: accounts
+  ref_doctype: Journal Entry
+  report_type: Script Report
+  upstream_path: erpnext/accounts/report/bank_clearance_summary/bank_clearance_summary.json
+  filters: []
+- id: bank-reconciliation-statement
+  name: Bank Reconciliation Statement
+  module: accounts
+  ref_doctype: Journal Entry
+  report_type: Script Report
+  upstream_path: erpnext/accounts/report/bank_reconciliation_statement/bank_reconciliation_statement.json
+  filters: []
+- id: billed-items-to-be-received
+  name: Billed Items To Be Received
+  module: accounts
+  ref_doctype: Purchase Invoice
+  report_type: Script Report
+  upstream_path: erpnext/accounts/report/billed_items_to_be_received/billed_items_to_be_received.json
+  filters: []
+- id: budget-variance-report
+  name: Budget Variance Report
+  module: accounts
+  ref_doctype: Cost Center
+  report_type: Script Report
+  upstream_path: erpnext/accounts/report/budget_variance_report/budget_variance_report.json
+  filters: []
+- id: calculated-discount-mismatch
+  name: Calculated Discount Mismatch
+  module: accounts
+  ref_doctype: Version
+  report_type: Script Report
+  upstream_path: erpnext/accounts/report/calculated_discount_mismatch/calculated_discount_mismatch.json
+  filters: []
+- id: cash-flow
+  name: Cash Flow
+  module: accounts
+  ref_doctype: GL Entry
+  report_type: Script Report
+  upstream_path: erpnext/accounts/report/cash_flow/cash_flow.json
+  filters: []
+- id: cheques-and-deposits-incorrectly-cleared
+  name: Cheques and Deposits Incorrectly cleared
+  module: accounts
+  ref_doctype: Payment Entry
+  report_type: Script Report
+  upstream_path: erpnext/accounts/report/cheques_and_deposits_incorrectly_cleared/cheques_and_deposits_incorrectly_cleared.json
+  filters: []
+- id: consolidated-financial-statement
+  name: Consolidated Financial Statement
+  module: accounts
+  ref_doctype: Account
+  report_type: Script Report
+  upstream_path: erpnext/accounts/report/consolidated_financial_statement/consolidated_financial_statement.json
+  filters: []
+- id: consolidated-trial-balance
+  name: Consolidated Trial Balance
+  module: accounts
+  ref_doctype: GL Entry
+  report_type: Script Report
+  upstream_path: erpnext/accounts/report/consolidated_trial_balance/consolidated_trial_balance.json
+  filters: []
+- id: custom-financial-statement
+  name: Custom Financial Statement
+  module: accounts
+  ref_doctype: GL Entry
+  report_type: Script Report
+  upstream_path: erpnext/accounts/report/custom_financial_statement/custom_financial_statement.json
+  filters: []
+- id: customer-ledger-summary
+  name: Customer Ledger Summary
+  module: accounts
+  ref_doctype: Sales Invoice
+  report_type: Script Report
+  upstream_path: erpnext/accounts/report/customer_ledger_summary/customer_ledger_summary.json
+  filters: []
+- id: deferred-revenue-and-expense
+  name: Deferred Revenue and Expense
+  module: accounts
+  ref_doctype: GL Entry
+  report_type: Script Report
+  upstream_path: erpnext/accounts/report/deferred_revenue_and_expense/deferred_revenue_and_expense.json
+  filters: []
+- id: delivered-items-to-be-billed
+  name: Delivered Items To Be Billed
+  module: accounts
+  ref_doctype: Sales Invoice
+  report_type: Script Report
+  upstream_path: erpnext/accounts/report/delivered_items_to_be_billed/delivered_items_to_be_billed.json
+  filters: []
+- id: dimension-wise-accounts-balance-report
+  name: Dimension-wise Accounts Balance Report
+  module: accounts
+  ref_doctype: GL Entry
+  report_type: Script Report
+  upstream_path: erpnext/accounts/report/dimension_wise_accounts_balance_report/dimension_wise_accounts_balance_report.json
+  filters: []
+- id: financial-ratios
+  name: Financial Ratios
+  module: accounts
+  ref_doctype: Account
+  report_type: Script Report
+  upstream_path: erpnext/accounts/report/financial_ratios/financial_ratios.json
+  filters: []
+- id: general-and-payment-ledger-comparison
+  name: General and Payment Ledger Comparison
+  module: accounts
+  ref_doctype: GL Entry
+  report_type: Script Report
+  upstream_path: erpnext/accounts/report/general_and_payment_ledger_comparison/general_and_payment_ledger_comparison.json
+  filters: []
+- id: general-ledger
+  name: General Ledger
+  module: accounts
+  ref_doctype: GL Entry
+  report_type: Script Report
+  upstream_path: erpnext/accounts/report/general_ledger/general_ledger.json
+  filters: []
+- id: gross-and-net-profit-report
+  name: Gross and Net Profit Report
+  module: accounts
+  ref_doctype: GL Entry
+  report_type: Script Report
+  upstream_path: erpnext/accounts/report/gross_and_net_profit_report/gross_and_net_profit_report.json
+  filters: []
+- id: gross-profit
+  name: Gross Profit
+  module: accounts
+  ref_doctype: Sales Invoice
+  report_type: Script Report
+  upstream_path: erpnext/accounts/report/gross_profit/gross_profit.json
+  filters: []
+- id: inactive-sales-items
+  name: Inactive Sales Items
+  module: accounts
+  ref_doctype: Sales Invoice
+  report_type: Script Report
+  upstream_path: erpnext/accounts/report/inactive_sales_items/inactive_sales_items.json
+  filters: []
+- id: invalid-ledger-entries
+  name: Invalid Ledger Entries
+  module: accounts
+  ref_doctype: GL Entry
+  report_type: Script Report
+  upstream_path: erpnext/accounts/report/invalid_ledger_entries/invalid_ledger_entries.json
+  filters: []
+- id: item-wise-purchase-register
+  name: Item-wise Purchase Register
+  module: accounts
+  ref_doctype: Purchase Invoice
+  report_type: Script Report
+  upstream_path: erpnext/accounts/report/item_wise_purchase_register/item_wise_purchase_register.json
+  filters: []
+- id: item-wise-sales-register
+  name: Item-wise Sales Register
+  module: accounts
+  ref_doctype: Sales Invoice
+  report_type: Script Report
+  upstream_path: erpnext/accounts/report/item_wise_sales_register/item_wise_sales_register.json
+  filters: []
+- id: payment-ledger
+  name: Payment Ledger
+  module: accounts
+  ref_doctype: Payment Ledger Entry
+  report_type: Script Report
+  upstream_path: erpnext/accounts/report/payment_ledger/payment_ledger.json
+  filters: []
+- id: payment-period-based-on-invoice-date
+  name: Payment Period Based On Invoice Date
+  module: accounts
+  ref_doctype: Journal Entry
+  report_type: Script Report
+  upstream_path: erpnext/accounts/report/payment_period_based_on_invoice_date/payment_period_based_on_invoice_date.json
+  filters: []
+- id: pos-register
+  name: POS Register
+  module: accounts
+  ref_doctype: POS Invoice
+  report_type: Script Report
+  upstream_path: erpnext/accounts/report/pos_register/pos_register.json
+  filters: []
+- id: profit-and-loss-statement
+  name: Profit and Loss Statement
+  module: accounts
+  ref_doctype: GL Entry
+  report_type: Script Report
+  upstream_path: erpnext/accounts/report/profit_and_loss_statement/profit_and_loss_statement.json
+  filters: []
+- id: profitability-analysis
+  name: Profitability Analysis
+  module: accounts
+  ref_doctype: GL Entry
+  report_type: Script Report
+  upstream_path: erpnext/accounts/report/profitability_analysis/profitability_analysis.json
+  filters: []
+- id: purchase-invoice-trends
+  name: Purchase Invoice Trends
+  module: accounts
+  ref_doctype: Purchase Invoice
+  report_type: Script Report
+  upstream_path: erpnext/accounts/report/purchase_invoice_trends/purchase_invoice_trends.json
+  filters: []
+- id: purchase-register
+  name: Purchase Register
+  module: accounts
+  ref_doctype: Purchase Invoice
+  report_type: Script Report
+  upstream_path: erpnext/accounts/report/purchase_register/purchase_register.json
+  filters: []
+- id: received-items-to-be-billed
+  name: Received Items To Be Billed
+  module: accounts
+  ref_doctype: Purchase Invoice
+  report_type: Script Report
+  upstream_path: erpnext/accounts/report/received_items_to_be_billed/received_items_to_be_billed.json
+  filters: []
+- id: sales-invoice-trends
+  name: Sales Invoice Trends
+  module: accounts
+  ref_doctype: Sales Invoice
+  report_type: Script Report
+  upstream_path: erpnext/accounts/report/sales_invoice_trends/sales_invoice_trends.json
+  filters: []
+- id: sales-partners-commission
+  name: Sales Partners Commission
+  module: accounts
+  ref_doctype: Sales Invoice
+  report_type: Query Report
+  upstream_path: erpnext/accounts/report/sales_partners_commission/sales_partners_commission.json
+  filters: []
+- id: sales-payment-summary
+  name: Sales Payment Summary
+  module: accounts
+  ref_doctype: Sales Invoice
+  report_type: Script Report
+  upstream_path: erpnext/accounts/report/sales_payment_summary/sales_payment_summary.json
+  filters: []
+- id: sales-register
+  name: Sales Register
+  module: accounts
+  ref_doctype: Sales Invoice
+  report_type: Script Report
+  upstream_path: erpnext/accounts/report/sales_register/sales_register.json
+  filters: []
+- id: share-balance
+  name: Share Balance
+  module: accounts
+  ref_doctype: Share Transfer
+  report_type: Script Report
+  upstream_path: erpnext/accounts/report/share_balance/share_balance.json
+  filters: []
+- id: share-ledger
+  name: Share Ledger
+  module: accounts
+  ref_doctype: Share Transfer
+  report_type: Script Report
+  upstream_path: erpnext/accounts/report/share_ledger/share_ledger.json
+  filters: []
+- id: supplier-ledger-summary
+  name: Supplier Ledger Summary
+  module: accounts
+  ref_doctype: Purchase Invoice
+  report_type: Script Report
+  upstream_path: erpnext/accounts/report/supplier_ledger_summary/supplier_ledger_summary.json
+  filters: []
+- id: tax-withholding-details
+  name: Tax Withholding Details
+  module: accounts
+  ref_doctype: Purchase Invoice
+  report_type: Script Report
+  upstream_path: erpnext/accounts/report/tax_withholding_details/tax_withholding_details.json
+  filters: []
+- id: tds-computation-summary
+  name: TDS Computation Summary
+  module: accounts
+  ref_doctype: Purchase Invoice
+  report_type: Script Report
+  upstream_path: erpnext/accounts/report/tds_computation_summary/tds_computation_summary.json
+  filters: []
+- id: trial-balance
+  name: Trial Balance
+  module: accounts
+  ref_doctype: GL Entry
+  report_type: Script Report
+  upstream_path: erpnext/accounts/report/trial_balance/trial_balance.json
+  filters: []
+- id: trial-balance-for-party
+  name: Trial Balance for Party
+  module: accounts
+  ref_doctype: GL Entry
+  report_type: Script Report
+  upstream_path: erpnext/accounts/report/trial_balance_for_party/trial_balance_for_party.json
+  filters: []
+- id: trial-balance-simple
+  name: Trial Balance (Simple)
+  module: accounts
+  ref_doctype: GL Entry
+  report_type: Query Report
+  upstream_path: erpnext/accounts/report/trial_balance_simple/trial_balance_simple.json
+  filters:
+  - fieldname: company
+    fieldtype: Link
+    label: Company
+    mandatory: 1
+    options: Company
+    wildcard_filter: 0
+- id: voucher-wise-balance
+  name: Voucher-wise Balance
+  module: accounts
+  ref_doctype: GL Entry
+  report_type: Script Report
+  upstream_path: erpnext/accounts/report/voucher_wise_balance/voucher_wise_balance.json
+  filters: []
+- id: asset-activity
+  name: Asset Activity
+  module: assets
+  ref_doctype: Asset Activity
+  report_type: Report Builder
+  upstream_path: erpnext/assets/report/asset_activity/asset_activity.json
+  filters: []
+- id: asset-maintenance
+  name: Asset Maintenance
+  module: assets
+  ref_doctype: Asset Maintenance
+  report_type: Report Builder
+  upstream_path: erpnext/assets/report/asset_maintenance/asset_maintenance.json
+  filters: []
+- id: fixed-asset-register
+  name: Fixed Asset Register
+  module: assets
+  ref_doctype: Asset
+  report_type: Script Report
+  upstream_path: erpnext/assets/report/fixed_asset_register/fixed_asset_register.json
+  filters: []
+- id: item-wise-purchase-history
+  name: Item-wise Purchase History
+  module: buying
+  ref_doctype: Purchase Order
+  report_type: Script Report
+  upstream_path: erpnext/buying/report/item_wise_purchase_history/item_wise_purchase_history.json
+  filters: []
+- id: procurement-tracker
+  name: Procurement Tracker
+  module: buying
+  ref_doctype: Purchase Order
+  report_type: Script Report
+  upstream_path: erpnext/buying/report/procurement_tracker/procurement_tracker.json
+  filters: []
+- id: purchase-analytics
+  name: Purchase Analytics
+  module: buying
+  ref_doctype: Purchase Order
+  report_type: Script Report
+  upstream_path: erpnext/buying/report/purchase_analytics/purchase_analytics.json
+  filters: []
+- id: purchase-order-analysis
+  name: Purchase Order Analysis
+  module: buying
+  ref_doctype: Purchase Order
+  report_type: Script Report
+  upstream_path: erpnext/buying/report/purchase_order_analysis/purchase_order_analysis.json
+  filters: []
+- id: purchase-order-trends
+  name: Purchase Order Trends
+  module: buying
+  ref_doctype: Purchase Order
+  report_type: Script Report
+  upstream_path: erpnext/buying/report/purchase_order_trends/purchase_order_trends.json
+  filters: []
+- id: requested-items-to-order-and-receive
+  name: Requested Items to Order and Receive
+  module: buying
+  ref_doctype: Material Request
+  report_type: Script Report
+  upstream_path: erpnext/buying/report/requested_items_to_order_and_receive/requested_items_to_order_and_receive.json
+  filters: []
+- id: subcontract-order-summary
+  name: Subcontract Order Summary
+  module: buying
+  ref_doctype: Subcontracting Order
+  report_type: Script Report
+  upstream_path: erpnext/buying/report/subcontract_order_summary/subcontract_order_summary.json
+  filters: []
+- id: subcontracted-item-to-be-received
+  name: Subcontracted Item To Be Received
+  module: buying
+  ref_doctype: Subcontracting Order
+  report_type: Script Report
+  upstream_path: erpnext/buying/report/subcontracted_item_to_be_received/subcontracted_item_to_be_received.json
+  filters: []
+- id: subcontracted-raw-materials-to-be-transferred
+  name: Subcontracted Raw Materials To Be Transferred
+  module: buying
+  ref_doctype: Subcontracting Order
+  report_type: Script Report
+  upstream_path: erpnext/buying/report/subcontracted_raw_materials_to_be_transferred/subcontracted_raw_materials_to_be_transferred.json
+  filters: []
+- id: supplier-quotation-comparison
+  name: Supplier Quotation Comparison
+  module: buying
+  ref_doctype: Supplier Quotation
+  report_type: Script Report
+  upstream_path: erpnext/buying/report/supplier_quotation_comparison/supplier_quotation_comparison.json
+  filters: []
+- id: campaign-efficiency
+  name: Campaign Efficiency
+  module: crm
+  ref_doctype: Lead
+  report_type: Script Report
+  upstream_path: erpnext/crm/report/campaign_efficiency/campaign_efficiency.json
+  filters: []
+- id: first-response-time-for-opportunity
+  name: First Response Time for Opportunity
+  module: crm
+  ref_doctype: Opportunity
+  report_type: Script Report
+  upstream_path: erpnext/crm/report/first_response_time_for_opportunity/first_response_time_for_opportunity.json
+  filters: []
+- id: lead-conversion-time
+  name: Lead Conversion Time
+  module: crm
+  ref_doctype: Communication
+  report_type: Script Report
+  upstream_path: erpnext/crm/report/lead_conversion_time/lead_conversion_time.json
+  filters: []
+- id: lead-details
+  name: Lead Details
+  module: crm
+  ref_doctype: Lead
+  report_type: Script Report
+  upstream_path: erpnext/crm/report/lead_details/lead_details.json
+  filters: []
+- id: lead-owner-efficiency
+  name: Lead Owner Efficiency
+  module: crm
+  ref_doctype: Lead
+  report_type: Script Report
+  upstream_path: erpnext/crm/report/lead_owner_efficiency/lead_owner_efficiency.json
+  filters: []
+- id: lost-opportunity
+  name: Lost Opportunity
+  module: crm
+  ref_doctype: Opportunity
+  report_type: Script Report
+  upstream_path: erpnext/crm/report/lost_opportunity/lost_opportunity.json
+  filters: []
+- id: opportunity-summary-by-sales-stage
+  name: 'Opportunity Summary by Sales Stage '
+  module: crm
+  ref_doctype: Opportunity
+  report_type: Script Report
+  upstream_path: erpnext/crm/report/opportunity_summary_by_sales_stage/opportunity_summary_by_sales_stage.json
+  filters: []
+- id: prospects-engaged-but-not-converted
+  name: Prospects Engaged But Not Converted
+  module: crm
+  ref_doctype: Lead
+  report_type: Script Report
+  upstream_path: erpnext/crm/report/prospects_engaged_but_not_converted/prospects_engaged_but_not_converted.json
+  filters: []
+- id: sales-pipeline-analytics
+  name: Sales Pipeline Analytics
+  module: crm
+  ref_doctype: Opportunity
+  report_type: Script Report
+  upstream_path: erpnext/crm/report/sales_pipeline_analytics/sales_pipeline_analytics.json
+  filters: []
+- id: maintenance-schedules
+  name: Maintenance Schedules
+  module: maintenance
+  ref_doctype: Maintenance Schedule
+  report_type: Query Report
+  upstream_path: erpnext/maintenance/report/maintenance_schedules/maintenance_schedules.json
+  filters: []
+- id: bom-explorer
+  name: BOM Explorer
+  module: manufacturing
+  ref_doctype: BOM
+  report_type: Script Report
+  upstream_path: erpnext/manufacturing/report/bom_explorer/bom_explorer.json
+  filters: []
+- id: bom-operations-time
+  name: BOM Operations Time
+  module: manufacturing
+  ref_doctype: BOM
+  report_type: Script Report
+  upstream_path: erpnext/manufacturing/report/bom_operations_time/bom_operations_time.json
+  filters: []
+- id: bom-stock-analysis
+  name: BOM Stock Analysis
+  module: manufacturing
+  ref_doctype: BOM
+  report_type: Script Report
+  upstream_path: erpnext/manufacturing/report/bom_stock_analysis/bom_stock_analysis.json
+  filters: []
+- id: bom-variance-report
+  name: BOM Variance Report
+  module: manufacturing
+  ref_doctype: Stock Entry
+  report_type: Script Report
+  upstream_path: erpnext/manufacturing/report/bom_variance_report/bom_variance_report.json
+  filters: []
+- id: completed-work-orders
+  name: Completed Work Orders
+  module: manufacturing
+  ref_doctype: Work Order
+  report_type: Query Report
+  upstream_path: erpnext/manufacturing/report/completed_work_orders/completed_work_orders.json
+  filters: []
+- id: cost-of-poor-quality-report
+  name: Cost of Poor Quality Report
+  module: manufacturing
+  ref_doctype: Job Card
+  report_type: Script Report
+  upstream_path: erpnext/manufacturing/report/cost_of_poor_quality_report/cost_of_poor_quality_report.json
+  filters: []
+- id: downtime-analysis
+  name: Downtime Analysis
+  module: manufacturing
+  ref_doctype: Downtime Entry
+  report_type: Script Report
+  upstream_path: erpnext/manufacturing/report/downtime_analysis/downtime_analysis.json
+  filters: []
+- id: exponential-smoothing-forecasting
+  name: Exponential Smoothing Forecasting
+  module: manufacturing
+  ref_doctype: Sales Order
+  report_type: Script Report
+  upstream_path: erpnext/manufacturing/report/exponential_smoothing_forecasting/exponential_smoothing_forecasting.json
+  filters: []
+- id: issued-items-against-work-order
+  name: Issued Items Against Work Order
+  module: manufacturing
+  ref_doctype: Work Order
+  report_type: Query Report
+  upstream_path: erpnext/manufacturing/report/issued_items_against_work_order/issued_items_against_work_order.json
+  filters: []
+- id: job-card-summary
+  name: Job Card Summary
+  module: manufacturing
+  ref_doctype: Job Card
+  report_type: Script Report
+  upstream_path: erpnext/manufacturing/report/job_card_summary/job_card_summary.json
+  filters: []
+- id: material-requirements-planning-report
+  name: Material Requirements Planning Report
+  module: manufacturing
+  ref_doctype: Master Production Schedule
+  report_type: Script Report
+  upstream_path: erpnext/manufacturing/report/material_requirements_planning_report/material_requirements_planning_report.json
+  filters: []
+- id: open-work-orders
+  name: Open Work Orders
+  module: manufacturing
+  ref_doctype: Work Order
+  report_type: Query Report
+  upstream_path: erpnext/manufacturing/report/open_work_orders/open_work_orders.json
+  filters: []
+- id: process-loss-report
+  name: Process Loss Report
+  module: manufacturing
+  ref_doctype: Work Order
+  report_type: Script Report
+  upstream_path: erpnext/manufacturing/report/process_loss_report/process_loss_report.json
+  filters: []
+- id: production-analytics
+  name: Production Analytics
+  module: manufacturing
+  ref_doctype: Work Order
+  report_type: Script Report
+  upstream_path: erpnext/manufacturing/report/production_analytics/production_analytics.json
+  filters: []
+- id: production-plan-summary
+  name: Production Plan Summary
+  module: manufacturing
+  ref_doctype: Production Plan
+  report_type: Script Report
+  upstream_path: erpnext/manufacturing/report/production_plan_summary/production_plan_summary.json
+  filters: []
+- id: production-planning-report
+  name: Production Planning Report
+  module: manufacturing
+  ref_doctype: Work Order
+  report_type: Script Report
+  upstream_path: erpnext/manufacturing/report/production_planning_report/production_planning_report.json
+  filters: []
+- id: quality-inspection-summary
+  name: Quality Inspection Summary
+  module: manufacturing
+  ref_doctype: Quality Inspection
+  report_type: Script Report
+  upstream_path: erpnext/manufacturing/report/quality_inspection_summary/quality_inspection_summary.json
+  filters: []
+- id: work-order-consumed-materials
+  name: Work Order Consumed Materials
+  module: manufacturing
+  ref_doctype: Work Order
+  report_type: Script Report
+  upstream_path: erpnext/manufacturing/report/work_order_consumed_materials/work_order_consumed_materials.json
+  filters: []
+- id: work-order-stock-report
+  name: Work Order Stock Report
+  module: manufacturing
+  ref_doctype: Work Order
+  report_type: Script Report
+  upstream_path: erpnext/manufacturing/report/work_order_stock_report/work_order_stock_report.json
+  filters: []
+- id: work-order-summary
+  name: Work Order Summary
+  module: manufacturing
+  ref_doctype: Work Order
+  report_type: Script Report
+  upstream_path: erpnext/manufacturing/report/work_order_summary/work_order_summary.json
+  filters: []
+- id: work-orders-in-progress
+  name: Work Orders in Progress
+  module: manufacturing
+  ref_doctype: Work Order
+  report_type: Query Report
+  upstream_path: erpnext/manufacturing/report/work_orders_in_progress/work_orders_in_progress.json
+  filters: []
+- id: daily-timesheet-summary
+  name: Daily Timesheet Summary
+  module: projects
+  ref_doctype: Timesheet
+  report_type: Script Report
+  upstream_path: erpnext/projects/report/daily_timesheet_summary/daily_timesheet_summary.json
+  filters: []
+- id: delayed-tasks-summary
+  name: Delayed Tasks Summary
+  module: projects
+  ref_doctype: Task
+  report_type: Script Report
+  upstream_path: erpnext/projects/report/delayed_tasks_summary/delayed_tasks_summary.json
+  filters: []
+- id: project-summary
+  name: Project Summary
+  module: projects
+  ref_doctype: Project
+  report_type: Script Report
+  upstream_path: erpnext/projects/report/project_summary/project_summary.json
+  filters: []
+- id: project-wise-stock-tracking
+  name: 'Project wise Stock Tracking '
+  module: projects
+  ref_doctype: Project
+  report_type: Script Report
+  upstream_path: erpnext/projects/report/project_wise_stock_tracking/project_wise_stock_tracking.json
+  filters: []
+- id: timesheet-billing-summary
+  name: Timesheet Billing Summary
+  module: projects
+  ref_doctype: Timesheet
+  report_type: Script Report
+  upstream_path: erpnext/projects/report/timesheet_billing_summary/timesheet_billing_summary.json
+  filters: []
+- id: review
+  name: Review
+  module: quality management
+  ref_doctype: Quality Action
+  report_type: Query Report
+  upstream_path: erpnext/quality_management/report/review/review.json
+  filters: []
+- id: electronic-invoice-register
+  name: Electronic Invoice Register
+  module: regional
+  ref_doctype: Sales Invoice
+  report_type: Script Report
+  upstream_path: erpnext/regional/report/electronic_invoice_register/electronic_invoice_register.json
+  filters: []
+- id: irs-1099
+  name: IRS 1099
+  module: regional
+  ref_doctype: Supplier
+  report_type: Script Report
+  upstream_path: erpnext/regional/report/irs_1099/irs_1099.json
+  filters: []
+- id: uae-vat-201
+  name: UAE VAT 201
+  module: regional
+  ref_doctype: GL Entry
+  report_type: Script Report
+  upstream_path: erpnext/regional/report/uae_vat_201/uae_vat_201.json
+  filters: []
+- id: vat-audit-report
+  name: VAT Audit Report
+  module: regional
+  ref_doctype: GL Entry
+  report_type: Script Report
+  upstream_path: erpnext/regional/report/vat_audit_report/vat_audit_report.json
+  filters: []
+- id: address-and-contacts
+  name: Address And Contacts
+  module: selling
+  ref_doctype: Address
+  report_type: Script Report
+  upstream_path: erpnext/selling/report/address_and_contacts/address_and_contacts.json
+  filters: []
+- id: available-stock-for-packing-items
+  name: Available Stock for Packing Items
+  module: selling
+  ref_doctype: Product Bundle
+  report_type: Script Report
+  upstream_path: erpnext/selling/report/available_stock_for_packing_items/available_stock_for_packing_items.json
+  filters: []
+- id: customer-acquisition-and-loyalty
+  name: Customer Acquisition and Loyalty
+  module: selling
+  ref_doctype: Customer
+  report_type: Script Report
+  upstream_path: erpnext/selling/report/customer_acquisition_and_loyalty/customer_acquisition_and_loyalty.json
+  filters: []
+- id: customer-credit-balance
+  name: Customer Credit Balance
+  module: selling
+  ref_doctype: Customer
+  report_type: Script Report
+  upstream_path: erpnext/selling/report/customer_credit_balance/customer_credit_balance.json
+  filters: []
+- id: customer-wise-item-price
+  name: Customer-wise Item Price
+  module: selling
+  ref_doctype: Customer
+  report_type: Script Report
+  upstream_path: erpnext/selling/report/customer_wise_item_price/customer_wise_item_price.json
+  filters: []
+- id: customers-without-any-sales-transactions
+  name: Customers Without Any Sales Transactions
+  module: selling
+  ref_doctype: Sales Invoice
+  report_type: Query Report
+  upstream_path: erpnext/selling/report/customers_without_any_sales_transactions/customers_without_any_sales_transactions.json
+  filters: []
+- id: inactive-customers
+  name: Inactive Customers
+  module: selling
+  ref_doctype: Sales Order
+  report_type: Script Report
+  upstream_path: erpnext/selling/report/inactive_customers/inactive_customers.json
+  filters: []
+- id: item-wise-sales-history
+  name: Item-wise Sales History
+  module: selling
+  ref_doctype: Sales Order
+  report_type: Script Report
+  upstream_path: erpnext/selling/report/item_wise_sales_history/item_wise_sales_history.json
+  filters: []
+- id: lost-quotations
+  name: Lost Quotations
+  module: selling
+  ref_doctype: Quotation
+  report_type: Script Report
+  upstream_path: erpnext/selling/report/lost_quotations/lost_quotations.json
+  filters: []
+- id: payment-terms-status-for-sales-order
+  name: Payment Terms Status for Sales Order
+  module: selling
+  ref_doctype: Sales Order
+  report_type: Script Report
+  upstream_path: erpnext/selling/report/payment_terms_status_for_sales_order/payment_terms_status_for_sales_order.json
+  filters: []
+- id: pending-so-items-for-purchase-request
+  name: Pending SO Items For Purchase Request
+  module: selling
+  ref_doctype: Sales Order
+  report_type: Script Report
+  upstream_path: erpnext/selling/report/pending_so_items_for_purchase_request/pending_so_items_for_purchase_request.json
+  filters: []
+- id: quotation-trends
+  name: Quotation Trends
+  module: selling
+  ref_doctype: Quotation
+  report_type: Script Report
+  upstream_path: erpnext/selling/report/quotation_trends/quotation_trends.json
+  filters: []
+- id: sales-analytics
+  name: Sales Analytics
+  module: selling
+  ref_doctype: Sales Order
+  report_type: Script Report
+  upstream_path: erpnext/selling/report/sales_analytics/sales_analytics.json
+  filters: []
+- id: sales-order-analysis
+  name: Sales Order Analysis
+  module: selling
+  ref_doctype: Sales Order
+  report_type: Script Report
+  upstream_path: erpnext/selling/report/sales_order_analysis/sales_order_analysis.json
+  filters: []
+- id: sales-order-trends
+  name: Sales Order Trends
+  module: selling
+  ref_doctype: Sales Order
+  report_type: Script Report
+  upstream_path: erpnext/selling/report/sales_order_trends/sales_order_trends.json
+  filters: []
+- id: sales-partner-commission-summary
+  name: Sales Partner Commission Summary
+  module: selling
+  ref_doctype: Sales Order
+  report_type: Script Report
+  upstream_path: erpnext/selling/report/sales_partner_commission_summary/sales_partner_commission_summary.json
+  filters: []
+- id: sales-partner-target-variance-based-on-item-group
+  name: Sales Partner Target Variance based on Item Group
+  module: selling
+  ref_doctype: Sales Order
+  report_type: Script Report
+  upstream_path: erpnext/selling/report/sales_partner_target_variance_based_on_item_group/sales_partner_target_variance_based_on_item_group.json
+  filters: []
+- id: sales-partner-transaction-summary
+  name: Sales Partner Transaction Summary
+  module: selling
+  ref_doctype: Sales Order
+  report_type: Script Report
+  upstream_path: erpnext/selling/report/sales_partner_transaction_summary/sales_partner_transaction_summary.json
+  filters: []
+- id: sales-person-commission-summary
+  name: Sales Person Commission Summary
+  module: selling
+  ref_doctype: Sales Order
+  report_type: Script Report
+  upstream_path: erpnext/selling/report/sales_person_commission_summary/sales_person_commission_summary.json
+  filters: []
+- id: sales-person-target-variance-based-on-item-group
+  name: Sales Person Target Variance Based On Item Group
+  module: selling
+  ref_doctype: Sales Order
+  report_type: Script Report
+  upstream_path: erpnext/selling/report/sales_person_target_variance_based_on_item_group/sales_person_target_variance_based_on_item_group.json
+  filters: []
+- id: sales-person-wise-transaction-summary
+  name: Sales Person-wise Transaction Summary
+  module: selling
+  ref_doctype: Sales Order
+  report_type: Script Report
+  upstream_path: erpnext/selling/report/sales_person_wise_transaction_summary/sales_person_wise_transaction_summary.json
+  filters: []
+- id: territory-target-variance-based-on-item-group
+  name: Territory Target Variance Based On Item Group
+  module: selling
+  ref_doctype: Sales Order
+  report_type: Script Report
+  upstream_path: erpnext/selling/report/territory_target_variance_based_on_item_group/territory_target_variance_based_on_item_group.json
+  filters: []
+- id: territory-wise-sales
+  name: Territory-wise Sales
+  module: selling
+  ref_doctype: Opportunity
+  report_type: Script Report
+  upstream_path: erpnext/selling/report/territory_wise_sales/territory_wise_sales.json
+  filters: []
+- id: available-batch-report
+  name: Available Batch Report
+  module: stock
+  ref_doctype: Stock Ledger Entry
+  report_type: Script Report
+  upstream_path: erpnext/stock/report/available_batch_report/available_batch_report.json
+  filters: []
+- id: available-serial-no
+  name: Available Serial No
+  module: stock
+  ref_doctype: Stock Ledger Entry
+  report_type: Script Report
+  upstream_path: erpnext/stock/report/available_serial_no/available_serial_no.json
+  filters: []
+- id: batch-item-expiry-status
+  name: Batch Item Expiry Status
+  module: stock
+  ref_doctype: Stock Ledger Entry
+  report_type: Script Report
+  upstream_path: erpnext/stock/report/batch_item_expiry_status/batch_item_expiry_status.json
+  filters: []
+- id: batch-split-tree
+  name: Batch Split Tree
+  module: stock
+  ref_doctype: Batch
+  report_type: Script Report
+  upstream_path: erpnext/stock/report/batch_split_tree/batch_split_tree.json
+  filters: []
+- id: batch-wise-balance-history
+  name: Batch-Wise Balance History
+  module: stock
+  ref_doctype: Stock Ledger Entry
+  report_type: Script Report
+  upstream_path: erpnext/stock/report/batch_wise_balance_history/batch_wise_balance_history.json
+  filters: []
+- id: bom-search
+  name: BOM Search
+  module: stock
+  ref_doctype: BOM
+  report_type: Script Report
+  upstream_path: erpnext/stock/report/bom_search/bom_search.json
+  filters: []
+- id: cogs-by-item-group
+  name: COGS By Item Group
+  module: stock
+  ref_doctype: GL Entry
+  report_type: Script Report
+  upstream_path: erpnext/stock/report/cogs_by_item_group/cogs_by_item_group.json
+  filters: []
+- id: delayed-item-report
+  name: Delayed Item Report
+  module: stock
+  ref_doctype: Delivery Note
+  report_type: Script Report
+  upstream_path: erpnext/stock/report/delayed_item_report/delayed_item_report.json
+  filters: []
+- id: delayed-order-report
+  name: Delayed Order Report
+  module: stock
+  ref_doctype: Delivery Note
+  report_type: Script Report
+  upstream_path: erpnext/stock/report/delayed_order_report/delayed_order_report.json
+  filters: []
+- id: delivery-note-trends
+  name: Delivery Note Trends
+  module: stock
+  ref_doctype: Delivery Note
+  report_type: Script Report
+  upstream_path: erpnext/stock/report/delivery_note_trends/delivery_note_trends.json
+  filters: []
+- id: fifo-queue-vs-qty-after-transaction-comparison
+  name: FIFO Queue vs Qty After Transaction Comparison
+  module: stock
+  ref_doctype: Stock Ledger Entry
+  report_type: Script Report
+  upstream_path: erpnext/stock/report/fifo_queue_vs_qty_after_transaction_comparison/fifo_queue_vs_qty_after_transaction_comparison.json
+  filters: []
+- id: incorrect-balance-qty-after-transaction
+  name: Incorrect Balance Qty After Transaction
+  module: stock
+  ref_doctype: Stock Ledger Entry
+  report_type: Script Report
+  upstream_path: erpnext/stock/report/incorrect_balance_qty_after_transaction/incorrect_balance_qty_after_transaction.json
+  filters: []
+- id: incorrect-serial-and-batch-bundle
+  name: Incorrect Serial and Batch Bundle
+  module: stock
+  ref_doctype: Serial and Batch Bundle
+  report_type: Script Report
+  upstream_path: erpnext/stock/report/incorrect_serial_and_batch_bundle/incorrect_serial_and_batch_bundle.json
+  filters: []
+- id: incorrect-serial-no-valuation
+  name: Incorrect Serial No Valuation
+  module: stock
+  ref_doctype: Stock Ledger Entry
+  report_type: Script Report
+  upstream_path: erpnext/stock/report/incorrect_serial_no_valuation/incorrect_serial_no_valuation.json
+  filters: []
+- id: incorrect-stock-value-report
+  name: Incorrect Stock Value Report
+  module: stock
+  ref_doctype: Stock Ledger Entry
+  report_type: Script Report
+  upstream_path: erpnext/stock/report/incorrect_stock_value_report/incorrect_stock_value_report.json
+  filters: []
+- id: item-balance
+  name: Item Balance (Simple)
+  module: stock
+  ref_doctype: Bin
+  report_type: Query Report
+  upstream_path: erpnext/stock/report/item_balance/item_balance.json
+  filters: []
+- id: item-price-stock
+  name: Item Price Stock
+  module: stock
+  ref_doctype: Item
+  report_type: Script Report
+  upstream_path: erpnext/stock/report/item_price_stock/item_price_stock.json
+  filters: []
+- id: item-prices
+  name: Item Prices
+  module: stock
+  ref_doctype: Stock Ledger Entry
+  report_type: Script Report
+  upstream_path: erpnext/stock/report/item_prices/item_prices.json
+  filters: []
+- id: item-shortage-report
+  name: Item Shortage Report
+  module: stock
+  ref_doctype: Bin
+  report_type: Script Report
+  upstream_path: erpnext/stock/report/item_shortage_report/item_shortage_report.json
+  filters: []
+- id: item-variant-details
+  name: Item Variant Details
+  module: stock
+  ref_doctype: Item
+  report_type: Script Report
+  upstream_path: erpnext/stock/report/item_variant_details/item_variant_details.json
+  filters: []
+- id: item-where-used
+  name: Item Where Used
+  module: stock
+  ref_doctype: Item
+  report_type: Script Report
+  upstream_path: erpnext/stock/report/item_where_used/item_where_used.json
+  filters: []
+- id: item-wise-consumption
+  name: Item Wise Consumption
+  module: stock
+  ref_doctype: Stock Ledger Entry
+  report_type: Script Report
+  upstream_path: erpnext/stock/report/item_wise_consumption/item_wise_consumption.json
+  filters: []
+- id: item-wise-price-list-rate
+  name: Item-wise Price List Rate
+  module: stock
+  ref_doctype: Item Price
+  report_type: Report Builder
+  upstream_path: erpnext/stock/report/item_wise_price_list_rate/item_wise_price_list_rate.json
+  filters: []
+- id: items-to-be-requested
+  name: Items To Be Requested
+  module: stock
+  ref_doctype: Material Request
+  report_type: Query Report
+  upstream_path: erpnext/stock/report/items_to_be_requested/items_to_be_requested.json
+  filters: []
+- id: itemwise-recommended-reorder-level
+  name: Itemwise Recommended Reorder Level
+  module: stock
+  ref_doctype: Item
+  report_type: Script Report
+  upstream_path: erpnext/stock/report/itemwise_recommended_reorder_level/itemwise_recommended_reorder_level.json
+  filters: []
+- id: landed-cost-report
+  name: Landed Cost Report
+  module: stock
+  ref_doctype: Landed Cost Voucher
+  report_type: Script Report
+  upstream_path: erpnext/stock/report/landed_cost_report/landed_cost_report.json
+  filters: []
+- id: material-requests-for-which-supplier-quotations-are-not-created
+  name: Material Requests for which Supplier Quotations are not created
+  module: stock
+  ref_doctype: Material Request
+  report_type: Query Report
+  upstream_path: erpnext/stock/report/material_requests_for_which_supplier_quotations_are_not_created/material_requests_for_which_supplier_quotations_are_not_created.json
+  filters: []
+- id: negative-batch-report
+  name: Negative Batch Report
+  module: stock
+  ref_doctype: Serial and Batch Bundle
+  report_type: Script Report
+  upstream_path: erpnext/stock/report/negative_batch_report/negative_batch_report.json
+  filters: []
+- id: product-bundle-balance
+  name: Product Bundle Balance
+  module: stock
+  ref_doctype: Stock Ledger Entry
+  report_type: Script Report
+  upstream_path: erpnext/stock/report/product_bundle_balance/product_bundle_balance.json
+  filters: []
+- id: purchase-receipt-trends
+  name: Purchase Receipt Trends
+  module: stock
+  ref_doctype: Purchase Receipt
+  report_type: Script Report
+  upstream_path: erpnext/stock/report/purchase_receipt_trends/purchase_receipt_trends.json
+  filters: []
+- id: requested-items-to-be-transferred
+  name: Requested Items To Be Transferred
+  module: stock
+  ref_doctype: Stock Entry
+  report_type: Query Report
+  upstream_path: erpnext/stock/report/requested_items_to_be_transferred/requested_items_to_be_transferred.json
+  filters: []
+- id: reserved-stock
+  name: Reserved Stock
+  module: stock
+  ref_doctype: Stock Reservation Entry
+  report_type: Script Report
+  upstream_path: erpnext/stock/report/reserved_stock/reserved_stock.json
+  filters: []
+- id: serial-and-batch-summary
+  name: Serial and Batch Summary
+  module: stock
+  ref_doctype: Serial and Batch Bundle
+  report_type: Script Report
+  upstream_path: erpnext/stock/report/serial_and_batch_summary/serial_and_batch_summary.json
+  filters: []
+- id: serial-no-and-batch-traceability
+  name: Serial No and Batch Traceability
+  module: stock
+  ref_doctype: Serial and Batch Bundle
+  report_type: Script Report
+  upstream_path: erpnext/stock/report/serial_no_and_batch_traceability/serial_no_and_batch_traceability.json
+  filters: []
+- id: serial-no-ledger
+  name: Serial No Ledger
+  module: stock
+  ref_doctype: Stock Ledger Entry
+  report_type: Script Report
+  upstream_path: erpnext/stock/report/serial_no_ledger/serial_no_ledger.json
+  filters: []
+- id: serial-no-service-contract-expiry
+  name: Serial No Service Contract Expiry
+  module: stock
+  ref_doctype: Serial No
+  report_type: Report Builder
+  upstream_path: erpnext/stock/report/serial_no_service_contract_expiry/serial_no_service_contract_expiry.json
+  filters: []
+- id: serial-no-status
+  name: Serial No Status
+  module: stock
+  ref_doctype: Serial No
+  report_type: Report Builder
+  upstream_path: erpnext/stock/report/serial_no_status/serial_no_status.json
+  filters: []
+- id: serial-no-warranty-expiry
+  name: Serial No Warranty Expiry
+  module: stock
+  ref_doctype: Serial No
+  report_type: Report Builder
+  upstream_path: erpnext/stock/report/serial_no_warranty_expiry/serial_no_warranty_expiry.json
+  filters: []
+- id: stock-ageing
+  name: Stock Ageing
+  module: stock
+  ref_doctype: Item
+  report_type: Script Report
+  upstream_path: erpnext/stock/report/stock_ageing/stock_ageing.json
+  filters: []
+- id: stock-analytics
+  name: Stock Analytics
+  module: stock
+  ref_doctype: Stock Entry
+  report_type: Script Report
+  upstream_path: erpnext/stock/report/stock_analytics/stock_analytics.json
+  filters: []
+- id: stock-and-account-value-comparison
+  name: Stock and Account Value Comparison
+  module: stock
+  ref_doctype: Stock Ledger Entry
+  report_type: Script Report
+  upstream_path: erpnext/stock/report/stock_and_account_value_comparison/stock_and_account_value_comparison.json
+  filters: []
+- id: stock-balance
+  name: Stock Balance
+  module: stock
+  ref_doctype: Stock Ledger Entry
+  report_type: Script Report
+  upstream_path: erpnext/stock/report/stock_balance/stock_balance.json
+  filters: []
+- id: stock-ledger
+  name: Stock Ledger
+  module: stock
+  ref_doctype: Stock Ledger Entry
+  report_type: Script Report
+  upstream_path: erpnext/stock/report/stock_ledger/stock_ledger.json
+  filters: []
+- id: stock-ledger-invariant-check
+  name: Stock Ledger Invariant Check
+  module: stock
+  ref_doctype: Stock Ledger Entry
+  report_type: Script Report
+  upstream_path: erpnext/stock/report/stock_ledger_invariant_check/stock_ledger_invariant_check.json
+  filters: []
+- id: stock-ledger-variance
+  name: Stock Ledger Variance
+  module: stock
+  ref_doctype: Stock Ledger Entry
+  report_type: Script Report
+  upstream_path: erpnext/stock/report/stock_ledger_variance/stock_ledger_variance.json
+  filters: []
+- id: stock-projected-qty
+  name: Stock Projected Qty
+  module: stock
+  ref_doctype: Item
+  report_type: Script Report
+  upstream_path: erpnext/stock/report/stock_projected_qty/stock_projected_qty.json
+  filters: []
+- id: stock-qty-vs-batch-qty
+  name: Stock Qty vs Batch Qty
+  module: stock
+  ref_doctype: Item
+  report_type: Script Report
+  upstream_path: erpnext/stock/report/stock_qty_vs_batch_qty/stock_qty_vs_batch_qty.json
+  filters: []
+- id: stock-qty-vs-serial-no-count
+  name: Stock Qty vs Serial No Count
+  module: stock
+  ref_doctype: Item
+  report_type: Script Report
+  upstream_path: erpnext/stock/report/stock_qty_vs_serial_no_count/stock_qty_vs_serial_no_count.json
+  filters: []
+- id: total-stock-summary
+  name: Total Stock Summary
+  module: stock
+  ref_doctype: Stock Entry
+  report_type: Script Report
+  upstream_path: erpnext/stock/report/total_stock_summary/total_stock_summary.json
+  filters: []
+- id: warehouse-wise-item-balance-age-and-value
+  name: Warehouse wise Item Balance Age and Value
+  module: stock
+  ref_doctype: Stock Ledger Entry
+  report_type: Script Report
+  upstream_path: erpnext/stock/report/warehouse_wise_item_balance_age_and_value/warehouse_wise_item_balance_age_and_value.json
+  filters: []
+- id: warehouse-wise-stock-balance
+  name: Warehouse Wise Stock Balance
+  module: stock
+  ref_doctype: Stock Ledger Entry
+  report_type: Script Report
+  upstream_path: erpnext/stock/report/warehouse_wise_stock_balance/warehouse_wise_stock_balance.json
+  filters: []
+- id: first-response-time-for-issues
+  name: First Response Time for Issues
+  module: support
+  ref_doctype: Issue
+  report_type: Script Report
+  upstream_path: erpnext/support/report/first_response_time_for_issues/first_response_time_for_issues.json
+  filters: []
+- id: issue-analytics
+  name: Issue Analytics
+  module: support
+  ref_doctype: Issue
+  report_type: Script Report
+  upstream_path: erpnext/support/report/issue_analytics/issue_analytics.json
+  filters: []
+- id: issue-summary
+  name: Issue Summary
+  module: support
+  ref_doctype: Issue
+  report_type: Script Report
+  upstream_path: erpnext/support/report/issue_summary/issue_summary.json
+  filters: []
+- id: support-hour-distribution
+  name: Support Hour Distribution
+  module: support
+  ref_doctype: Issue
+  report_type: Script Report
+  upstream_path: erpnext/support/report/support_hour_distribution/support_hour_distribution.json
+  filters: []
+- id: youtube-interactions
+  name: YouTube Interactions
+  module: utilities
+  ref_doctype: Video
+  report_type: Script Report
+  upstream_path: erpnext/utilities/report/youtube_interactions/youtube_interactions.json
+  filters: []

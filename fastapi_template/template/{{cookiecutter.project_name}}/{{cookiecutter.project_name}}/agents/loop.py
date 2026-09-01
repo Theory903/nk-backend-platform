@@ -4,7 +4,6 @@ import inspect
 import json
 from uuid import UUID, uuid4
 from collections.abc import Awaitable, Callable
-from dataclasses import dataclass, field
 from typing import Any
 
 from {{cookiecutter.project_name}}.ai.llm import (
@@ -12,10 +11,16 @@ from {{cookiecutter.project_name}}.ai.llm import (
     ChatModel,
     Message,
 )
+from {{cookiecutter.project_name}}.observability.genai.metrics import record_agent_step
+from {{cookiecutter.project_name}}.observability.genai.spans import agent_run_span
 from {{cookiecutter.project_name}}.agents.budgets import Budget, BudgetTracker
 from {{cookiecutter.project_name}}.agents.guardrails import Guardrails
+from {{cookiecutter.project_name}}.agents.runtime import CancellationToken
+from {{cookiecutter.project_name}}.agents.session_runtime import SessionRecorder
+from {{cookiecutter.project_name}}.agents.tool_gateway import ToolGateway
 from {{cookiecutter.project_name}}.agents.tools import ToolRegistry
 from {{cookiecutter.project_name}}.agents.security import SecurityPipeline
+from {{cookiecutter.project_name}}.agents.types import AgentResult, RuntimeMode
 from {{cookiecutter.project_name}}.platform.contracts import (
     Scope,
     ToolDescriptor,
@@ -28,16 +33,6 @@ ApprovalHook = Callable[
     Awaitable[None],
 ]
 ToolApprovalHook = Callable[[ToolInvocation], Awaitable[bool]]
-
-
-@dataclass(slots=True)
-class AgentResult:
-    """Stable result contract shared by NK runtimes."""
-
-    content: str | None
-    trace: list[tuple[Any, ...]] = field(default_factory=list)
-    transcript: list[Message] = field(default_factory=list)
-    steps: int = 0
 
 
 class LoopRuntime:
@@ -66,6 +61,9 @@ class LoopRuntime:
         "_scope",
         "_security",
         "_tool_approval",
+        "_cancellation",
+        "_gateway",
+        "_recorder",
     )
 
     def __init__(
@@ -80,6 +78,9 @@ class LoopRuntime:
         scope: Scope | None = None,
         security: SecurityPipeline | None = None,
         tool_approval: ToolApprovalHook | None = None,
+        cancellation: CancellationToken | None = None,
+        gateway: ToolGateway | None = None,
+        recorder: SessionRecorder | None = None,
     ) -> None:
         if model is None:
             raise ValueError("model cannot be None")
@@ -106,6 +107,15 @@ class LoopRuntime:
         self._scope = scope
         self._security = security or SecurityPipeline()
         self._tool_approval = tool_approval
+        self._cancellation = cancellation
+        self._gateway = gateway
+        self._recorder = recorder
+
+    def _check_cancelled(self) -> None:
+        if self._cancellation is not None and self._cancellation.cancelled:
+            from {{cookiecutter.project_name}}.agents.runtime import RuntimeCancelled
+
+            raise RuntimeCancelled("agent loop cancelled")
 
     @property
     def budget(self) -> BudgetTracker:
@@ -131,7 +141,31 @@ class LoopRuntime:
         denial = self._guardrails.check(name)
 
         if denial is not None:
+            if self._recorder is not None:
+                await self._recorder.tool_called(
+                    name=name,
+                    arguments=arguments,
+                    output=denial,
+                    ok=False,
+                )
             return denial
+
+        if self._gateway is not None and self._scope is not None:
+            outcome = await self._gateway.dispatch_string(
+                name,
+                arguments,
+                self._scope,
+                call_id=call_id,
+                approval_hook=self._tool_approval,
+            )
+            if self._recorder is not None:
+                await self._recorder.tool_called(
+                    name=name,
+                    arguments=arguments,
+                    output=outcome,
+                    ok=not outcome.startswith("DENIED"),
+                )
+            return outcome
 
         if self._scope is None:
             raise PermissionError("tool execution requires an authenticated scope")
@@ -161,16 +195,37 @@ class LoopRuntime:
                 if self._tool_approval is None or not await self._tool_approval(invocation):
                     raise PermissionError("tool invocation requires approval")
 
-        return await self._tools.dispatch(
+        outcome = await self._tools.dispatch(
             name,
             arguments,
         )
+        if self._recorder is not None:
+            await self._recorder.tool_called(
+                name=name,
+                arguments=arguments,
+                output=outcome,
+                ok=True,
+            )
+        return outcome
 
     async def run(
         self,
         task: str,
     ) -> AgentResult:
         """Execute the agent until a final answer is produced."""
+        with agent_run_span(
+            runtime_mode=RuntimeMode.LOOP.value,
+            organization_id=self._scope.organization_id if self._scope else None,
+        ) as span_state:
+            result = await self._run_loop(task, span_state)
+        record_agent_step(runtime_mode=RuntimeMode.LOOP.value, outcome="success")
+        return result
+
+    async def _run_loop(
+        self,
+        task: str,
+        span_state: dict[str, object],
+    ) -> AgentResult:
         task = task.strip()
 
         if not task:
@@ -181,6 +236,7 @@ class LoopRuntime:
         specs = self._tools.specs()
 
         while True:
+            self._check_cancelled()
             self._budget.step()
 
             if self._on_step is not None:
@@ -190,6 +246,12 @@ class LoopRuntime:
                 messages,
                 tools=specs,
             )
+
+            if self._recorder is not None:
+                await self._recorder.model_called(
+                    step=self._budget.steps_used,
+                    tool_calls=len(reply.tool_calls),
+                )
 
             if not isinstance(reply, AssistantReply):
                 raise TypeError(
@@ -202,12 +264,14 @@ class LoopRuntime:
 
             if not reply.tool_calls:
                 trace.append(("final",))
+                span_state["steps"] = self._budget.steps_used
 
                 return AgentResult(
                     content=reply.content,
                     trace=trace,
                     transcript=messages,
                     steps=self._budget.steps_used,
+                    runtime_mode=RuntimeMode.LOOP,
                 )
 
             for call in reply.tool_calls:

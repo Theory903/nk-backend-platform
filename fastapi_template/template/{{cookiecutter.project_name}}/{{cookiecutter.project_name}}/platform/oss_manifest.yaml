@@ -1,0 +1,286 @@
+# NK AI Platform — OSS manifest (generated)
+# Regenerate: scripts/build_ai_platform_manifest.py
+# Clone refs: scripts/clone_ai_platform_refs.sh
+
+classification_rules:
+  - runtime: pip adapter, hidden engine
+  - adapter: optional backend behind NK interface
+  - protocol: MCP/A2A SDK dependencies
+  - reference: study only, no vendor copy
+  - skill: workflow patterns (gstack)
+  - evaluator: harness backends
+  - backend: infra (Qdrant, SearXNG compose)
+  - research: autoresearch, optimization loops
+  - architecture_reference: shapes NK kernel design
+
+repositories:
+  deepseek-harness:
+    repo: deepseek-ai/deepseek-harness
+    category: architecture_reference
+    integration: reference
+    license: MIT
+    nk_module: kernel/plugins/
+    phase: P21
+    cloned: true
+    use: "Plugin kernel, session events, replay/fork/resume (dev preview — pin as reference only)"
+
+  gstack:
+    repo: garrytan/gstack
+    category: skill
+    integration: reference
+    license: MIT
+    nk_module: skills/engineering/
+    phase: P22-P23
+    cloned: true
+    use: "Engineering skill workflows (review, QA, ship, retro) — NK-native SKILL.md equivalents"
+
+  langgraph:
+    repo: langchain-ai/langgraph
+    category: runtime
+    integration: adapter
+    license: MIT
+    pip: "langgraph>=1.0,<2"
+    nk_module: runtime/graph/
+    phase: P3
+    cloned: true
+    use: "Graph/supervisor/durable execution engine (hidden)"
+
+  smolagents:
+    repo: huggingface/smolagents
+    category: runtime
+    integration: adapter
+    license: Apache-2.0
+    pip: "smolagents"
+    nk_module: agents/code/lightweight.py
+    phase: P11
+    cloned: true
+    use: "Lightweight/code agent adapter"
+
+  OpenHands:
+    repo: All-Hands-AI/OpenHands
+    category: reference
+    integration: reference
+    license: MIT
+    nk_module: agents/code/reference/
+    phase: P11
+    cloned: true
+    use: "Code-agent sandbox patterns"
+
+  autoresearch:
+    repo: karpathy/autoresearch
+    category: research
+    integration: reference
+    license: MIT
+    nk_module: research/experiments/
+    phase: P26-P27
+    cloned: true
+    use: "Autonomous experiment loop: hypothesis → mutate → run → eval → keep/revert"
+
+  nanochat:
+    repo: karpathy/nanochat
+    category: reference
+    integration: reference
+    license: MIT
+    nk_module: profiles/production-ai-local
+    phase: P0
+    cloned: true
+    use: "Local-first ChatGPT-like stack reference"
+
+  nanoGPT:
+    repo: karpathy/nanoGPT
+    category: reference
+    integration: reference
+    license: MIT
+    nk_module: research/reference/
+    phase: P2
+    cloned: true
+    use: "Training/finetuning reference"
+
+  llm.c:
+    repo: karpathy/llm.c
+    category: reference
+    integration: reference
+    license: MIT
+    nk_module: research/reference/
+    phase: P3
+    cloned: true
+    use: "Minimal LLM training/inference reference"
+
+  llama2.c:
+    repo: karpathy/llama2.c
+    category: reference
+    integration: reference
+    license: MIT
+    nk_module: research/reference/
+    phase: P4
+    cloned: true
+    use: "Minimal inference reference"
+
+  micrograd:
+    repo: karpathy/micrograd
+    category: reference
+    integration: reference
+    license: MIT
+    nk_module: research/reference/
+    phase: P4
+    cloned: true
+    use: "Autograd educational reference"
+
+  makemore:
+    repo: karpathy/makemore
+    category: reference
+    integration: reference
+    license: MIT
+    nk_module: research/reference/
+    phase: P4
+    cloned: true
+    use: "Small-model experimentation reference"
+
+  microgpt:
+    repo: karpathy/microgpt (blog)
+    category: reference
+    integration: reference
+    license: n/a
+    nk_module: research/reference/
+    phase: P3
+    cloned: false
+    use: "Minimal GPT implementation principle — no standalone repo; see nanochat"
+
+  haystack:
+    repo: deepset-ai/haystack
+    category: adapter
+    integration: adapter
+    license: Apache-2.0
+    pip: "haystack-ai"
+    nk_module: rag/adapters/haystack.py
+    phase: P5
+    cloned: true
+    use: "Optional complex RAG pipeline backend"
+
+  qdrant-client:
+    repo: qdrant/qdrant-client
+    category: backend
+    integration: adapter
+    license: Apache-2.0
+    pip: "qdrant-client"
+    nk_module: rag/adapters/qdrant_store.py
+    phase: P1
+    cloned: true
+    use: "Scale vector backend"
+
+  ragas:
+    repo: explodinggradients/ragas
+    category: evaluator
+    integration: adapter
+    license: Apache-2.0
+    pip: "ragas"
+    nk_module: harness/evaluators/ragas.py
+    phase: P15
+    cloned: true
+    use: "RAG evaluation metrics"
+
+  python-sdk-mcp:
+    repo: modelcontextprotocol/python-sdk
+    category: protocol
+    integration: dependency
+    license: MIT
+    pip: "mcp"
+    nk_module: protocols/mcp/
+    phase: P4
+    cloned: true
+    use: "MCP client/server"
+
+  a2a-python:
+    repo: a2aproject/a2a-python
+    category: protocol
+    integration: dependency
+    license: Apache-2.0
+    pip: "a2a-sdk"
+    nk_module: protocols/a2a/
+    phase: P4/P8
+    cloned: true
+    use: "Agent-to-agent protocol"
+
+  litellm:
+    repo: BerriAI/litellm
+    category: adapter
+    integration: adapter
+    license: MIT
+    pip: "litellm"
+    nk_module: ai/gateway/adapters/litellm.py
+    phase: P2
+    cloned: true
+    use: "Multi-provider routing and cost"
+
+  browser-use:
+    repo: browser-use/browser-use
+    category: runtime
+    integration: adapter
+    license: MIT
+    pip: "browser-use"
+    nk_module: agents/browser/
+    phase: P10
+    cloned: true
+    use: "Browser agent (sandboxed)"
+
+  searxng:
+    repo: searxng/searxng
+    category: backend
+    integration: infra_service
+    license: AGPL-3.0
+    nk_module: tools/search/searxng.py
+    phase: P12
+    cloned: true
+    use: "Self-hosted search (compose service, not vendored)"
+
+  deepeval:
+    repo: confident-ai/deepeval
+    category: evaluator
+    integration: adapter
+    license: Apache-2.0
+    pip: "deepeval"
+    nk_module: harness/evaluators/deepeval.py
+    phase: P15
+    cloned: true
+    use: "Agent evaluation"
+
+  harness-evals:
+    repo: harness/harness-evals
+    category: evaluator
+    integration: reference
+    license: Apache-2.0
+    nk_module: harness/evaluators/harness.py
+    phase: P15
+    cloned: true
+    use: "Trajectory evaluation dimensions"
+
+  promptfoo:
+    repo: promptfoo/promptfoo
+    category: evaluator
+    integration: reference_cli
+    license: MIT
+    nk_module: harness/adapters/promptfoo.py
+    phase: P15/P18
+    cloned: true
+    use: "Red team / prompt regression CLI"
+
+  dspy:
+    repo: stanfordnlp/dspy
+    category: research
+    integration: adapter
+    license: MIT
+    pip: "dspy"
+    nk_module: research/optimization/dspy.py
+    phase: P27
+    cloned: true
+    use: "Optional prompt/program optimization"
+
+  semantic-conventions:
+    repo: open-telemetry/semantic-conventions
+    category: reference
+    integration: reference_spec
+    license: Apache-2.0
+    nk_module: observability/genai/spans.py
+    phase: P19
+    cloned: true
+    use: "OTel GenAI semantic conventions"

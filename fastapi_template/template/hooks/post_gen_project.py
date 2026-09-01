@@ -307,7 +307,7 @@ def ensure_lockfile() -> None:
 
 def init_repo():
     run_cmd("git init")
-    cprint(" Git repository initialized", "green")
+    cprint("Git repository initialized", "green")
     run_cmd("git add .")
     install_requested = os.getenv("NK_GENERATOR_INSTALL", "").lower() in {
         "1",

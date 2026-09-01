@@ -128,6 +128,19 @@ class ToolRegistry:
 
         self._tools[tool.name] = tool
 
+    def register_many(self, tools: list[AgentTool]) -> None:
+        """Register a batch of tools atomically."""
+        names = [tool.name for tool in tools]
+        if len(names) != len(set(names)):
+            raise ValueError("duplicate tool names in batch")
+        conflicts = [name for name in names if name in self._tools]
+        if conflicts:
+            raise ValueError(
+                f"tools already registered: {', '.join(conflicts)}",
+            )
+        for tool in tools:
+            self._tools[tool.name] = tool
+
     def names(self) -> list[str]:
         return sorted(self._tools)
 

@@ -1,0 +1,2675 @@
+version: 1
+source: temp/erpnext
+controller_count: 6
+doctype_count: 534
+doctypes:
+- name: Account
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Account Category
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Account Closing Balance
+  module: accounts
+  controller: accounts_controller
+  is_submittable: true
+  nk_table: null
+- name: Accounting Dimension
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Accounting Dimension Detail
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Accounting Dimension Filter
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Accounting Period
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Accounts Settings
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Advance Payment Ledger Entry
+  module: accounts
+  controller: accounts_controller
+  is_submittable: true
+  nk_table: null
+- name: Advance Taxes and Charges
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Allowed Dimension
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Allowed To Transact With
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Applicable On Account
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Bank
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Bank Account
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Bank Account Balance
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Bank Account Subtype
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Bank Account Type
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Bank Clearance
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Bank Clearance Detail
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Bank Guarantee
+  module: accounts
+  controller: accounts_controller
+  is_submittable: true
+  nk_table: null
+- name: Bank Reconciliation Tool
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Bank Statement Import
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Bank Statement Import Log
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Bank Statement Import Log Column Map
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Bank Transaction
+  module: accounts
+  controller: accounts_controller
+  is_submittable: true
+  nk_table: erp_bank_transaction
+- name: Bank Transaction Mapping
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Bank Transaction Payments
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Bank Transaction Rule
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Bank Transaction Rule Accounts
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Bank Transaction Rule Description Conditions
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Bisect Accounting Statements
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Bisect Nodes
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Budget
+  module: accounts
+  controller: accounts_controller
+  is_submittable: true
+  nk_table: null
+- name: Budget Account
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Budget Distribution
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Campaign Item
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Cashier Closing
+  module: accounts
+  controller: accounts_controller
+  is_submittable: true
+  nk_table: null
+- name: Cashier Closing Payments
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Chart of Accounts Importer
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Cheque Print Template
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Closed Document
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Cost Center
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Cost Center Allocation
+  module: accounts
+  controller: accounts_controller
+  is_submittable: true
+  nk_table: null
+- name: Cost Center Allocation Percentage
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Coupon Code
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Currency Exchange Settings
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Currency Exchange Settings Details
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Currency Exchange Settings Result
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Customer Group Item
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Customer Item
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Discounted Invoice
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Dunning
+  module: accounts
+  controller: accounts_controller
+  is_submittable: true
+  nk_table: null
+- name: Dunning Letter Text
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Dunning Type
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Exchange Rate Revaluation
+  module: accounts
+  controller: accounts_controller
+  is_submittable: true
+  nk_table: null
+- name: Exchange Rate Revaluation Account
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Finance Book
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Financial Report Row
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Financial Report Template
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Fiscal Year
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Fiscal Year Company
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: GL Entry
+  module: accounts
+  controller: accounts_controller
+  is_submittable: true
+  nk_table: erp_gl_entry
+- name: Invoice Discounting
+  module: accounts
+  controller: accounts_controller
+  is_submittable: true
+  nk_table: null
+- name: Item Tax Template
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Item Tax Template Detail
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Item Wise Tax Detail
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Journal Entry
+  module: accounts
+  controller: accounts_controller
+  is_submittable: true
+  nk_table: erp_gl_entry
+- name: Journal Entry Account
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Journal Entry Template
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Journal Entry Template Account
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Ledger Health
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Ledger Health Monitor
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Ledger Health Monitor Company
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Ledger Merge
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Ledger Merge Accounts
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Loyalty Point Entry
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Loyalty Point Entry Redemption
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Loyalty Program
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Loyalty Program Collection
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Mode of Payment
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Mode of Payment Account
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Monthly Distribution
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Monthly Distribution Percentage
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Opening Invoice Creation Tool
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Opening Invoice Creation Tool Item
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Overdue Payment
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Party Account
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Party Link
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Payment Entry
+  module: accounts
+  controller: accounts_controller
+  is_submittable: true
+  nk_table: null
+- name: Payment Entry Deduction
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Payment Entry Reference
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Payment Gateway Account
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Payment Ledger Entry
+  module: accounts
+  controller: accounts_controller
+  is_submittable: true
+  nk_table: erp_payment_ledger
+- name: Payment Order
+  module: accounts
+  controller: accounts_controller
+  is_submittable: true
+  nk_table: null
+- name: Payment Order Reference
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Payment Reconciliation
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Payment Reconciliation Allocation
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Payment Reconciliation Invoice
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Payment Reconciliation Payment
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Payment Reference
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Payment Request
+  module: accounts
+  controller: accounts_controller
+  is_submittable: true
+  nk_table: null
+- name: Payment Schedule
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Payment Term
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Payment Terms Template
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Payment Terms Template Detail
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Pegged Currencies
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Pegged Currency Details
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Period Closing Voucher
+  module: accounts
+  controller: accounts_controller
+  is_submittable: true
+  nk_table: null
+- name: POS Closing Entry
+  module: accounts
+  controller: accounts_controller
+  is_submittable: true
+  nk_table: null
+- name: POS Closing Entry Detail
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: POS Closing Entry Taxes
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: POS Customer Group
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: POS Field
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: POS Invoice
+  module: accounts
+  controller: accounts_controller
+  is_submittable: true
+  nk_table: null
+- name: POS Invoice Item
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: POS Invoice Merge Log
+  module: accounts
+  controller: accounts_controller
+  is_submittable: true
+  nk_table: null
+- name: POS Invoice Reference
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: POS Item Group
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: POS Opening Entry
+  module: accounts
+  controller: accounts_controller
+  is_submittable: true
+  nk_table: null
+- name: POS Opening Entry Detail
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: POS Payment Method
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: POS Profile
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: POS Profile User
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: POS Search Fields
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: POS Settings
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Pricing Rule
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Pricing Rule Brand
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Pricing Rule Detail
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Pricing Rule Item Code
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Pricing Rule Item Group
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Process Deferred Accounting
+  module: accounts
+  controller: accounts_controller
+  is_submittable: true
+  nk_table: null
+- name: Process Payment Reconciliation
+  module: accounts
+  controller: accounts_controller
+  is_submittable: true
+  nk_table: null
+- name: Process Payment Reconciliation Log
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Process Payment Reconciliation Log Allocations
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Process Period Closing Voucher
+  module: accounts
+  controller: accounts_controller
+  is_submittable: true
+  nk_table: null
+- name: Process Period Closing Voucher Detail
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Process Statement Of Accounts
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Process Statement Of Accounts CC
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Process Statement Of Accounts Customer
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Process Subscription
+  module: accounts
+  controller: accounts_controller
+  is_submittable: true
+  nk_table: null
+- name: Promotional Scheme
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Promotional Scheme Price Discount
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Promotional Scheme Product Discount
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: PSOA Cost Center
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: PSOA Project
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Purchase Invoice
+  module: accounts
+  controller: accounts_controller
+  is_submittable: true
+  nk_table: erp_document
+- name: Purchase Invoice Advance
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Purchase Invoice Item
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Purchase Taxes and Charges
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Purchase Taxes and Charges Template
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Repost Accounting Ledger
+  module: accounts
+  controller: accounts_controller
+  is_submittable: true
+  nk_table: null
+- name: Repost Accounting Ledger Items
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Repost Allowed Types
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Repost Payment Ledger
+  module: accounts
+  controller: accounts_controller
+  is_submittable: true
+  nk_table: null
+- name: Repost Payment Ledger Items
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Sales Invoice
+  module: accounts
+  controller: accounts_controller
+  is_submittable: true
+  nk_table: erp_document
+- name: Sales Invoice Advance
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Sales Invoice Item
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Sales Invoice Payment
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Sales Invoice Reference
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Sales Invoice Timesheet
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Sales Partner Item
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Sales Taxes and Charges
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Sales Taxes and Charges Template
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Share Balance
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Share Transfer
+  module: accounts
+  controller: accounts_controller
+  is_submittable: true
+  nk_table: null
+- name: Share Type
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Shareholder
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Shipping Rule
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Shipping Rule Condition
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Shipping Rule Country
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: South Africa VAT Account
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Subscription
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Subscription Invoice
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Subscription Plan
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Subscription Plan Detail
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Subscription Settings
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Supplier Group Item
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Supplier Item
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Tax Category
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Tax Rule
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Tax Withholding Account
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Tax Withholding Category
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Tax Withholding Entry
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Tax Withholding Group
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Tax Withholding Rate
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Territory Item
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Transaction Deletion Record Details
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Unreconcile Payment
+  module: accounts
+  controller: accounts_controller
+  is_submittable: true
+  nk_table: null
+- name: Unreconcile Payment Entries
+  module: accounts
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Asset
+  module: assets
+  controller: accounts_controller
+  is_submittable: true
+  nk_table: erp_asset
+- name: Asset Activity
+  module: assets
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Asset Capitalization
+  module: assets
+  controller: accounts_controller
+  is_submittable: true
+  nk_table: null
+- name: Asset Capitalization Asset Item
+  module: assets
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Asset Capitalization Service Item
+  module: assets
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Asset Capitalization Stock Item
+  module: assets
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Asset Category
+  module: assets
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Asset Category Account
+  module: assets
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Asset Depreciation Schedule
+  module: assets
+  controller: accounts_controller
+  is_submittable: true
+  nk_table: null
+- name: Asset Finance Book
+  module: assets
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Asset Maintenance
+  module: assets
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Asset Maintenance Log
+  module: assets
+  controller: accounts_controller
+  is_submittable: true
+  nk_table: null
+- name: Asset Maintenance Task
+  module: assets
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Asset Maintenance Team
+  module: assets
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Asset Movement
+  module: assets
+  controller: accounts_controller
+  is_submittable: true
+  nk_table: null
+- name: Asset Movement Item
+  module: assets
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Asset Repair
+  module: assets
+  controller: accounts_controller
+  is_submittable: true
+  nk_table: null
+- name: Asset Repair Consumed Item
+  module: assets
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Asset Repair Purchase Invoice
+  module: assets
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Asset Shift Allocation
+  module: assets
+  controller: accounts_controller
+  is_submittable: true
+  nk_table: null
+- name: Asset Shift Factor
+  module: assets
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Asset Value Adjustment
+  module: assets
+  controller: accounts_controller
+  is_submittable: true
+  nk_table: null
+- name: Depreciation Schedule
+  module: assets
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Linked Location
+  module: assets
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Location
+  module: assets
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Maintenance Team Member
+  module: assets
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Bulk Transaction Log
+  module: bulk_transaction
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Bulk Transaction Log Detail
+  module: bulk_transaction
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Buying Settings
+  module: buying
+  controller: buying_controller
+  is_submittable: false
+  nk_table: null
+- name: Customer Number At Supplier
+  module: buying
+  controller: buying_controller
+  is_submittable: false
+  nk_table: null
+- name: Purchase Order
+  module: buying
+  controller: buying_controller
+  is_submittable: true
+  nk_table: erp_document
+- name: Purchase Order Item
+  module: buying
+  controller: buying_controller
+  is_submittable: false
+  nk_table: null
+- name: Purchase Receipt Item Supplied
+  module: buying
+  controller: buying_controller
+  is_submittable: false
+  nk_table: null
+- name: Request for Quotation
+  module: buying
+  controller: buying_controller
+  is_submittable: true
+  nk_table: null
+- name: Request for Quotation Item
+  module: buying
+  controller: buying_controller
+  is_submittable: false
+  nk_table: null
+- name: Request for Quotation Supplier
+  module: buying
+  controller: buying_controller
+  is_submittable: false
+  nk_table: null
+- name: Supplier
+  module: buying
+  controller: buying_controller
+  is_submittable: false
+  nk_table: erp_supplier
+- name: Supplier Quotation
+  module: buying
+  controller: buying_controller
+  is_submittable: true
+  nk_table: null
+- name: Supplier Quotation Item
+  module: buying
+  controller: buying_controller
+  is_submittable: false
+  nk_table: null
+- name: Supplier Scorecard
+  module: buying
+  controller: buying_controller
+  is_submittable: false
+  nk_table: null
+- name: Supplier Scorecard Criteria
+  module: buying
+  controller: buying_controller
+  is_submittable: false
+  nk_table: null
+- name: Supplier Scorecard Period
+  module: buying
+  controller: buying_controller
+  is_submittable: true
+  nk_table: null
+- name: Supplier Scorecard Scoring Criteria
+  module: buying
+  controller: buying_controller
+  is_submittable: false
+  nk_table: null
+- name: Supplier Scorecard Scoring Standing
+  module: buying
+  controller: buying_controller
+  is_submittable: false
+  nk_table: null
+- name: Supplier Scorecard Scoring Variable
+  module: buying
+  controller: buying_controller
+  is_submittable: false
+  nk_table: null
+- name: Supplier Scorecard Standing
+  module: buying
+  controller: buying_controller
+  is_submittable: false
+  nk_table: null
+- name: Supplier Scorecard Variable
+  module: buying
+  controller: buying_controller
+  is_submittable: false
+  nk_table: null
+- name: Communication Medium
+  module: communication
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Communication Medium Timeslot
+  module: communication
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Appointment
+  module: crm
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Appointment Booking Settings
+  module: crm
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Appointment Booking Slots
+  module: crm
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Availability Of Slots
+  module: crm
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Campaign
+  module: crm
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Campaign Email Schedule
+  module: crm
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Competitor
+  module: crm
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Competitor Detail
+  module: crm
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Contract
+  module: crm
+  controller: status_updater
+  is_submittable: true
+  nk_table: null
+- name: Contract Fulfilment Checklist
+  module: crm
+  controller: status_updater
+  is_submittable: true
+  nk_table: null
+- name: Contract Template
+  module: crm
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Contract Template Fulfilment Terms
+  module: crm
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: CRM Note
+  module: crm
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: CRM Settings
+  module: crm
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Email Campaign
+  module: crm
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Frappe CRM Allowed User
+  module: crm
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Lead
+  module: crm
+  controller: status_updater
+  is_submittable: false
+  nk_table: erp_lead
+- name: Lost Reason Detail
+  module: crm
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Market Segment
+  module: crm
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Opportunity
+  module: crm
+  controller: status_updater
+  is_submittable: false
+  nk_table: erp_opportunity
+- name: Opportunity Item
+  module: crm
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Opportunity Lost Reason
+  module: crm
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Opportunity Lost Reason Detail
+  module: crm
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Opportunity Type
+  module: crm
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Prospect
+  module: crm
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Prospect Lead
+  module: crm
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Prospect Opportunity
+  module: crm
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Sales Stage
+  module: crm
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Code List
+  module: edi
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Common Code
+  module: edi
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Plaid Settings
+  module: erpnext_integrations
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Maintenance Schedule
+  module: maintenance
+  controller: status_updater
+  is_submittable: true
+  nk_table: null
+- name: Maintenance Schedule Detail
+  module: maintenance
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Maintenance Schedule Item
+  module: maintenance
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Maintenance Visit
+  module: maintenance
+  controller: status_updater
+  is_submittable: true
+  nk_table: erp_maintenance_visit
+- name: Maintenance Visit Purpose
+  module: maintenance
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Blanket Order
+  module: manufacturing
+  controller: subcontracting_controller
+  is_submittable: true
+  nk_table: null
+- name: Blanket Order Item
+  module: manufacturing
+  controller: subcontracting_controller
+  is_submittable: false
+  nk_table: null
+- name: BOM
+  module: manufacturing
+  controller: subcontracting_controller
+  is_submittable: true
+  nk_table: erp_bom
+- name: BOM Creator
+  module: manufacturing
+  controller: subcontracting_controller
+  is_submittable: true
+  nk_table: null
+- name: BOM Creator Item
+  module: manufacturing
+  controller: subcontracting_controller
+  is_submittable: false
+  nk_table: null
+- name: BOM Explosion Item
+  module: manufacturing
+  controller: subcontracting_controller
+  is_submittable: false
+  nk_table: null
+- name: BOM Item
+  module: manufacturing
+  controller: subcontracting_controller
+  is_submittable: false
+  nk_table: null
+- name: BOM Operation
+  module: manufacturing
+  controller: subcontracting_controller
+  is_submittable: false
+  nk_table: null
+- name: BOM Secondary Item
+  module: manufacturing
+  controller: subcontracting_controller
+  is_submittable: false
+  nk_table: null
+- name: BOM Update Batch
+  module: manufacturing
+  controller: subcontracting_controller
+  is_submittable: false
+  nk_table: null
+- name: BOM Update Log
+  module: manufacturing
+  controller: subcontracting_controller
+  is_submittable: true
+  nk_table: null
+- name: BOM Update Tool
+  module: manufacturing
+  controller: subcontracting_controller
+  is_submittable: false
+  nk_table: null
+- name: BOM Website Item
+  module: manufacturing
+  controller: subcontracting_controller
+  is_submittable: false
+  nk_table: null
+- name: BOM Website Operation
+  module: manufacturing
+  controller: subcontracting_controller
+  is_submittable: false
+  nk_table: null
+- name: Downtime Entry
+  module: manufacturing
+  controller: subcontracting_controller
+  is_submittable: false
+  nk_table: null
+- name: Job Card
+  module: manufacturing
+  controller: subcontracting_controller
+  is_submittable: true
+  nk_table: null
+- name: Job Card Item
+  module: manufacturing
+  controller: subcontracting_controller
+  is_submittable: false
+  nk_table: null
+- name: Job Card Operation
+  module: manufacturing
+  controller: subcontracting_controller
+  is_submittable: false
+  nk_table: null
+- name: Job Card Scheduled Time
+  module: manufacturing
+  controller: subcontracting_controller
+  is_submittable: false
+  nk_table: null
+- name: Job Card Secondary Item
+  module: manufacturing
+  controller: subcontracting_controller
+  is_submittable: false
+  nk_table: null
+- name: Job Card Time Log
+  module: manufacturing
+  controller: subcontracting_controller
+  is_submittable: false
+  nk_table: null
+- name: Manufacturing Settings
+  module: manufacturing
+  controller: subcontracting_controller
+  is_submittable: false
+  nk_table: null
+- name: Master Production Schedule
+  module: manufacturing
+  controller: subcontracting_controller
+  is_submittable: false
+  nk_table: null
+- name: Master Production Schedule Item
+  module: manufacturing
+  controller: subcontracting_controller
+  is_submittable: false
+  nk_table: null
+- name: Material Request Plan Item
+  module: manufacturing
+  controller: subcontracting_controller
+  is_submittable: false
+  nk_table: null
+- name: Operation
+  module: manufacturing
+  controller: subcontracting_controller
+  is_submittable: false
+  nk_table: null
+- name: Plant Floor
+  module: manufacturing
+  controller: subcontracting_controller
+  is_submittable: false
+  nk_table: null
+- name: Production Plan
+  module: manufacturing
+  controller: subcontracting_controller
+  is_submittable: true
+  nk_table: null
+- name: Production Plan Item
+  module: manufacturing
+  controller: subcontracting_controller
+  is_submittable: false
+  nk_table: null
+- name: Production Plan Item Reference
+  module: manufacturing
+  controller: subcontracting_controller
+  is_submittable: false
+  nk_table: null
+- name: Production Plan Material Request
+  module: manufacturing
+  controller: subcontracting_controller
+  is_submittable: false
+  nk_table: null
+- name: Production Plan Material Request Warehouse
+  module: manufacturing
+  controller: subcontracting_controller
+  is_submittable: false
+  nk_table: null
+- name: Production Plan Sales Order
+  module: manufacturing
+  controller: subcontracting_controller
+  is_submittable: false
+  nk_table: null
+- name: Production Plan Schedule
+  module: manufacturing
+  controller: subcontracting_controller
+  is_submittable: false
+  nk_table: null
+- name: Production Plan Sub Assembly Item
+  module: manufacturing
+  controller: subcontracting_controller
+  is_submittable: false
+  nk_table: null
+- name: Routing
+  module: manufacturing
+  controller: subcontracting_controller
+  is_submittable: false
+  nk_table: null
+- name: Sales Forecast
+  module: manufacturing
+  controller: subcontracting_controller
+  is_submittable: true
+  nk_table: null
+- name: Sales Forecast Item
+  module: manufacturing
+  controller: subcontracting_controller
+  is_submittable: false
+  nk_table: null
+- name: Sub Operation
+  module: manufacturing
+  controller: subcontracting_controller
+  is_submittable: false
+  nk_table: null
+- name: Work Order
+  module: manufacturing
+  controller: subcontracting_controller
+  is_submittable: true
+  nk_table: erp_work_order
+- name: Work Order Additional Item
+  module: manufacturing
+  controller: subcontracting_controller
+  is_submittable: false
+  nk_table: null
+- name: Work Order Item
+  module: manufacturing
+  controller: subcontracting_controller
+  is_submittable: false
+  nk_table: null
+- name: Work Order Operation
+  module: manufacturing
+  controller: subcontracting_controller
+  is_submittable: false
+  nk_table: null
+- name: Workstation
+  module: manufacturing
+  controller: subcontracting_controller
+  is_submittable: false
+  nk_table: null
+- name: Workstation Cost
+  module: manufacturing
+  controller: subcontracting_controller
+  is_submittable: false
+  nk_table: null
+- name: Workstation Operating Component
+  module: manufacturing
+  controller: subcontracting_controller
+  is_submittable: false
+  nk_table: null
+- name: Workstation Operating Component Account
+  module: manufacturing
+  controller: subcontracting_controller
+  is_submittable: false
+  nk_table: null
+- name: Workstation Type
+  module: manufacturing
+  controller: subcontracting_controller
+  is_submittable: false
+  nk_table: null
+- name: Workstation Working Hour
+  module: manufacturing
+  controller: subcontracting_controller
+  is_submittable: false
+  nk_table: null
+- name: Website Attribute
+  module: portal
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Website Filter Field
+  module: portal
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Activity Cost
+  module: projects
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Activity Type
+  module: projects
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Dependent Task
+  module: projects
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Project
+  module: projects
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: erp_project
+- name: Project Template
+  module: projects
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Project Template Task
+  module: projects
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Project Type
+  module: projects
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Project Update
+  module: projects
+  controller: accounts_controller
+  is_submittable: true
+  nk_table: null
+- name: Project User
+  module: projects
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Projects Settings
+  module: projects
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Task
+  module: projects
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: erp_task
+- name: Task Depends On
+  module: projects
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Task Type
+  module: projects
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Timesheet
+  module: projects
+  controller: accounts_controller
+  is_submittable: true
+  nk_table: erp_timesheet
+- name: Timesheet Detail
+  module: projects
+  controller: accounts_controller
+  is_submittable: false
+  nk_table: null
+- name: Non Conformance
+  module: quality_management
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Quality Action
+  module: quality_management
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Quality Action Resolution
+  module: quality_management
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Quality Feedback
+  module: quality_management
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Quality Feedback Parameter
+  module: quality_management
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Quality Feedback Template
+  module: quality_management
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Quality Feedback Template Parameter
+  module: quality_management
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Quality Goal
+  module: quality_management
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Quality Goal Objective
+  module: quality_management
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Quality Meeting
+  module: quality_management
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Quality Meeting Agenda
+  module: quality_management
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Quality Meeting Minutes
+  module: quality_management
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Quality Procedure
+  module: quality_management
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Quality Procedure Process
+  module: quality_management
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Quality Review
+  module: quality_management
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Quality Review Objective
+  module: quality_management
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Import Supplier Invoice
+  module: regional
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Lower Deduction Certificate
+  module: regional
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: South Africa VAT Settings
+  module: regional
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: UAE VAT Account
+  module: regional
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: UAE VAT Settings
+  module: regional
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Customer
+  module: selling
+  controller: selling_controller
+  is_submittable: false
+  nk_table: erp_customer
+- name: Customer Credit Limit
+  module: selling
+  controller: selling_controller
+  is_submittable: false
+  nk_table: null
+- name: Delivery Schedule Item
+  module: selling
+  controller: selling_controller
+  is_submittable: false
+  nk_table: null
+- name: Industry Type
+  module: selling
+  controller: selling_controller
+  is_submittable: false
+  nk_table: null
+- name: Installation Note
+  module: selling
+  controller: selling_controller
+  is_submittable: true
+  nk_table: null
+- name: Installation Note Item
+  module: selling
+  controller: selling_controller
+  is_submittable: false
+  nk_table: null
+- name: Party Specific Item
+  module: selling
+  controller: selling_controller
+  is_submittable: false
+  nk_table: null
+- name: Product Bundle
+  module: selling
+  controller: selling_controller
+  is_submittable: true
+  nk_table: null
+- name: Product Bundle Item
+  module: selling
+  controller: selling_controller
+  is_submittable: false
+  nk_table: null
+- name: Proforma Invoice
+  module: selling
+  controller: selling_controller
+  is_submittable: true
+  nk_table: null
+- name: Proforma Invoice Item
+  module: selling
+  controller: selling_controller
+  is_submittable: false
+  nk_table: null
+- name: Quotation
+  module: selling
+  controller: selling_controller
+  is_submittable: true
+  nk_table: erp_document
+- name: Quotation Item
+  module: selling
+  controller: selling_controller
+  is_submittable: false
+  nk_table: null
+- name: Sales Order
+  module: selling
+  controller: selling_controller
+  is_submittable: true
+  nk_table: erp_document
+- name: Sales Order Item
+  module: selling
+  controller: selling_controller
+  is_submittable: false
+  nk_table: null
+- name: Sales Partner Type
+  module: selling
+  controller: selling_controller
+  is_submittable: false
+  nk_table: null
+- name: Sales Team
+  module: selling
+  controller: selling_controller
+  is_submittable: false
+  nk_table: null
+- name: Selling Settings
+  module: selling
+  controller: selling_controller
+  is_submittable: false
+  nk_table: null
+- name: SMS Center
+  module: selling
+  controller: selling_controller
+  is_submittable: false
+  nk_table: null
+- name: Supplier Number At Customer
+  module: selling
+  controller: selling_controller
+  is_submittable: false
+  nk_table: null
+- name: Authorization Control
+  module: setup
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Authorization Rule
+  module: setup
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Branch
+  module: setup
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Brand
+  module: setup
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Company
+  module: setup
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Currency Exchange
+  module: setup
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Customer Group
+  module: setup
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Department
+  module: setup
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Designation
+  module: setup
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Driver
+  module: setup
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Driving License Category
+  module: setup
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Email Digest
+  module: setup
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Email Digest Recipient
+  module: setup
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Employee
+  module: setup
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Employee Education
+  module: setup
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Employee External Work History
+  module: setup
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Employee Group
+  module: setup
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Employee Group Table
+  module: setup
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Employee Internal Work History
+  module: setup
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Global Defaults
+  module: setup
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Holiday
+  module: setup
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Holiday List
+  module: setup
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Incoterm
+  module: setup
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Item Group
+  module: setup
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Party Type
+  module: setup
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Quotation Lost Reason
+  module: setup
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Quotation Lost Reason Detail
+  module: setup
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Sales Partner
+  module: setup
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Sales Person
+  module: setup
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Supplier Group
+  module: setup
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Target Detail
+  module: setup
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Terms and Conditions
+  module: setup
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Territory
+  module: setup
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Transaction Deletion Record
+  module: setup
+  controller: status_updater
+  is_submittable: true
+  nk_table: null
+- name: Transaction Deletion Record Item
+  module: setup
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Transaction Deletion Record To Delete
+  module: setup
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: UOM
+  module: setup
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: UOM Conversion Factor
+  module: setup
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Vehicle
+  module: setup
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Website Item Group
+  module: setup
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Batch
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Bin
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Company Restriction
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Customs Tariff Number
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Delivery Note
+  module: stock
+  controller: stock_controller
+  is_submittable: true
+  nk_table: erp_document
+- name: Delivery Note Item
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Delivery Settings
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Delivery Stop
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Delivery Trip
+  module: stock
+  controller: stock_controller
+  is_submittable: true
+  nk_table: null
+- name: Inventory Dimension
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Item
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: erp_item
+- name: Item Alternative
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Item Attribute
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Item Attribute Value
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Item Barcode
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Item Customer Detail
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Item Default
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Item Lead Time
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Item Lead Time Supplier
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Item Manufacturer
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Item Price
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Item Quality Inspection Parameter
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Item Reorder
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Item Standard Cost
+  module: stock
+  controller: stock_controller
+  is_submittable: true
+  nk_table: null
+- name: Item Supplier
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Item Tax
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Item Variant
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Item Variant Attribute
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Item Variant Settings
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Item Website Specification
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Landed Cost Item
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Landed Cost Purchase Receipt
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Landed Cost Taxes and Charges
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Landed Cost Vendor Invoice
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Landed Cost Voucher
+  module: stock
+  controller: stock_controller
+  is_submittable: true
+  nk_table: null
+- name: Manufacturer
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Material Request
+  module: stock
+  controller: stock_controller
+  is_submittable: true
+  nk_table: null
+- name: Material Request Item
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Packed Item
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Packing Slip
+  module: stock
+  controller: stock_controller
+  is_submittable: true
+  nk_table: null
+- name: Packing Slip Item
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Pick List
+  module: stock
+  controller: stock_controller
+  is_submittable: true
+  nk_table: null
+- name: Pick List Item
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Price List
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Price List Country
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Purchase Receipt
+  module: stock
+  controller: stock_controller
+  is_submittable: true
+  nk_table: erp_document
+- name: Purchase Receipt Item
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Putaway Rule
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Quality Inspection
+  module: stock
+  controller: stock_controller
+  is_submittable: true
+  nk_table: erp_quality_inspection
+- name: Quality Inspection Parameter
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Quality Inspection Parameter Group
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Quality Inspection Reading
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Quality Inspection Template
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Quick Stock Balance
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Repost Item Valuation
+  module: stock
+  controller: stock_controller
+  is_submittable: true
+  nk_table: null
+- name: Serial and Batch Bundle
+  module: stock
+  controller: stock_controller
+  is_submittable: true
+  nk_table: null
+- name: Serial and Batch Entry
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Serial No
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Shipment
+  module: stock
+  controller: stock_controller
+  is_submittable: true
+  nk_table: null
+- name: Shipment Delivery Note
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Shipment Parcel
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Shipment Parcel Template
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Stock Closing Balance
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Stock Closing Entry
+  module: stock
+  controller: stock_controller
+  is_submittable: true
+  nk_table: null
+- name: Stock Entry
+  module: stock
+  controller: stock_controller
+  is_submittable: true
+  nk_table: null
+- name: Stock Entry Detail
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Stock Entry Type
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Stock Ledger Entry
+  module: stock
+  controller: stock_controller
+  is_submittable: true
+  nk_table: erp_stock_ledger_entry
+- name: Stock Reconciliation
+  module: stock
+  controller: stock_controller
+  is_submittable: true
+  nk_table: null
+- name: Stock Reconciliation Item
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Stock Reposting Settings
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Stock Reservation Entry
+  module: stock
+  controller: stock_controller
+  is_submittable: true
+  nk_table: null
+- name: Stock Settings
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: UOM Category
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: UOM Conversion Detail
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Variant Field
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Warehouse
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Warehouse Type
+  module: stock
+  controller: stock_controller
+  is_submittable: false
+  nk_table: null
+- name: Subcontracting BOM
+  module: subcontracting
+  controller: subcontracting_controller
+  is_submittable: false
+  nk_table: null
+- name: Subcontracting Inward Order
+  module: subcontracting
+  controller: subcontracting_controller
+  is_submittable: true
+  nk_table: null
+- name: Subcontracting Inward Order Item
+  module: subcontracting
+  controller: subcontracting_controller
+  is_submittable: false
+  nk_table: null
+- name: Subcontracting Inward Order Received Item
+  module: subcontracting
+  controller: subcontracting_controller
+  is_submittable: false
+  nk_table: null
+- name: Subcontracting Inward Order Secondary Item
+  module: subcontracting
+  controller: subcontracting_controller
+  is_submittable: false
+  nk_table: null
+- name: Subcontracting Inward Order Service Item
+  module: subcontracting
+  controller: subcontracting_controller
+  is_submittable: false
+  nk_table: null
+- name: Subcontracting Order
+  module: subcontracting
+  controller: subcontracting_controller
+  is_submittable: true
+  nk_table: null
+- name: Subcontracting Order Item
+  module: subcontracting
+  controller: subcontracting_controller
+  is_submittable: false
+  nk_table: null
+- name: Subcontracting Order Service Item
+  module: subcontracting
+  controller: subcontracting_controller
+  is_submittable: false
+  nk_table: null
+- name: Subcontracting Order Supplied Item
+  module: subcontracting
+  controller: subcontracting_controller
+  is_submittable: false
+  nk_table: null
+- name: Subcontracting Receipt
+  module: subcontracting
+  controller: subcontracting_controller
+  is_submittable: true
+  nk_table: null
+- name: Subcontracting Receipt Item
+  module: subcontracting
+  controller: subcontracting_controller
+  is_submittable: false
+  nk_table: null
+- name: Subcontracting Receipt Supplied Item
+  module: subcontracting
+  controller: subcontracting_controller
+  is_submittable: false
+  nk_table: null
+- name: Issue
+  module: support
+  controller: status_updater
+  is_submittable: false
+  nk_table: erp_issue
+- name: Issue Priority
+  module: support
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Issue Type
+  module: support
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Pause SLA On Status
+  module: support
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Service Day
+  module: support
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Service Level Agreement
+  module: support
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Service Level Priority
+  module: support
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: SLA Fulfilled On Status
+  module: support
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Support Search Source
+  module: support
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Support Settings
+  module: support
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Warranty Claim
+  module: support
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Call Log
+  module: telephony
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Incoming Call Handling Schedule
+  module: telephony
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Incoming Call Settings
+  module: telephony
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Telephony Call Type
+  module: telephony
+  controller: status_updater
+  is_submittable: true
+  nk_table: null
+- name: Voice Call Settings
+  module: telephony
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Portal User
+  module: utilities
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Rename Tool
+  module: utilities
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Video
+  module: utilities
+  controller: status_updater
+  is_submittable: false
+  nk_table: null
+- name: Video Settings
+  module: utilities
+  controller: status_updater
+  is_submittable: false
+  nk_table: null

@@ -1,0 +1,25 @@
+# NK experiment hypotheses (P26) — autoresearch-style loop (reference only).
+hypotheses:
+  agent-concise-replies:
+    id: agent-concise-replies
+    description: Shorter system prompt suffix improves harness pass rate
+    target: agent
+    target_ref: loop
+    metric: pass_rate
+    min_delta: 0.0
+    mutation:
+      strategy: prompt_suffix
+      changes:
+        system_prompt_suffix: "\n\nReply in one concise sentence."
+
+  routing-fast-capability:
+    id: routing-fast-capability
+    description: Route agent runs through fast capability
+    target: routing
+    target_ref: chat
+    metric: pass_rate
+    min_delta: 0.0
+    mutation:
+      strategy: capability_override
+      changes:
+        capability: fast

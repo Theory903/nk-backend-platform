@@ -1,0 +1,124 @@
+# NK built-in plugins — maps core primitives to the plugin kernel (P21).
+# DeepSeek Harness reference only; NK owns this stable contract.
+
+plugins:
+  model_gateway:
+    name: model_gateway
+    type: model
+    description: Capability-based LLM routing, fallback, budgets, semantic cache
+    module: "{{cookiecutter.project_name}}.ai.gateway.router"
+    provides: [chat, reasoning, fast, embeddings]
+    requires: []
+    permissions:
+      network: true
+
+  tool_gateway:
+    name: tool_gateway
+    type: tool
+    description: Native, MCP, and feature-pack tools with policy and audit
+    module: "{{cookiecutter.project_name}}.agents.tool_gateway"
+    provides: [native_tools, mcp, policy, audit]
+    requires: []
+    permissions:
+      network: true
+      subprocess: true
+
+  agent_runtime:
+    name: agent_runtime
+    type: agent
+    description: Loop, graph, and supervisor agent execution ladder
+    module: "{{cookiecutter.project_name}}.agents.factory"
+    provides: [loop, graph, supervisor, auto_routing]
+    requires: [model_gateway, tool_gateway]
+    permissions:
+      network: true
+
+  session_runtime:
+    name: session_runtime
+    type: storage
+    description: Append-only run events, inspect, fork, replay, resume
+    module: "{{cookiecutter.project_name}}.agents.session_runtime"
+    provides: [events, replay, fork, resume]
+    requires: []
+    permissions:
+      filesystem: read
+
+  harness:
+    name: harness
+    type: evaluator
+    description: Scenario runner with trajectory capture and fixture replay
+    module: "{{cookiecutter.project_name}}.agents.harness.runner"
+    provides: [scenarios, trajectory, fixtures]
+    requires: [agent_runtime]
+    permissions:
+      filesystem: read
+
+  eval_adapters:
+    name: eval_adapters
+    type: evaluator
+    description: Native, harness, Ragas, DeepEval, Promptfoo evaluation backends
+    module: "{{cookiecutter.project_name}}.agents.evaluation.adapters"
+    provides: [native_eval, harness_eval, ragas, deepeval, promptfoo]
+    requires: [harness]
+    permissions:
+      network: false
+
+  security:
+    name: security
+    type: security
+    description: Injection defense, PII redaction, tool poisoning, RAG boundary
+    module: "{{cookiecutter.project_name}}.agents.security"
+    provides: [injection, pii, poisoning, sandbox]
+    requires: []
+    permissions:
+      filesystem: read
+
+  observability:
+    name: observability
+    type: protocol
+    description: OTel GenAI spans and Prometheus cost/latency metrics
+    module: "{{cookiecutter.project_name}}.observability.genai"
+    provides: [genai_spans, llm_metrics, tool_metrics]
+    requires: []
+    permissions:
+      network: false
+
+  memory_store:
+    name: memory_store
+    type: memory
+    description: Working memory with Redis or in-process backend
+    module: "{{cookiecutter.project_name}}.agents.memory_factory"
+    provides: [working_memory]
+    requires: []
+    permissions:
+      network: false
+
+  vector_store:
+    name: vector_store
+    type: vector_store
+    description: pgvector or Qdrant vector retrieval backend
+    module: "{{cookiecutter.project_name}}.ai.knowledge.store_factory"
+    provides: [vectors]
+    requires: []
+    permissions:
+      network: true
+
+  rag_context:
+    name: rag_context
+    type: retriever
+    description: Hybrid retrieval and RAG answer service
+    module: "{{cookiecutter.project_name}}.ai.knowledge.answer"
+    provides: [rag, citations]
+    requires: [vector_store, model_gateway]
+    permissions:
+      network: false
+
+  skills:
+    name: skills
+    type: skill
+    description: Trusted skill loader and instruction packs
+    module: "{{cookiecutter.project_name}}.agents.skills.factory"
+    provides: [skills]
+    requires: [tool_gateway]
+    permissions:
+      filesystem: read

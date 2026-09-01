@@ -26,6 +26,28 @@ class AccessTokenRecord:
     created_at: datetime
 
 
+def _record_from_create_payload(access_token: Any) -> AccessTokenRecord:
+    """Normalize FastAPI Users create dict or ORM objects into AccessTokenRecord."""
+    if isinstance(access_token, AccessTokenRecord):
+        return access_token
+    if isinstance(access_token, dict):
+        created_at = access_token.get("created_at")
+        if created_at is None:
+            created_at = datetime.now(UTC)
+        elif not isinstance(created_at, datetime):
+            created_at = datetime.fromtimestamp(float(created_at), tz=UTC)
+        return AccessTokenRecord(
+            token=str(access_token["token"]),
+            user_id=access_token["user_id"],
+            created_at=created_at,
+        )
+    return AccessTokenRecord(
+        token=str(access_token.token),
+        user_id=access_token.user_id,
+        created_at=access_token.created_at,
+    )
+
+
 auth_access_tokens = Table(
     "auth_access_token",
     metadata,
@@ -48,11 +70,7 @@ class SqlAlchemyAccessTokenStore:
         return await asyncio.to_thread(self.create_sync, access_token)
 
     def create_sync(self, access_token: Any) -> AccessTokenRecord:
-        record = AccessTokenRecord(
-            token=str(access_token.token),
-            user_id=access_token.user_id,
-            created_at=access_token.created_at,
-        )
+        record = _record_from_create_payload(access_token)
         with self._engine.begin() as connection:
             connection.execute(
                 insert(auth_access_tokens).values(
@@ -146,11 +164,7 @@ class RedisAccessTokenStore:
         return await asyncio.to_thread(self.create_sync, access_token)
 
     def create_sync(self, access_token: Any) -> AccessTokenRecord:
-        record = AccessTokenRecord(
-            token=str(access_token.token),
-            user_id=access_token.user_id,
-            created_at=access_token.created_at,
-        )
+        record = _record_from_create_payload(access_token)
         self._redis.set(
             self._key(record.token),
             json.dumps(
@@ -193,23 +207,44 @@ class InMemoryAccessTokenStore:
     def __init__(self) -> None:
         self._tokens: dict[str, AccessTokenRecord] = {}
 
-    async def create(self, access_token: Any) -> AccessTokenRecord:
-        record = AccessTokenRecord(
-            token=str(access_token.token),
-            user_id=access_token.user_id,
-            created_at=access_token.created_at,
-        )
+    async def create(self, create_dict: dict[str, Any]) -> AccessTokenRecord:
+        record = _record_from_create_payload(create_dict)
         self._tokens[record.token] = record
         return record
+
+    async def get_by_token(
+        self,
+        token: str,
+        max_age: datetime | None = None,
+    ) -> AccessTokenRecord | None:
+        record = self._tokens.get(token)
+        if record is None:
+            return None
+        if max_age is not None and record.created_at < max_age:
+            return None
+        return record
+
+    async def update(
+        self,
+        access_token: AccessTokenRecord,
+        update_dict: dict[str, Any],
+    ) -> AccessTokenRecord:
+        updated = AccessTokenRecord(
+            token=access_token.token,
+            user_id=update_dict.get("user_id", access_token.user_id),
+            created_at=update_dict.get("created_at", access_token.created_at),
+        )
+        self._tokens[updated.token] = updated
+        return updated
+
+    async def delete(self, access_token: AccessTokenRecord) -> None:
+        self._tokens.pop(access_token.token, None)
 
     async def get(self, token: str) -> AccessTokenRecord | None:
         return self.get_sync(token)
 
     def get_sync(self, token: str) -> AccessTokenRecord | None:
         return self._tokens.get(token)
-
-    async def delete(self, token: str) -> None:
-        self._tokens.pop(token, None)
 
 
 __all__ = [

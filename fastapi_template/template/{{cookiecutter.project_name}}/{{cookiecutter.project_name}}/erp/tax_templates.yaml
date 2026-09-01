@@ -1,0 +1,85 @@
+# NK regional tax templates — ERPNext Sales Taxes and Charges Template port
+# Reference: erpnext/accounts/doctype/sales_taxes_and_charges_template
+
+templates:
+  india_gst_intra:
+    title: India GST Intra-State (CGST + SGST)
+    country: IN
+    tax_category: GST Intra-State
+    taxes:
+      - description: CGST
+        rate: 9.0
+        charge_type: On Net Total
+        account_head: CGST - NK
+      - description: SGST
+        rate: 9.0
+        charge_type: On Net Total
+        account_head: SGST - NK
+
+  india_gst_inter:
+    title: India GST Inter-State (IGST)
+    country: IN
+    tax_category: GST Inter-State
+    taxes:
+      - description: IGST
+        rate: 18.0
+        charge_type: On Net Total
+        account_head: IGST - NK
+
+  eu_vat_standard:
+    title: EU VAT Standard (20%)
+    country: EU
+    tax_category: VAT Standard
+    taxes:
+      - description: VAT
+        rate: 20.0
+        charge_type: On Net Total
+        account_head: VAT - NK
+
+  eu_vat_reduced:
+    title: EU VAT Reduced (10%)
+    country: EU
+    tax_category: VAT Reduced
+    taxes:
+      - description: VAT Reduced
+        rate: 10.0
+        charge_type: On Net Total
+        account_head: VAT - NK
+
+  us_sales_tax_ca:
+    title: US Sales Tax California
+    country: US
+    state: CA
+    tax_category: Sales Tax
+    taxes:
+      - description: CA Sales Tax
+        rate: 7.25
+        charge_type: On Net Total
+        account_head: Sales Tax - NK
+
+  us_sales_tax_ny:
+    title: US Sales Tax New York
+    country: US
+    state: NY
+    tax_category: Sales Tax
+    taxes:
+      - description: NY Sales Tax
+        rate: 8.0
+        charge_type: On Net Total
+        account_head: Sales Tax - NK
+
+  uk_vat:
+    title: UK VAT (20%)
+    country: GB
+    tax_category: VAT
+    taxes:
+      - description: VAT
+        rate: 20.0
+        charge_type: On Net Total
+        account_head: VAT - NK
+
+  zero_rated:
+    title: Zero Rated Export
+    country: "*"
+    tax_category: Zero Rated
+    taxes: []

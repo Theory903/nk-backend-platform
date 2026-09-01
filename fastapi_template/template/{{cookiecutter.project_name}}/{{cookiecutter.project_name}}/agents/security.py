@@ -14,6 +14,11 @@ from {{cookiecutter.project_name}}.platform.contracts import (
     ToolInvocation,
 )
 
+try:
+    from {{cookiecutter.project_name}}.agents.security_loader import SecurityManifest
+except ImportError:
+    SecurityManifest = None  # type: ignore[misc,assignment]
+
 
 class SecurityRisk(StrEnum):
     LOW = "low"
@@ -91,15 +96,84 @@ class SecurityPipeline:
         default_factory=PromptInjectionDefense,
     )
     tool_policy: ToolPolicy = field(default_factory=ToolPolicy)
+    pii_redactor: Any | None = None
+    tool_poisoning: Any | None = None
+    manifest: Any | None = None
+
+    def __post_init__(self) -> None:
+        if self.pii_redactor is None:
+            from {{cookiecutter.project_name}}.agents.security_pii import PIIRedactor
+
+            self.pii_redactor = PIIRedactor()
+        if self.tool_poisoning is None:
+            from {{cookiecutter.project_name}}.agents.security_poisoning import (
+                ToolPoisoningDefense,
+            )
+
+            self.tool_poisoning = ToolPoisoningDefense()
+        if self.manifest is None:
+            from {{cookiecutter.project_name}}.agents.security_loader import (
+                load_security_manifest,
+            )
+
+            self.manifest = load_security_manifest()
 
     def inspect_prompt(self, text: str) -> PromptInspection:
-        return self.prompt_defense.inspect(text)
+        inspection = self.prompt_defense.inspect(text)
+        if (
+            inspection.allowed
+            and getattr(self.manifest, "redact_pii_in_context", True)
+            and self.pii_redactor is not None
+        ):
+            sanitized = self.pii_redactor.redact(inspection.sanitized)
+            return PromptInspection(
+                allowed=True,
+                risk=inspection.risk,
+                reasons=inspection.reasons,
+                sanitized=sanitized,
+            )
+        return inspection
+
+    def inspect_tool_poisoning(
+        self,
+        descriptor: ToolDescriptor,
+        *,
+        input_schema: dict | None = None,
+    ) -> PolicyDecision | None:
+        if not getattr(self.manifest, "scan_tool_poisoning", True):
+            return None
+        if self.tool_poisoning is None:
+            return None
+        poison = self.tool_poisoning.inspect(
+            name=descriptor.name,
+            description=descriptor.description,
+            parameters=input_schema,
+        )
+        if not poison.allowed:
+            return PolicyDecision(
+                allowed=False,
+                reason=f"tool poisoning detected: {', '.join(poison.reasons)}",
+            )
+        return None
 
     def authorize_tool(
         self,
         invocation: ToolInvocation,
     ) -> PolicyDecision:
+        denial = self.inspect_tool_poisoning(
+            invocation.descriptor,
+            input_schema=invocation.descriptor.input_schema,
+        )
+        if denial is not None:
+            return denial
         return self.tool_policy.authorize(invocation.scope, invocation.descriptor)
+
+    def finalize_output(self, text: str, *, max_chars: int = 100_000) -> str:
+        if len(text) > max_chars:
+            raise ValueError("model output exceeds configured size limit")
+        if getattr(self.manifest, "redact_pii_in_output", True) and self.pii_redactor:
+            return self.pii_redactor.redact(text)
+        return text
 
     @staticmethod
     def validate_output(text: str, *, max_chars: int = 100_000) -> str:

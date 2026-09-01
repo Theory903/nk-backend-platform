@@ -1,0 +1,17 @@
+# Tool gateway policy + external MCP servers (P4).
+#
+# Override: {{cookiecutter.project_name | upper}}_TOOL_POLICY_FILE
+
+policy:
+  high_risk_requires_approval: true
+  denied_tools: []
+  # allowed_tools: [echo, search_knowledge]  # omit = allow all registered tools
+
+mcp_servers: []
+# Example (requires `uv sync --extra ai-platform` and MCP SDK):
+# - name: filesystem
+#   transport: stdio
+#   command: npx
+#   args: ["-y", "@modelcontextprotocol/server-filesystem", "/tmp"]
+#   prefix: fs_
+#   enabled: false

@@ -1,0 +1,173 @@
+version: 1
+report_count: 185
+columns_extracted: 9
+reports:
+  accounts-receivable:
+  - field: posting_date
+    label: Posting Date
+  - field: party_type
+    label: Party Type
+  - field: party
+    label: Party
+  - field: party_account
+    label: Party Account
+  - field: supplier_name
+    label: Supplier Name
+  - field: customer_name
+    label: Customer Name
+  - field: customer_primary_contact
+    label: Customer Primary Contact
+  - field: cost_center
+    label: Cost Center
+  - field: project
+    label: Project
+  - field: voucher_type
+    label: Voucher Type
+  - field: voucher_no
+    label: Voucher No
+  - field: due_date
+    label: Due Date
+  - field: bill_no
+    label: Bill No
+  - field: bill_date
+    label: Bill Date
+  - field: payment_term
+    label: Payment Term
+  - field: invoice_grand_total
+    label: Invoice Grand Total
+  - field: invoiced
+    label: Invoiced
+  - field: paid
+    label: Paid
+  - field: credit_note
+    label: Credit Note
+  - field: outstanding
+    label: Outstanding
+  - field: age
+    label: Age
+  - field: currency
+    label: Currency
+  - field: future_ref
+    label: Future Ref
+  - field: future_amount
+    label: Future Amount
+  - field: remaining_balance
+    label: Remaining Balance
+  - field: po_no
+    label: Po No
+  - field: delivery_notes
+    label: Delivery Notes
+  - field: territory
+    label: Territory
+  - field: customer_group
+    label: Customer Group
+  - field: sales_person
+    label: Sales Person
+  - field: sales_partner
+    label: Sales Partner
+  - field: supplier_group
+    label: Supplier Group
+  - field: remarks
+    label: Remarks
+  - field: range0
+    label: Range0
+  - field: range
+    label: Range
+  accounts-receivable-summary:
+  - field: party_type
+    label: Party Type
+  - field: party
+    label: Party
+  - field: party_name
+    label: Party Name
+  - field: advance
+    label: Advance
+  - field: invoiced
+    label: Invoiced
+  - field: paid
+    label: Paid
+  - field: credit_note
+    label: Credit Note
+  - field: outstanding
+    label: Outstanding
+  - field: gl_balance
+    label: Gl Balance
+  - field: diff
+    label: Diff
+  - field: total_due
+    label: Total Due
+  - field: future_amount
+    label: Future Amount
+  - field: remaining_balance
+    label: Remaining Balance
+  - field: territory
+    label: Territory
+  - field: customer_group
+    label: Customer Group
+  - field: sales_person
+    label: Sales Person
+  - field: sales_partner
+    label: Sales Partner
+  - field: supplier_group
+    label: Supplier Group
+  - field: currency
+    label: Currency
+  general-and-payment-ledger-comparison:
+  - field: company
+    label: Company
+  - field: account
+    label: Account
+  - field: voucher_type
+    label: Voucher Type
+  - field: voucher_no
+    label: Voucher No
+  - field: party_type
+    label: Party Type
+  - field: party
+    label: Party
+  - field: gl_balance
+    label: Gl Balance
+  - field: pl_balance
+    label: Pl Balance
+  payment-ledger:
+  - field: posting_date
+    label: Posting Date
+  - field: account
+    label: Account
+  - field: party_type
+    label: Party Type
+  - field: party
+    label: Party
+  - field: voucher_type
+    label: Voucher Type
+  - field: voucher_no
+    label: Voucher No
+  - field: against_voucher_type
+    label: Against Voucher Type
+  - field: against_voucher_no
+    label: Against Voucher No
+  - field: amount
+    label: Amount
+  - field: amount_in_account_currency
+    label: Amount In Account Currency
+  - field: currency
+    label: Currency
+  purchase-register:
+  - field: paid_to
+    label: Paid To
+  sales-register:
+  - field: paid_from
+    label: Paid From
+  production-planning-report:
+  - field: schedule_date
+    label: Schedule Date
+  - field: planned_start_date
+    label: Planned Start Date
+  lost-quotations:
+  - field: lost_reason
+    label: Lost Reason
+  - field: competitor
+    label: Competitor
+  stock-ageing:
+  - field: range
+    label: Range

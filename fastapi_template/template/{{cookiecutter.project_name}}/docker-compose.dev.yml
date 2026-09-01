@@ -21,7 +21,8 @@ services:
       {{cookiecutter.project_name | upper}}_ALLOWED_HOSTS: ${ALLOWED_HOSTS:-["localhost","127.0.0.1","testserver","test","host.docker.internal"]}
       {{cookiecutter.project_name | upper}}_SECURE_COOKIES: "False"
     ports:
-      - "${NK_API_PORT:-8000}:8000"
+      # IPv4 loopback only — OrbStack/macOS often resets ::1 for published ports.
+      - "127.0.0.1:${NK_API_PORT:-8000}:8000"
     volumes:
       - .:/app/src/
       # Keep the Docker-built React bundle visible through the source mount.
@@ -116,4 +117,18 @@ services:
   nats:
     ports:
       - "${NK_NATS_PORT:-4222}:4222"
+  {%- endif %}
+
+  {%- if cookiecutter.enable_llm in [True, "True", "true", 1, "1"] %}
+
+  ollama:
+    ports:
+      - "127.0.0.1:${NK_OLLAMA_PORT:-11434}:11434"
+  {%- endif %}
+
+  {%- if cookiecutter.enable_vector in [True, "True", "true", 1, "1"] %}
+
+  qdrant:
+    ports:
+      - "127.0.0.1:${NK_QDRANT_PORT:-6333}:6333"
   {%- endif %}

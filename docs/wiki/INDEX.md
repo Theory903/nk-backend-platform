@@ -1,4 +1,4 @@
-<!-- INDEX · updated 2026-08-31 · status: active -->
+<!-- INDEX · updated 2026-09-01 · status: active -->
 
 # FastAPI-template / NK Backend OS — Wiki
 
@@ -17,6 +17,9 @@ Single entry point for curated docs.
 | [API reference](references/api-reference.md) | Route families and runtime OpenAPI workflow |
 | [Identity](references/identity.md) | Authentication, authorization, and tenancy |
 | [AI, knowledge, and agents](references/ai-knowledge-agents.md) | Retrieval and bounded agent runtime |
+| [AI platform roadmap](references/ai-platform-roadmap.md) | Master AI runtime architecture (8 primitives) |
+| [AI platform phases](references/ai-platform-phases.md) | P0–P30 implementation phases |
+| [AI platform OSS map](references/ai-platform-oss-map.md) | Karpathy, gstack, DeepSeek Harness, adapters |
 | [Platform services](references/platform-services.md) | Data, queues, files, and integrations |
 | [Production readiness](references/production-readiness.md) | Deployment and operational checks |
 | [Security architecture](references/security-architecture.md) | End-to-end security control plane and checklist |

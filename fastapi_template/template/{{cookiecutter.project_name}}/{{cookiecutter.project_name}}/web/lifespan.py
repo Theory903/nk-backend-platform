@@ -59,9 +59,7 @@ from {{cookiecutter.project_name}}.ai.knowledge.runtime import (
     HybridRetrievalAdapter,
     RedisAnswerCache,
 )
-from {{cookiecutter.project_name}}.ai.knowledge.vector_store import (
-    InMemoryVectorStore,
-)
+from {{cookiecutter.project_name}}.ai.knowledge.store_factory import create_vector_store
 {%- endif %}
 
 
@@ -632,6 +630,27 @@ async def lifespan_setup(app: FastAPI) -> AsyncGenerator[None, None]:  # pragma:
         _auth_kwargs["csrf"] = CsrfProtection(_users_secret)
     configure_auth_stores(**_auth_kwargs)
     app.state.access_token_store = _auth_kwargs["access_tokens"]
+    {%- if cookiecutter.add_users in [True, "True", "true", 1, "1"] %}
+    if settings.environment.lower() in {"dev", "development", "test"}:
+        import sys
+
+        {%- if cookiecutter.orm in ['sqlalchemy', 'beanie'] %}
+        from {{cookiecutter.project_name}}.api.scim import E2E_ORG_ID
+
+        _e2e_org = E2E_ORG_ID
+        {%- else %}
+        _e2e_org = "org:e2e-smoke"
+        {%- endif %}
+        _e2e_plaintext, _ = _auth_kwargs["api_keys"].create(
+            "e2e-smoke",
+            org_id=_e2e_org,
+            scopes=frozenset({"*"}),
+        )
+        sys.stderr.write(
+            f"\n[dev e2e] Authorization: ApiKey {_e2e_plaintext}\n"
+            f"[dev e2e] org_id={_e2e_org}\n\n",
+        )
+    {%- endif %}
     if _auth_backend in {"sql", "sqlalchemy", "postgres", "postgresql"}:
         from sqlalchemy import text
 
@@ -717,10 +736,15 @@ async def lifespan_setup(app: FastAPI) -> AsyncGenerator[None, None]:  # pragma:
         _embedding_provider = get_embedding_provider(
             getattr(settings, "embedding_provider", "local"),
         )
+        _vector_store = await create_vector_store(app)
         _hybrid_retriever = HybridRetriever(
             embeddings=_embedding_provider,
-            store=InMemoryVectorStore(),
+            store=_vector_store,
         )
+        app.state.hybrid_retriever = _hybrid_retriever
+        from {{cookiecutter.project_name}}.llm.features.runtime import get_or_create_runtime
+
+        get_or_create_runtime(app).hybrid_retriever = _hybrid_retriever
         _router = get_router()
         _route = _router.for_task("default")
         answer_cache = (
@@ -744,6 +768,38 @@ async def lifespan_setup(app: FastAPI) -> AsyncGenerator[None, None]:  # pragma:
             exc,
         )
         app.state.rag_service = None
+    {%- endif %}
+    {%- if cookiecutter.enable_llm in [True, "True", "true", 1, "1"] or cookiecutter.enable_agents in [True, "True", "true", 1, "1"] %}
+    {%- if cookiecutter.enable_llm in [True, "True", "true", 1, "1"] %}
+    from {{cookiecutter.project_name}}.ai.gateway.runtime import configure_gateway_runtime
+
+    configure_gateway_runtime(app)
+    {%- endif %}
+    from {{cookiecutter.project_name}}.agents.bootstrap import wire_agent_bootstrap
+    {%- if cookiecutter.enable_redis in [True, "True", "true", 1, "1"] %}
+    from {{cookiecutter.project_name}}.agents.memory_factory import configure_memory_store
+    {%- endif %}
+    from {{cookiecutter.project_name}}.llm.features.runtime import get_or_create_runtime
+
+    _feature_runtime = get_or_create_runtime(app)
+    {%- if cookiecutter.enable_redis in [True, "True", "true", 1, "1"] %}
+    configure_memory_store(app, _feature_runtime)
+    {%- endif %}
+    wire_agent_bootstrap(app)
+    {%- if cookiecutter.enable_agents in [True, "True", "true", 1, "1"] %}
+    from {{cookiecutter.project_name}}.agents.mcp_bootstrap import wire_mcp_servers
+
+    await wire_mcp_servers(app)
+    {%- endif %}
+    if settings.environment.lower() in {"dev", "development"}:
+        from {{cookiecutter.project_name}}.llm.dev_seed import seed_dev_plane
+
+        await seed_dev_plane(app)
+    {%- endif %}
+    {%- if cookiecutter.db_info.name != "none" and cookiecutter.orm == "sqlalchemy" %}
+    from {{cookiecutter.project_name}}.erp.bootstrap import wire_erp_bootstrap
+
+    wire_erp_bootstrap(app)
     {%- endif %}
     _register_runtime_readiness(app)
     {%- if cookiecutter.otlp_enabled in [True, "True", "true", 1, "1"] %}
@@ -822,6 +878,14 @@ async def lifespan_setup(app: FastAPI) -> AsyncGenerator[None, None]:  # pragma:
                 await shutdown_nats(app)
             except Exception:
                 logging.getLogger(__name__).exception("NATS shutdown failed")
+            {%- endif %}
+            {%- if cookiecutter.enable_agents in [True, "True", "true", 1, "1"] %}
+            mcp_stack = getattr(app.state, "mcp_exit_stack", None)
+            if mcp_stack is not None:
+                try:
+                    await mcp_stack.aclose()
+                except Exception:
+                    logging.getLogger(__name__).exception("MCP shutdown failed")
             {%- endif %}
         finally:
             {%- if cookiecutter.otlp_enabled in [True, "True", "true", 1, "1"] %}

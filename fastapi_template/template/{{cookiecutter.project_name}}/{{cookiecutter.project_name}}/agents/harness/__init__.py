@@ -88,7 +88,12 @@ class Harness:
         """Return the configured system prompt."""
         return self.config.system_prompt
 
-    def loop(self) -> LoopRuntime:
+    def loop(
+        self,
+        *,
+        recorder: Any | None = None,
+        gateway: Any | None = None,
+    ) -> LoopRuntime:
         """
         Create a new runtime for one agent execution.
 
@@ -103,6 +108,8 @@ class Harness:
             guardrails=self.guardrails,
             system_prompt=self.system_prompt,
             scope=self.scope,
+            recorder=recorder,
+            gateway=gateway,
         )
 
     def run(self, *args: Any, **kwargs: Any) -> Any:
@@ -172,4 +179,40 @@ __all__ = [
     "DEFAULT_SYSTEM_PROMPT",
     "Harness",
     "HarnessConfig",
+]
+
+from {{cookiecutter.project_name}}.agents.harness.fixtures import (  # noqa: E402
+    ToolFixture,
+    fixture_path,
+    load_fixture,
+    save_fixture,
+)
+from {{cookiecutter.project_name}}.agents.harness.runner import (  # noqa: E402
+    HarnessMode,
+    HarnessReport,
+    ScenarioRunner,
+    run_scenarios_sync,
+)
+from {{cookiecutter.project_name}}.agents.harness.scenarios import (  # noqa: E402
+    HarnessScenario,
+    load_scenarios_yaml,
+)
+from {{cookiecutter.project_name}}.agents.harness.trajectory import (  # noqa: E402
+    Trajectory,
+    TrajectoryCapture,
+)
+
+__all__ += [
+    "HarnessMode",
+    "HarnessReport",
+    "HarnessScenario",
+    "ScenarioRunner",
+    "ToolFixture",
+    "Trajectory",
+    "TrajectoryCapture",
+    "fixture_path",
+    "load_fixture",
+    "load_scenarios_yaml",
+    "run_scenarios_sync",
+    "save_fixture",
 ]
