@@ -34,10 +34,23 @@ Production guidance:
 from __future__ import annotations
 
 import logging
+import os
 from contextlib import contextmanager
 from typing import Any, Iterator
 
 logger = logging.getLogger(__name__)
+_KNOWN_QUEUE_TASKS = frozenset(
+    {
+        "deliver_webhook",
+        "relay_outbox",
+        "webhook_delivery",
+    }
+)
+
+
+def _queue_task_label(task: str) -> str:
+    """Map untrusted task names to a bounded metric label set."""
+    return task if task in _KNOWN_QUEUE_TASKS else "other"
 
 
 # ---------------------------------------------------------------------------
@@ -52,6 +65,7 @@ try:
         Gauge as _PcGauge,
         Histogram as _PcHistogram,
         generate_latest,
+        multiprocess,
     )
 
     HAS_PROMETHEUS = True
@@ -63,6 +77,7 @@ except ImportError:
     _PcGauge = Any  # type: ignore[misc,assignment]
     _PcHistogram = Any  # type: ignore[misc,assignment]
     generate_latest = None  # type: ignore[assignment]
+    multiprocess = None  # type: ignore[assignment]
 
     HAS_PROMETHEUS = False
 
@@ -245,6 +260,7 @@ class _MetricBase:
     __slots__ = (
         "_labels",
         "_impl",
+        "_multiprocess_mode",
     )
 
     def __init__(
@@ -254,8 +270,10 @@ class _MetricBase:
         description: str,
         label_names: tuple[str, ...] = (),
         registry: CollectorRegistry | None = None,
+        multiprocess_mode: str | None = None,
     ) -> None:
         self._labels = label_names
+        self._multiprocess_mode = multiprocess_mode
 
         if HAS_PROMETHEUS:
             self._impl = self._create_metric(
@@ -263,6 +281,7 @@ class _MetricBase:
                 description=description,
                 label_names=label_names,
                 registry=registry,
+                multiprocess_mode=multiprocess_mode,
             )
         else:
             self._impl = _NoOpMetric()
@@ -274,6 +293,7 @@ class _MetricBase:
         description: str,
         label_names: tuple[str, ...],
         registry: CollectorRegistry | None,
+        multiprocess_mode: str | None,
     ) -> Any:
         raise NotImplementedError
 
@@ -345,6 +365,7 @@ class NkCounter(_MetricBase):
         description: str,
         label_names: tuple[str, ...],
         registry: CollectorRegistry | None,
+        multiprocess_mode: str | None,
     ) -> Any:
         return _create_or_reuse(
             _PcCounter,
@@ -396,13 +417,20 @@ class NkGauge(_MetricBase):
         description: str,
         label_names: tuple[str, ...],
         registry: CollectorRegistry | None,
+        multiprocess_mode: str | None,
     ) -> Any:
+        kwargs = (
+            {"multiprocess_mode": multiprocess_mode}
+            if multiprocess_mode is not None
+            else {}
+        )
         return _create_or_reuse(
             _PcGauge,
             name=name,
             description=description,
             label_names=label_names,
             registry=registry,
+            **kwargs,
         )
 
     def set(
@@ -490,6 +518,7 @@ class NkHistogram(_MetricBase):
         buckets: tuple[float, ...] = DEFAULT_BUCKETS,
         label_names: tuple[str, ...] = (),
         registry: CollectorRegistry | None = None,
+        multiprocess_mode: str | None = None,
     ) -> None:
         self._buckets = buckets
 
@@ -498,6 +527,7 @@ class NkHistogram(_MetricBase):
             description=description,
             label_names=label_names,
             registry=registry,
+            multiprocess_mode=multiprocess_mode,
         )
 
     def _create_metric(
@@ -507,6 +537,7 @@ class NkHistogram(_MetricBase):
         description: str,
         label_names: tuple[str, ...],
         registry: CollectorRegistry | None,
+        multiprocess_mode: str | None,
     ) -> Any:
         return _create_or_reuse(
             _PcHistogram,
@@ -703,6 +734,21 @@ queue_job_duration = NkHistogram(
     ),
 )
 
+worker_heartbeat = NkGauge(
+    name="nk_worker_heartbeat",
+    description="Whether the background worker is alive and accepting work.",
+    multiprocess_mode="liveall",
+)
+
+queue_enqueues_total = NkCounter(
+    name="nk_queue_enqueues_total",
+    description="Task enqueue attempts by task and outcome.",
+    label_names=(
+        "task",
+        "outcome",
+    ),
+)
+
 
 queue_depth = NkGauge(
     name="nk_queue_depth",
@@ -710,6 +756,12 @@ queue_depth = NkGauge(
     label_names=(
         "queue",
     ),
+)
+
+dlq_messages = NkGauge(
+    name="nk_dlq_messages",
+    description="Current dead-letter queue depth.",
+    label_names=("queue",),
 )
 
 
@@ -768,6 +820,12 @@ def export_metrics() -> bytes:
         return b"# prometheus_client not installed\n"
 
     assert generate_latest is not None
+
+    if os.getenv("PROMETHEUS_MULTIPROC_DIR"):
+        assert multiprocess is not None
+        registry = CollectorRegistry()
+        multiprocess.MultiProcessCollector(registry)
+        return generate_latest(registry)
 
     return generate_latest()
 
@@ -878,16 +936,42 @@ def record_queue_job(
     """
     Record background task execution.
     """
+    queue_task = _queue_task_label(task)
     queue_jobs_total.inc(
-        task=task,
+        task=queue_task,
         outcome=outcome,
     )
 
     if duration_s is not None:
         queue_job_duration.observe(
             duration_s,
-            task=task,
+            task=queue_task,
         )
+
+
+def record_queue_enqueue(
+    *,
+    task: str,
+    outcome: str,
+) -> None:
+    """Record a task enqueue outcome using bounded task names."""
+    queue_enqueues_total.inc(
+        task=_queue_task_label(task),
+        outcome=outcome,
+    )
+
+
+def set_worker_heartbeat(
+    alive: bool,
+) -> None:
+    """Set the process-local worker liveness gauge."""
+    worker_heartbeat.set(1 if alive else 0)
+
+
+def mark_worker_process_dead(pid: int | None = None) -> None:
+    """Remove this process from live multiprocess gauges on graceful exit."""
+    if HAS_PROMETHEUS and multiprocess is not None:
+        multiprocess.mark_process_dead(pid or os.getpid())
 
 
 __all__ = [
@@ -903,6 +987,7 @@ __all__ = [
     "create_registry",
     "db_queries_total",
     "db_query_duration",
+    "dlq_messages",
     "export_metrics",
     "http_request_duration",
     "http_requests_total",
@@ -911,6 +996,7 @@ __all__ = [
     "metrics_content_type",
     "outbox_pending",
     "queue_depth",
+    "queue_enqueues_total",
     "queue_job_duration",
     "queue_jobs_total",
     "rate_limit_rejections_total",
@@ -918,6 +1004,10 @@ __all__ = [
     "record_http_request",
     "record_llm_usage",
     "record_queue_job",
+    "record_queue_enqueue",
+    "mark_worker_process_dead",
+    "set_worker_heartbeat",
+    "worker_heartbeat",
     "webhook_deliveries_total",
     "webhook_delivery_duration",
 ]

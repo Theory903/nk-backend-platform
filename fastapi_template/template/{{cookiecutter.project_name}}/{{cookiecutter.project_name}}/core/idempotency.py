@@ -23,12 +23,15 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import json
 import time
 from abc import ABC, abstractmethod
 from collections.abc import Callable
+from typing import Any
 from dataclasses import dataclass
 from threading import RLock
 from typing import Final
+from urllib.parse import parse_qsl, urlencode
 
 
 DEFAULT_TTL_S: Final[float] = 24 * 60 * 60
@@ -88,6 +91,17 @@ class IdempotencyStore(ABC):
         ttl_s: float,
     ) -> None:
         """Store a response."""
+
+    def set_if_owner(
+        self,
+        key: str,
+        response: CachedResponse,
+        *,
+        ttl_s: float,
+        owner: str,
+    ) -> bool:
+        """Store only while the caller still owns the execution lease."""
+        return False
 
     @abstractmethod
     def acquire_lock(
@@ -193,6 +207,35 @@ class InMemoryIdempotencyStore(IdempotencyStore):
                 expires_at=now + ttl_s,
             )
 
+    def set_if_owner(
+        self,
+        key: str,
+        response: CachedResponse,
+        *,
+        ttl_s: float,
+        owner: str,
+    ) -> bool:
+        if ttl_s <= 0 or not owner:
+            raise ValueError("response ttl_s and lock owner are required")
+        now = self._clock()
+        with self._lock:
+            current = self._locks.get(key)
+            if (
+                current is None
+                or current.expires_at <= now
+                or not hmac.compare_digest(current.owner, owner)
+            ):
+                return False
+            self._responses[key] = CachedResponse(
+                status_code=response.status_code,
+                body=response.body,
+                content_type=response.content_type,
+                fingerprint=response.fingerprint,
+                created_at=response.created_at,
+                expires_at=now + ttl_s,
+            )
+            return True
+
     def acquire_lock(
         self,
         key: str,
@@ -250,6 +293,23 @@ class InMemoryIdempotencyStore(IdempotencyStore):
                     None,
                 )
 
+    def extend_lock(
+        self,
+        key: str,
+        *,
+        ttl_s: float,
+        owner: str,
+    ) -> bool:
+        now = self._clock()
+        with self._lock:
+            current = self._locks.get(key)
+            if current is None or not hmac.compare_digest(current.owner, owner):
+                return False
+            if current.expires_at <= now:
+                return False
+            current.expires_at = now + ttl_s
+            return True
+
     def clear(
         self,
         key: str,
@@ -300,6 +360,135 @@ class InMemoryIdempotencyStore(IdempotencyStore):
         return removed
 
 
+class RedisIdempotencyStore(IdempotencyStore):
+    """Redis-backed idempotency store using atomic SET NX leases."""
+
+    _RELEASE_SCRIPT = """
+    if redis.call('GET', KEYS[1]) == ARGV[1] then
+      return redis.call('DEL', KEYS[1])
+    end
+    return 0
+    """
+    _EXTEND_SCRIPT = """
+    if redis.call('GET', KEYS[1]) == ARGV[1] then
+      return redis.call('EXPIRE', KEYS[1], ARGV[2])
+    end
+    return 0
+    """
+    _SET_IF_OWNER_SCRIPT = """
+    if redis.call('GET', KEYS[1]) == ARGV[1] then
+      redis.call('SET', KEYS[2], ARGV[2], 'EX', ARGV[3])
+      return 1
+    end
+    return 0
+    """
+
+    def __init__(self, redis_client: Any, *, prefix: str = "nk:idempotency") -> None:
+        self._redis = redis_client
+        self._prefix = prefix.rstrip(":")
+
+    def _key(self, kind: str, key: str) -> str:
+        return f"{self._prefix}:{kind}:{key}"
+
+    def get(self, key: str) -> CachedResponse | None:
+        raw = self._redis.get(self._key("response", key))
+        if raw is None:
+            return None
+        if isinstance(raw, bytes):
+            raw = raw.decode("utf-8")
+        data = json.loads(raw)
+        return CachedResponse(
+            status_code=int(data["status_code"]),
+            body=bytes.fromhex(data["body"]),
+            content_type=str(data["content_type"]),
+            fingerprint=str(data["fingerprint"]),
+            created_at=float(data["created_at"]),
+            expires_at=float(data["expires_at"]),
+        )
+
+    def set(self, key: str, response: CachedResponse, *, ttl_s: float) -> None:
+        if ttl_s <= 0:
+            raise ValueError("ttl_s must be greater than zero")
+        self._redis.set(
+            self._key("response", key),
+            json.dumps({
+                "status_code": response.status_code,
+                "body": response.body.hex(),
+                "content_type": response.content_type,
+                "fingerprint": response.fingerprint,
+                "created_at": response.created_at,
+                "expires_at": time.monotonic() + ttl_s,
+            }),
+            ex=max(1, int(ttl_s)),
+        )
+
+    def set_if_owner(
+        self,
+        key: str,
+        response: CachedResponse,
+        *,
+        ttl_s: float,
+        owner: str,
+    ) -> bool:
+        if ttl_s <= 0 or not owner:
+            raise ValueError("response ttl_s and lock owner are required")
+        payload = json.dumps({
+            "status_code": response.status_code,
+            "body": response.body.hex(),
+            "content_type": response.content_type,
+            "fingerprint": response.fingerprint,
+            "created_at": response.created_at,
+            "expires_at": time.monotonic() + ttl_s,
+        })
+        return bool(self._redis.eval(
+            self._SET_IF_OWNER_SCRIPT,
+            2,
+            self._key("lock", key),
+            self._key("response", key),
+            owner,
+            payload,
+            max(1, int(ttl_s)),
+        ))
+
+    def acquire_lock(self, key: str, *, ttl_s: float, owner: str) -> bool:
+        if ttl_s <= 0 or not owner:
+            raise ValueError("lock ttl_s must be positive and owner is required")
+        return bool(self._redis.set(
+            self._key("lock", key),
+            owner,
+            nx=True,
+            ex=max(1, int(ttl_s)),
+        ))
+
+    def release_lock(self, key: str, *, owner: str) -> None:
+        self._redis.eval(
+            self._RELEASE_SCRIPT,
+            1,
+            self._key("lock", key),
+            owner,
+        )
+
+    def extend_lock(
+        self,
+        key: str,
+        *,
+        ttl_s: float,
+        owner: str,
+    ) -> bool:
+        return bool(
+            self._redis.eval(
+                self._EXTEND_SCRIPT,
+                1,
+                self._key("lock", key),
+                owner,
+                max(1, int(ttl_s)),
+            ),
+        )
+
+    def clear(self, key: str) -> None:
+        self._redis.delete(self._key("response", key), self._key("lock", key))
+
+
 def validate_idempotency_key(
     key: str,
 ) -> str:
@@ -329,11 +518,13 @@ def compute_fingerprint(
     method: str,
     path: str,
     body: bytes,
+    *,
+    query: str = "",
 ) -> str:
     """
     Compute a deterministic request fingerprint.
 
-    Method and path are normalized. Body bytes are hashed exactly as
+    Method, path, and query are normalized. Body bytes are hashed exactly as
     received, avoiding accidental JSON normalization differences.
     """
 
@@ -350,6 +541,13 @@ def compute_fingerprint(
         normalized_path.encode("utf-8")
     )
     digest.update(b"\x00")
+    if query:
+        canonical_query = urlencode(
+            sorted(parse_qsl(query, keep_blank_values=True)),
+            doseq=True,
+        )
+        digest.update(canonical_query.encode("utf-8"))
+        digest.update(b"\x00")
     digest.update(body)
 
     return digest.hexdigest()
@@ -416,6 +614,7 @@ __all__ = [
     "IdempotencyInProgress",
     "IdempotencyStore",
     "InMemoryIdempotencyStore",
+    "RedisIdempotencyStore",
     "InvalidIdempotencyKey",
     "compute_fingerprint",
     "get_idempotency_store",

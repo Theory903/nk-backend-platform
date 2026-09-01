@@ -7,7 +7,7 @@ stages:
 
 .quality-template:
   stage: quality
-  image: ghcr.io/astral-sh/uv:0.9.12-python3.13-bookworm-slim
+  image: ghcr.io/astral-sh/uv:0.9.12-python3.13-bookworm-slim@sha256:4fa588752732ba29cbfb68ad4e43ece65e54b9b9211003224abab1b1874084ee
   tags:
     - kubernetes-runner
     - docker-runner
@@ -15,14 +15,8 @@ stages:
     - tags
   before_script:
     - apt update && apt install -y git
-    # Template may lack uv.lock until post-gen; prefer --locked when present.
-    - |
-      if [ -f uv.lock ]; then
-        uv sync --locked
-      else
-        echo "NOTE: uv.lock missing — unlocked uv sync"
-        uv sync
-      fi
+    - uv sync --locked
+    - uv lock --check
 
 quality:
   extends:
@@ -31,3 +25,4 @@ quality:
     - uv run ruff format --check .
     - uv run ruff check .
     - uv run mypy {{cookiecutter.project_name}} tests
+    - uv run bandit -r {{cookiecutter.project_name}} -ll -ii

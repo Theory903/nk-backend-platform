@@ -4,13 +4,18 @@ from fastapi import APIRouter
 from fastapi.param_functions import Depends
 from {{cookiecutter.project_name}}.db.dao.dummy_dao import DummyDAO
 from {{cookiecutter.project_name}}.db.models.dummy_model import DummyModel
+from {{cookiecutter.project_name}}.identity.deps import RequirePermission
 from {{cookiecutter.project_name}}.web.api.dummy.schema import (DummyModelDTO,
                                                                 DummyModelInputDTO)
 
 router = APIRouter()
 
 
-@router.get("/", response_model=List[DummyModelDTO])
+@router.get(
+    "/",
+    response_model=List[DummyModelDTO],
+    dependencies=[Depends(RequirePermission("dummy.read"))],
+)
 async def get_dummy_models(
     limit: int = 10,
     offset: int = 0,
@@ -27,7 +32,10 @@ async def get_dummy_models(
     return await dummy_dao.get_all_dummies(limit=limit, offset=offset)
 
 
-@router.put("/")
+@router.put(
+    "/",
+    dependencies=[Depends(RequirePermission("dummy.write"))],
+)
 async def create_dummy_model(
     new_dummy_object: DummyModelInputDTO,
     dummy_dao: DummyDAO = Depends(),

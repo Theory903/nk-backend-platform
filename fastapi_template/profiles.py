@@ -26,7 +26,10 @@ _SAAS: dict[str, Any] = {
     "enable_redis": True,
     "enable_taskiq": True,
     "otlp_enabled": True,
+    "prometheus_enabled": True,
     "add_users": True,
+    "jwt_auth": True,
+    "gunicorn": True,
     "enable_migrations": True,
 }
 
@@ -59,6 +62,96 @@ PROFILES: dict[str, dict[str, Any]] = {
     "fintech": _FINTECH,
 }
 
+PROFILE_DESCRIPTIONS: dict[str, str] = {
+    "minimal": "REST + no database + no infrastructure",
+    "saas": (
+        "REST + PostgreSQL/SQLAlchemy + Redis/Taskiq + JWT + migrations "
+        "+ OTel/Prometheus + Gunicorn"
+    ),
+    "ai-saas": "SaaS baseline + LLM + vector storage + traditional RAG",
+    "agentic": "AI SaaS + agent runtime + GraphRAG",
+    "fintech": "SaaS baseline + audit trail + idempotency + fintech primitives",
+}
+
+# Product-oriented intents are deliberately mapped to existing architecture
+# profiles. This keeps the product-first CLI honest until dedicated domain
+# packs exist for concerns such as data ingestion or high-scale deployment.
+USE_CASE_PROFILES: dict[str, str | None] = {
+    "minimal-api": "minimal",
+    "saas": "saas",
+    "enterprise-saas": "saas",
+    "crud-platform": "saas",
+    "integration-api": "saas",
+    "data-platform": "saas",
+    "search-platform": "saas",
+    "knowledge-platform": "ai-saas",
+    "ai-saas": "ai-saas",
+    "ai-knowledge": "ai-saas",
+    "agentic": "agentic",
+    "automation-platform": "saas",
+    "event-platform": "saas",
+    "fintech": "fintech",
+    "internal-tool": "saas",
+    "developer-api": "saas",
+    "webhook-platform": "saas",
+    "high-scale-api": "saas",
+    "custom": None,
+}
+
+USE_CASE_DESCRIPTIONS: dict[str, str] = {
+    "minimal-api": "Small APIs, prototypes, and internal utilities",
+    "saas": "Multi-user SaaS products",
+    "enterprise-saas": "Enterprise SaaS with tenancy, RBAC, audit, and integrations",
+    "crud-platform": "CRUD-heavy business applications",
+    "integration-api": "API integrations, webhooks, and external systems",
+    "data-platform": "Data ingestion, processing, and asynchronous workflows",
+    "search-platform": "Search, indexing, and retrieval systems",
+    "knowledge-platform": "Document and knowledge products",
+    "ai-saas": "AI-powered SaaS applications",
+    "ai-knowledge": "RAG and enterprise knowledge systems",
+    "agentic": "Tool-using AI applications",
+    "automation-platform": "Workflow and task automation",
+    "event-platform": "Event-driven and message-based systems",
+    "fintech": "Transactional and financial workloads",
+    "internal-tool": "Admin panels, operations, and internal systems",
+    "developer-api": "Public APIs and developer platforms",
+    "webhook-platform": "Reliable inbound and outbound webhook infrastructure",
+    "high-scale-api": "High-throughput production APIs",
+    "custom": "Fully composable architecture",
+}
+
+# Options not explicitly defined by a profile are deliberately disabled when
+# a profile is selected. This makes ``--profile`` a reproducible architecture
+# choice instead of a partially pre-filled interactive questionnaire.
+PROFILE_OPTION_DEFAULTS: dict[str, bool] = {
+    "enable_redis": False,
+    "add_users": False,
+    "enable_rmq": False,
+    "enable_taskiq": False,
+    "enable_migrations": False,
+    "add_dummy": False,
+    "enable_routers": False,
+    "self_hosted_swagger": False,
+    "prometheus_enabled": False,
+    "sentry_enabled": False,
+    "enable_loguru": False,
+    "otlp_enabled": False,
+    "traefik_labels": False,
+    "enable_kafka": False,
+    "enable_nats": False,
+    "gunicorn": False,
+    "enable_llm": False,
+    "enable_vector": False,
+    "enable_rag_traditional": False,
+    "enable_agents": False,
+    "enable_graphrag": False,
+    "enable_audit": False,
+    "enable_idempotency": False,
+    "enable_fintech": False,
+    "cookie_auth": False,
+    "jwt_auth": False,
+}
+
 
 # ============================================================================
 # Validation
@@ -71,10 +164,7 @@ def validate_profile(name: str) -> None:
     """Raise ValueError when the requested profile does not exist."""
     if name not in PROFILES:
         available = ", ".join(sorted(PROFILES))
-        raise ValueError(
-            f"unknown profile '{name}'. "
-            f"available profiles: {available}"
-        )
+        raise ValueError(f"unknown profile '{name}'. available profiles: {available}")
 
 
 # ============================================================================
@@ -114,6 +204,24 @@ def expand_profile(
     return context
 
 
+def complete_profile(
+    name: str,
+    context: BuilderContext,
+) -> BuilderContext:
+    """
+    Apply a profile and deterministic defaults for every optional feature.
+
+    Explicit command-line values always win. This is used by the non-
+    interactive profile path; omitting ``--profile`` continues to expose
+    every option in the interactive wizard.
+    """
+    expanded = expand_profile(name, context)
+    for key, value in PROFILE_OPTION_DEFAULTS.items():
+        if not expanded.is_set(key):
+            setattr(expanded, key, deepcopy(value))
+    return expanded
+
+
 # ============================================================================
 # Profile inspection
 # ============================================================================
@@ -122,6 +230,36 @@ def expand_profile(
 def profile_names() -> tuple[str, ...]:
     """Return all supported profile names."""
     return tuple(sorted(PROFILES))
+
+
+def profile_description(name: str) -> str:
+    """Return the architecture summary shown by the generator CLI."""
+    validate_profile(name)
+    return PROFILE_DESCRIPTIONS[name]
+
+
+def validate_use_case(name: str) -> None:
+    """Raise ValueError when the requested use case does not exist."""
+    if name not in USE_CASE_PROFILES:
+        available = ", ".join(sorted(USE_CASE_PROFILES))
+        raise ValueError(f"unknown use case '{name}'. available use cases: {available}")
+
+
+def use_case_names() -> tuple[str, ...]:
+    """Return all supported product-oriented use cases."""
+    return tuple(sorted(USE_CASE_PROFILES))
+
+
+def use_case_description(name: str) -> str:
+    """Return the product-oriented summary shown by the generator CLI."""
+    validate_use_case(name)
+    return USE_CASE_DESCRIPTIONS[name]
+
+
+def use_case_profile(name: str) -> str | None:
+    """Return the architecture profile selected by a use case."""
+    validate_use_case(name)
+    return USE_CASE_PROFILES[name]
 
 
 def profile_contains(

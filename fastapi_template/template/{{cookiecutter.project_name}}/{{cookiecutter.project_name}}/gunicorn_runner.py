@@ -3,11 +3,17 @@ from typing import Any
 from gunicorn.app.base import BaseApplication
 from gunicorn.util import import_app
 from uvicorn.workers import UvicornWorker as BaseUvicornWorker
+from {{cookiecutter.project_name}}.operations.metrics import mark_worker_process_dead
 
 try:
     import uvloop
 except ImportError:
     uvloop = None  # type: ignore
+
+
+def gunicorn_child_exit(_server: Any, _worker: Any) -> None:
+    """Mark a multiprocess worker dead before Gunicorn reaps it."""
+    mark_worker_process_dead(getattr(_worker, "pid", None))
 
 
 class UvicornWorker(BaseUvicornWorker):
@@ -48,6 +54,7 @@ class GunicornApplication(BaseApplication):
             "bind": f"{host}:{port}",
             "workers": workers,
             "worker_class": "{{cookiecutter.project_name}}.gunicorn_runner.UvicornWorker",
+            "child_exit": gunicorn_child_exit,
             **kwargs,
         }
         self.app = app

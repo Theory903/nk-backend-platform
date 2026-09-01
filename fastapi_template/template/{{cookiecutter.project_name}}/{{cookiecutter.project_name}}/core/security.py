@@ -19,6 +19,7 @@ import base64
 import hashlib
 import hmac
 import json
+import re
 import secrets
 import time
 import uuid
@@ -45,6 +46,9 @@ MAX_TOKEN_TTL_S: Final[int] = 7 * 24 * 60 * 60
 
 MAX_REQUEST_ID_LENGTH: Final[int] = 128
 MAX_TOKEN_LENGTH: Final[int] = 8192
+_REQUEST_ID_PATTERN: Final[re.Pattern[str]] = re.compile(
+    r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+)
 
 
 class SecurityError(ValueError):
@@ -88,10 +92,7 @@ def get_request_id(
     if header:
         value = header.strip()
 
-        if (
-            value
-            and len(value) <= MAX_REQUEST_ID_LENGTH
-        ):
+        if _REQUEST_ID_PATTERN.fullmatch(value):
             return value
 
     existing = getattr(

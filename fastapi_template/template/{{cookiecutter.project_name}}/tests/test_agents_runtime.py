@@ -5,6 +5,7 @@ from {{cookiecutter.project_name}}.agents.budgets import Budget, BudgetExhausted
 from {{cookiecutter.project_name}}.agents.guardrails import Guardrails
 from {{cookiecutter.project_name}}.agents.loop import LoopRuntime
 from {{cookiecutter.project_name}}.agents.tools import ToolRegistry, agent_tool
+from {{cookiecutter.project_name}}.platform.contracts import Scope, ToolRisk
 from tests._fakes import FakeChatModel
 
 pytest.importorskip("langgraph.prebuilt", reason="graph runtime needs langgraph")
@@ -23,6 +24,10 @@ def _registry() -> ToolRegistry:
     return registry
 
 
+def _scope() -> Scope:
+    return Scope(principal_id="test-user", organization_id="test-org")
+
+
 async def test_loop_executes_tool_then_answers() -> None:
     """
     Scripted model drives one tool call then a final answer.
@@ -36,7 +41,12 @@ async def test_loop_executes_tool_then_answers() -> None:
             AssistantReply(content="finished", tool_calls=[]),
         ],
     )
-    runtime = LoopRuntime(model=model, tools=_registry(), budget=Budget(max_steps=5))
+    runtime = LoopRuntime(
+        model=model,
+        tools=_registry(),
+        budget=Budget(max_steps=5),
+        scope=_scope(),
+    )
 
     result = await runtime.run(task="use the tool")
 
@@ -60,6 +70,7 @@ async def test_budget_exhaustion_halts_loop() -> None:
         model=FakeChatModel(endless),
         tools=_registry(),
         budget=Budget(max_steps=2),
+        scope=_scope(),
     )
 
     with pytest.raises(BudgetExhausted):
@@ -90,12 +101,37 @@ async def test_guardrail_denial_blocks_execution() -> None:
         tools=registry,
         budget=Budget(max_steps=3),
         guardrails=guardrails,
+        scope=_scope(),
     )
 
     outcome = await runtime.dispatch("dangerous", {})
 
     assert outcome == "DENIED: tool 'dangerous' is not allowed"
     assert calls == []
+
+
+async def test_loop_requires_scope_even_for_final_answers() -> None:
+    model = FakeChatModel([AssistantReply(content="ok", tool_calls=[])])
+
+    with pytest.raises(ValueError, match="scope is required"):
+        LoopRuntime(model=model, tools=ToolRegistry())
+
+
+async def test_high_risk_tool_requires_approval() -> None:
+    @agent_tool(description="Irreversible operation.", risk=ToolRisk.HIGH)
+    def irreversible() -> str:
+        return "done"
+
+    registry = ToolRegistry()
+    registry.register(irreversible)
+    runtime = LoopRuntime(
+        model=FakeChatModel([]),
+        tools=registry,
+        scope=_scope(),
+    )
+
+    with pytest.raises(PermissionError, match="requires approval"):
+        await runtime.dispatch("irreversible", {})
 
 
 async def test_graph_runtime_shares_registry_contract() -> None:

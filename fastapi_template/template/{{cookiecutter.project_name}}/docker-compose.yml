@@ -7,26 +7,34 @@
 # State model (keep this distinction explicit):
 #   PostgreSQL / MongoDB / MySQL  — durable identity & business truth
 #   Redis                         — ephemeral / distributed state (cache, locks,
-#                                   rate limits, short-lived sessions) unless you
-#                                   deliberately design Redis as authoritative
+#                                   rate limits, and optional authoritative
+#                                   sessions when explicitly configured)
 #   Kafka / NATS / RabbitMQ       — async / event workloads
 #
 # Only the edge proxy should be publicly reachable. DB/Redis/brokers stay on the
 # internal `app` network; host ports live in docker-compose.dev.yml only.
 #
-# Next (not bundled): Traefik/nginx edge, Docker/K8s secrets, TLS/SASL for
-# brokers, and durable stores for in-memory identity/session primitives.
+# Next (not bundled): Traefik/nginx edge, Docker/K8s secrets, and TLS/SASL for
+# brokers. Production identity stores are selected explicitly by the auth
+# backend and fail closed when no durable backend is available.
 
 x-app-common: &app-common
   restart: unless-stopped
-  env_file:
-    - path: .env
-      required: false
+  read_only: true
+  cap_drop:
+    - ALL
+  security_opt:
+    - no-new-privileges:true
+  tmpfs:
+    - /tmp:rw,noexec,nosuid,size=64m
+  pids_limit: 256
   networks:
     - app
 
 x-app-environment: &app-environment
   {{cookiecutter.project_name | upper }}_HOST: 0.0.0.0
+  {{cookiecutter.project_name | upper }}_PORT: 8000
+  {{cookiecutter.project_name | upper }}_SERVICE_ROLE: api
   {%- if cookiecutter.db_info.name != "none" %}
   {%- if cookiecutter.db_info.name == "sqlite" %}
   {{cookiecutter.project_name | upper }}_DB_FILE: /db_data/db.sqlite3
@@ -42,18 +50,18 @@ x-app-environment: &app-environment
   {%- endif %}
   {%- endif %}
   {%- endif %}
-  {%- if cookiecutter.enable_rmq == 'True' %}
+  {%- if cookiecutter.enable_rmq in [True, "True", "true", 1, "1"] %}
   {{cookiecutter.project_name | upper }}_RABBIT_HOST: rmq
   {{cookiecutter.project_name | upper }}_RABBIT_USER: ${RABBITMQ_USER:-guest}
   {{cookiecutter.project_name | upper }}_RABBIT_PASS: ${RABBITMQ_PASSWORD:-guest}
   {%- endif %}
-  {%- if cookiecutter.enable_redis == 'True' %}
+  {%- if cookiecutter.enable_redis in [True, "True", "true", 1, "1"] %}
   {{cookiecutter.project_name | upper }}_REDIS_HOST: redis
   {%- endif %}
-  {%- if cookiecutter.enable_kafka == "True" %}
+  {%- if cookiecutter.enable_kafka in [True, "True", "true", 1, "1"] %}
   {{cookiecutter.project_name | upper }}_KAFKA_BOOTSTRAP_SERVERS: '["kafka:9092"]'
   {%- endif %}
-  {%- if cookiecutter.enable_nats == "True" %}
+  {%- if cookiecutter.enable_nats in [True, "True", "true", 1, "1"] %}
   {{cookiecutter.project_name | upper }}_NATS_SERVERS: '["nats://nats:4222"]'
   {%- endif %}
 
@@ -64,25 +72,25 @@ services:
       context: .
       target: prod
       dockerfile: ./Dockerfile
-    image: {{cookiecutter.project_name}}:{{"${" }}{{cookiecutter.project_name | upper }}_VERSION:-latest{{"}"}}
+    image: {{ "${" }}COMPOSE_PROJECT_NAME:-{{cookiecutter.project_name}}{{ "}" }}-api:{{"${" }}{{cookiecutter.project_name | upper }}_VERSION:-latest{{"}"}}
     environment:
       <<: *app-environment
-    {%- if cookiecutter.traefik_labels == "True" %}
+    {%- if cookiecutter.traefik_labels in [True, "True", "true", 1, "1"] %}
     labels:
       - traefik.enable=true
-      - traefik.http.routers.{{cookiecutter.project_name}}.rule=Host(`{{ "${" }}{{cookiecutter.project_name | upper}}_TRAEFIK_HOST:-{{cookiecutter.project_name}}.localhost{{ "}" }}`)
-      - traefik.http.routers.{{cookiecutter.project_name}}.entrypoints=http
-      - traefik.http.routers.{{cookiecutter.project_name}}.service={{cookiecutter.project_name}}
-      - traefik.http.services.{{cookiecutter.project_name}}.loadbalancer.server.port={{ "${" }}{{cookiecutter.project_name | upper}}_PORT:-8000{{ "}" }}
+      - traefik.http.routers.{{ "${" }}COMPOSE_PROJECT_NAME:-{{cookiecutter.project_name}}{{ "}" }}.rule=Host(`{{ "${" }}{{cookiecutter.project_name | upper}}_TRAEFIK_HOST:-{{cookiecutter.project_name}}.localhost{{ "}" }}`)
+      - traefik.http.routers.{{ "${" }}COMPOSE_PROJECT_NAME:-{{cookiecutter.project_name}}{{ "}" }}.entrypoints=http
+      - traefik.http.routers.{{ "${" }}COMPOSE_PROJECT_NAME:-{{cookiecutter.project_name}}{{ "}" }}.service={{ "${" }}COMPOSE_PROJECT_NAME:-{{cookiecutter.project_name}}{{ "}" }}
+      - traefik.http.services.{{ "${" }}COMPOSE_PROJECT_NAME:-{{cookiecutter.project_name}}{{ "}" }}.loadbalancer.server.port={{ "${" }}{{cookiecutter.project_name | upper}}_PORT:-8000{{ "}" }}
     networks:
       - app
       - traefik-shared
     {%- endif %}
     {%- if ((cookiecutter.db_info.name != "none" and cookiecutter.db_info.name != "sqlite") or
-            (cookiecutter.enable_redis == "True") or
-            (cookiecutter.enable_rmq == "True") or
-            (cookiecutter.enable_kafka == "True") or
-            (cookiecutter.enable_nats == "True")
+            cookiecutter.enable_redis in [True, "True", "true", 1, "1"] or
+            cookiecutter.enable_rmq in [True, "True", "true", 1, "1"] or
+            cookiecutter.enable_kafka in [True, "True", "true", 1, "1"] or
+            cookiecutter.enable_nats in [True, "True", "true", 1, "1"]
     ) %}
     depends_on:
       {%- if cookiecutter.db_info.name != "none" %}
@@ -91,23 +99,23 @@ services:
         condition: service_healthy
       {%- endif %}
       {%- endif %}
-      {%- if cookiecutter.enable_redis == "True" %}
+      {%- if cookiecutter.enable_redis in [True, "True", "true", 1, "1"] %}
       redis:
         condition: service_healthy
       {%- endif %}
-      {%- if cookiecutter.enable_rmq == "True" %}
+      {%- if cookiecutter.enable_rmq in [True, "True", "true", 1, "1"] %}
       rmq:
         condition: service_healthy
       {%- endif %}
-      {%- if cookiecutter.enable_kafka == "True" %}
+      {%- if cookiecutter.enable_kafka in [True, "True", "true", 1, "1"] %}
       kafka:
         condition: service_healthy
       {%- endif %}
-      {%- if cookiecutter.enable_nats == "True" %}
+      {%- if cookiecutter.enable_nats in [True, "True", "true", 1, "1"] %}
       nats:
         condition: service_healthy
       {%- endif %}
-      {%- if cookiecutter.enable_migrations == 'True' and cookiecutter.orm != 'psycopg' %}
+      {%- if cookiecutter.enable_migrations in [True, "True", "true", 1, "1"] and cookiecutter.orm != 'psycopg' %}
       migrator:
         condition: service_completed_successfully
       {%- endif %}
@@ -117,7 +125,7 @@ services:
       - {{cookiecutter.project_name}}-db-data:/db_data/
     {%- endif %}
 
-  {%- if cookiecutter.enable_taskiq == "True" %}
+  {%- if cookiecutter.enable_taskiq in [True, "True", "true", 1, "1"] %}
 
   # Worker shares build/env/network via x-app-common only — not API ports/labels/mounts.
   taskiq-worker:
@@ -126,18 +134,28 @@ services:
       context: .
       target: prod
       dockerfile: ./Dockerfile
-    image: {{cookiecutter.project_name}}:{{"${" }}{{cookiecutter.project_name | upper }}_VERSION:-latest{{"}"}}
+    image: {{ "${" }}COMPOSE_PROJECT_NAME:-{{cookiecutter.project_name}}{{ "}" }}-worker:{{"${" }}{{cookiecutter.project_name | upper }}_VERSION:-latest{{"}"}}
     environment:
       <<: *app-environment
+      {{cookiecutter.project_name | upper }}_SERVICE_ROLE: worker
     command:
       - taskiq
       - worker
       - {{cookiecutter.project_name}}.tkq:broker
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import os; os.kill(1, 0)"
+      interval: 30s
+      timeout: 3s
+      retries: 3
     {%- if ((cookiecutter.db_info.name != "none" and cookiecutter.db_info.name != "sqlite") or
-            (cookiecutter.enable_redis == "True") or
-            (cookiecutter.enable_rmq == "True") or
-            (cookiecutter.enable_kafka == "True") or
-            (cookiecutter.enable_nats == "True")
+            cookiecutter.enable_redis in [True, "True", "true", 1, "1"] or
+            cookiecutter.enable_rmq in [True, "True", "true", 1, "1"] or
+            cookiecutter.enable_kafka in [True, "True", "true", 1, "1"] or
+            cookiecutter.enable_nats in [True, "True", "true", 1, "1"]
     ) %}
     depends_on:
       {%- if cookiecutter.db_info.name != "none" %}
@@ -146,23 +164,23 @@ services:
         condition: service_healthy
       {%- endif %}
       {%- endif %}
-      {%- if cookiecutter.enable_redis == "True" %}
+      {%- if cookiecutter.enable_redis in [True, "True", "true", 1, "1"] %}
       redis:
         condition: service_healthy
       {%- endif %}
-      {%- if cookiecutter.enable_rmq == "True" %}
+      {%- if cookiecutter.enable_rmq in [True, "True", "true", 1, "1"] %}
       rmq:
         condition: service_healthy
       {%- endif %}
-      {%- if cookiecutter.enable_kafka == "True" %}
+      {%- if cookiecutter.enable_kafka in [True, "True", "true", 1, "1"] %}
       kafka:
         condition: service_healthy
       {%- endif %}
-      {%- if cookiecutter.enable_nats == "True" %}
+      {%- if cookiecutter.enable_nats in [True, "True", "true", 1, "1"] %}
       nats:
         condition: service_healthy
       {%- endif %}
-      {%- if cookiecutter.enable_migrations == 'True' and cookiecutter.orm != 'psycopg' %}
+      {%- if cookiecutter.enable_migrations in [True, "True", "true", 1, "1"] and cookiecutter.orm != 'psycopg' %}
       migrator:
         condition: service_completed_successfully
       {%- endif %}
@@ -176,11 +194,15 @@ services:
     image: {{cookiecutter.db_info.image}}
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${DB_USER:-{{cookiecutter.project_name}}}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-{{cookiecutter.project_name}}}
+      POSTGRES_USER: ${DB_ADMIN_USER:-{{cookiecutter.project_name}}_admin}
+      POSTGRES_PASSWORD: ${DB_ADMIN_PASSWORD:-{{cookiecutter.project_name}}_admin}
       POSTGRES_DB: ${DB_NAME:-{{cookiecutter.project_name}}}
+      POSTGRES_RUNTIME_USER: ${DB_USER:-{{cookiecutter.project_name}}}
+      POSTGRES_RUNTIME_PASSWORD: ${DB_PASSWORD:-{{cookiecutter.project_name}}}
+      POSTGRES_OWNER_ROLE: ${DB_OWNER_ROLE:-{{cookiecutter.project_name}}_owner}
     volumes:
       - {{cookiecutter.project_name}}-db-data:/var/lib/postgresql
+      - ./deploy/postgres-init-runtime-role.sh:/docker-entrypoint-initdb.d/10-runtime-role.sh:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 2s
@@ -236,7 +258,7 @@ services:
       - app
   {%- endif %}
 
-  {%- if cookiecutter.enable_migrations == 'True' and cookiecutter.orm != 'psycopg' %}
+  {%- if cookiecutter.enable_migrations in [True, "True", "true", 1, "1"] and cookiecutter.orm != 'psycopg' %}
 
   migrator:
     <<: *app-common
@@ -245,9 +267,13 @@ services:
       context: .
       target: prod
       dockerfile: ./Dockerfile
-    image: {{cookiecutter.project_name}}:{{"${" }}{{cookiecutter.project_name | upper }}_VERSION:-latest{{"}"}}
+    image: {{ "${" }}COMPOSE_PROJECT_NAME:-{{cookiecutter.project_name}}{{ "}" }}-migrator:{{"${" }}{{cookiecutter.project_name | upper }}_VERSION:-latest{{"}"}}
     environment:
       <<: *app-environment
+      {{cookiecutter.project_name | upper }}_SERVICE_ROLE: migrator
+      {{cookiecutter.project_name | upper}}_DB_USER: ${DB_ADMIN_USER:-{{cookiecutter.project_name}}_admin}
+      {{cookiecutter.project_name | upper}}_DB_PASS: ${DB_ADMIN_PASSWORD:-{{cookiecutter.project_name}}_admin}
+      {{cookiecutter.project_name | upper}}_DB_OWNER_ROLE: ${DB_OWNER_ROLE:-{{cookiecutter.project_name}}_owner}
     {%- if cookiecutter.orm in ['sqlalchemy', 'ormar'] %}
     command: alembic upgrade head
     {%- elif cookiecutter.orm == 'tortoise' %}
@@ -264,17 +290,25 @@ services:
     {%- endif %}
   {%- endif %}
 
-  {%- if cookiecutter.enable_redis == "True" %}
+  {%- if cookiecutter.enable_redis in [True, "True", "true", 1, "1"] %}
 
   # Ephemeral / distributed state by default (no volume = data lost on recreate).
   # Add a volume + AOF/RDB only if Redis is authoritative for sessions/idempotency.
   redis:
-    image: redis:8.4.0
+    image: redis:8.4.0@sha256:c22af04bb576503bf16b3e34a1fd2fd82de0f765afd866d2e380145e0af30d78
     restart: unless-stopped
     environment:
       ALLOW_EMPTY_PASSWORD: "yes"
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
     healthcheck:
-      test: redis-cli ping
+      test:
+        - CMD-SHELL
+        - >-
+          if [ -n "$$REDIS_PASSWORD" ]; then
+            redis-cli --no-auth-warning -a "$$REDIS_PASSWORD" ping;
+          else
+            redis-cli ping;
+          fi
       interval: 1s
       timeout: 3s
       retries: 50
@@ -282,11 +316,11 @@ services:
       - app
   {%- endif %}
 
-  {%- if cookiecutter.enable_rmq == "True" %}
+  {%- if cookiecutter.enable_rmq in [True, "True", "true", 1, "1"] %}
 
   # Async workloads. guest/guest is a local bootstrap default — set RABBITMQ_* in prod.
   rmq:
-    image: rabbitmq:4.2.1-management-alpine
+    image: rabbitmq:4.2.1-management-alpine@sha256:f1f1ec0bb9b5cb55335a433c00e2f4804bdf90f513e53260ce47b82d2165de24
     restart: unless-stopped
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
@@ -301,11 +335,11 @@ services:
       - app
   {%- endif %}
 
-  {%- if cookiecutter.enable_kafka == "True" %}
+  {%- if cookiecutter.enable_kafka in [True, "True", "true", 1, "1"] %}
 
   # Async / event bus. Plaintext for template/dev; production needs TLS/SASL.
   kafka:
-    image: apache/kafka:4.1.1
+    image: apache/kafka:4.1.1@sha256:0bc1bb2478f45b6cea78864df86acdc11e8df2c5172477819a4d12942cbe5d40
     restart: unless-stopped
     environment:
       KAFKA_NODE_ID: "0"
@@ -326,11 +360,11 @@ services:
       - app
   {%- endif %}
 
-  {%- if cookiecutter.enable_nats == "True" %}
+  {%- if cookiecutter.enable_nats in [True, "True", "true", 1, "1"] %}
 
   # Async / event bus. Plaintext for template/dev; production needs auth/TLS.
   nats:
-    image: nats:2.12-alpine
+    image: nats:2.12-alpine@sha256:b270f5e2428354c0335612694d7dd2fb588148e567a5757fdff325ef9c9332e6
     restart: unless-stopped
     command: -m 8222 -js
     healthcheck:
@@ -349,9 +383,9 @@ services:
 
 networks:
   app:
-    name: {{cookiecutter.project_name}}-app
+    name: {{ "${" }}COMPOSE_PROJECT_NAME:-{{cookiecutter.project_name}}{{ "}" }}-app
     driver: bridge
-  {%- if cookiecutter.traefik_labels == "True" %}
+  {%- if cookiecutter.traefik_labels in [True, "True", "true", 1, "1"] %}
   # Attach Traefik (run separately) to this network; do not publish DB/broker ports.
   traefik-shared:
     name: traefik-shared
@@ -360,5 +394,5 @@ networks:
 {% if cookiecutter.db_info.name != 'none' %}
 volumes:
   {{cookiecutter.project_name}}-db-data:
-    name: {{cookiecutter.project_name}}-db-data
+    name: {{ "${" }}COMPOSE_PROJECT_NAME:-{{cookiecutter.project_name}}{{ "}" }}-db-data
 {%- endif %}

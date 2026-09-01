@@ -147,6 +147,8 @@ class TestConcurrentRequests:
     ) -> None:
         import asyncio
 
+        # Anonymous idempotency is scoped by the private namespace cookie.
+        client.cookies.set("nk_anon_id", "test-anonymous-client")
         results = await asyncio.gather(
             *[
                 client.post(
@@ -266,6 +268,21 @@ class TestFingerprintFunction:
     def test_different_method_different_fp(self) -> None:
         fp1 = compute_fingerprint("POST", "/x", b"data")
         fp2 = compute_fingerprint("PUT", "/x", b"data")
+        assert fp1 != fp2
+
+    def test_different_query_different_fp(self) -> None:
+        fp1 = compute_fingerprint(
+            "POST",
+            "/orders",
+            b"data",
+            query="region=us",
+        )
+        fp2 = compute_fingerprint(
+            "POST",
+            "/orders",
+            b"data",
+            query="region=eu",
+        )
         assert fp1 != fp2
 
 

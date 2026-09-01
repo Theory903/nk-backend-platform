@@ -10,6 +10,7 @@ from {{cookiecutter.project_name}}.agents.guardrails import Guardrails
 from {{cookiecutter.project_name}}.agents.loop import LoopRuntime
 from {{cookiecutter.project_name}}.agents.memory import MemoryStore
 from {{cookiecutter.project_name}}.agents.tools import ToolRegistry
+from {{cookiecutter.project_name}}.platform.contracts import Scope
 
 
 DEFAULT_SYSTEM_PROMPT = "You are a helpful agent."
@@ -45,6 +46,7 @@ class Harness:
         "guardrails",
         "memory",
         "config",
+        "scope",
     )
 
     def __init__(
@@ -57,6 +59,7 @@ class Harness:
         memory: MemoryStore | None = None,
         system_prompt: str = DEFAULT_SYSTEM_PROMPT,
         config: HarnessConfig | None = None,
+        scope: Scope | None = None,
     ) -> None:
         if model is None:
             raise ValueError("model cannot be None.")
@@ -78,6 +81,7 @@ class Harness:
         self.config = config or HarnessConfig(
             system_prompt=system_prompt,
         )
+        self.scope = scope
 
     @property
     def system_prompt(self) -> str:
@@ -97,8 +101,8 @@ class Harness:
             tools=self.tools,
             budget=self.budget,
             guardrails=self.guardrails,
-            memory=self.memory,
             system_prompt=self.system_prompt,
+            scope=self.scope,
         )
 
     def run(self, *args: Any, **kwargs: Any) -> Any:

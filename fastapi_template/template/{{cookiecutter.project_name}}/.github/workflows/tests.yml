@@ -21,28 +21,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
         with:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@6b9c6063abd6010835644d4c2e1bef4cf5cd0fca # v6.0.1
         with:
           enable-cache: true
 
-      # Template does not ship uv.lock; post-gen creates it when network works.
-      # Prefer --locked once uv.lock is committed in the generated repo.
       - name: Install dependencies
-        run: |
-          if [ -f uv.lock ]; then
-            uv sync --locked
-          else
-            echo "NOTE: uv.lock missing — running unlocked uv sync (commit lockfile for reproducible CI)"
-            uv sync
-          fi
+        run: uv sync --locked
+
+      - name: Verify lockfile
+        run: uv lock --check
 
       - name: Check formatting
         run: uv run ruff format --check .
@@ -53,37 +48,41 @@ jobs:
       - name: Type check
         run: uv run mypy {{cookiecutter.project_name}} tests
 
+      - name: NK framework checks
+        run: uv run nk doctor && uv run nk validate
+
+      - name: Reject test fakes in production modules
+        run: |
+          ! rg -n "Fake(ChatModel|EmbeddingProvider)" \
+            --glob '*.py' --glob '!tests/_fakes.py' \
+            {{cookiecutter.project_name}} || \
+            (echo "fake-in-production detected" && exit 1)
+
   tests:
     name: Tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
         with:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@6b9c6063abd6010835644d4c2e1bef4cf5cd0fca # v6.0.1
         with:
           enable-cache: true
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
 
-      # Optional env file; compose marks env_file as required: false.
       - name: Create environment
         run: touch .env
 
-      # Dockerfile prod/dev stages bind-mount uv.lock — generate if missing.
-      - name: Create uv.lock if absent
-        run: |
-          if [ ! -f uv.lock ]; then
-            echo "NOTE: generating uv.lock for Docker build (commit it for reproducible CI)"
-            uv lock
-          fi
+      - name: Verify lockfile
+        run: uv lock --check
 
       # Base + dev overlay → Dockerfile target `dev` (test deps) + source mount.
       # Prod overlay is covered by the `docker` job (`--target prod`).
@@ -102,27 +101,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
         with:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@6b9c6063abd6010835644d4c2e1bef4cf5cd0fca # v6.0.1
         with:
           enable-cache: true
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
 
-      - name: Create uv.lock if absent
-        run: |
-          if [ ! -f uv.lock ]; then
-            echo "NOTE: generating uv.lock for Docker build (commit it for reproducible CI)"
-            uv lock
-          fi
+      - name: Verify lockfile
+        run: uv lock --check
 
       - name: Build production image
         run: |
@@ -130,3 +125,80 @@ jobs:
             --target prod \
             --tag {{cookiecutter.project_name}}:ci \
             .
+
+      - name: Generate SBOM
+        uses: anchore/sbom-action@da167eac915b4e86f08b264dbdbc867b61be6f0c # v0.20.5
+        with:
+          image: "{{cookiecutter.project_name}}:ci"
+          artifact-name: sbom.spdx.json
+
+      - name: Scan image
+        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8 # v0.33.1
+        with:
+          image-ref: "{{cookiecutter.project_name}}:ci"
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+
+{%- if cookiecutter.otlp_enabled in [True, "True", "true", 1, "1"] %}
+  observability-config:
+    name: Observability Compose Config
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Validate production observability topology
+        run: |
+          touch .env
+          ALLOWED_HOSTS=localhost \
+            CORS_ALLOWED_ORIGINS=[] \
+            DB_USER=ci-user \
+            DB_PASSWORD=ci-password \
+            DB_ADMIN_USER=ci-admin \
+            DB_ADMIN_PASSWORD=ci-admin-password \
+            DB_NAME=ci-db \
+            DB_ROOT_PASSWORD=ci-root-password \
+            USERS_SECRET=ci-users-secret-32chars!! \
+            AUTH_STORE_BACKEND=memory \
+            REDIS_PASSWORD=ci-redis-password \
+            RABBITMQ_USER=ci-rabbit-user \
+            RABBITMQ_PASSWORD=ci-rabbit-password \
+            GRAFANA_ADMIN_PASSWORD=ci-only-password \
+            METRICS_AUTH_TOKEN=ci-only-token \
+            docker compose \
+            -f docker-compose.yml \
+            -f docker-compose.prod.yml \
+            -f deploy/docker-compose.otlp.yml \
+            config --quiet
+{%- endif %}
+
+  security:
+    name: Security
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up Python
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
+        with:
+          python-version: "3.12"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@6b9c6063abd6010835644d4c2e1bef4cf5cd0fca # v6.0.1
+        with:
+          enable-cache: true
+
+      - name: Install locked dependencies
+        run: uv sync --locked
+
+      - name: Scan Python source
+        run: uv run bandit -r {{cookiecutter.project_name}} -ll -ii
+
+      - name: Scan repository for credentials
+        run: |
+          ! git ls-files -z | xargs -0 -r rg -n \
+            --glob '!uv.lock' \
+            --glob '!*.md' \
+            '(AKIA[0-9A-Z]{16}|-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----|gh[pousr]_[A-Za-z0-9]{20,})'

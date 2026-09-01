@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "nk-backend.fullname" . }}-api
+  labels:
+    {{- include "nk-backend.labels" . | nindent 4 }}
+    app.kubernetes.io/component: api
+spec:
+  replicas: {{ .Values.api.replicas }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "nk-backend.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: api
+  template:
+    metadata:
+      labels:
+        {{- include "nk-backend.labels" . | nindent 8 }}
+        app.kubernetes.io/component: api
+    spec:
+      serviceAccountName: {{ .Values.serviceAccount.name | default (include "nk-backend.fullname" .) }}
+      automountServiceAccountToken: {{ .Values.serviceAccount.automount }}
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/zone
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/component: api
+      securityContext:
+        runAsNonRoot: {{ .Values.podSecurity.runAsNonRoot }}
+        seccompProfile:
+          type: {{ .Values.podSecurity.seccompProfile }}
+      volumes:
+        - name: prometheus-tmp
+          emptyDir: {}
+      containers:
+        - name: api
+          image: {{ include "nk-backend.image" . | quote }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: {{ toJson .Values.api.command }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+          volumeMounts:
+            - name: prometheus-tmp
+              mountPath: /tmp/prom
+          {{- if or .Values.runtime.identityEnabled .Values.externalSecrets.enabled .Values.secrets.existingSecret }}
+          envFrom:
+            - secretRef:
+                name: {{ include "nk-backend.secretName" . }}
+          {{- end }}
+          env:
+            {{- include "nk-backend.runtimeEnv" . | nindent 12 }}
+            - name: GIT_SHA
+              value: "{{ .Values.image.tag }}"
+          readinessProbe:
+            httpGet:
+              path: /api/ready
+              port: http
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+          securityContext:
+            runAsNonRoot: {{ .Values.podSecurity.runAsNonRoot }}
+            seccompProfile:
+              type: {{ .Values.podSecurity.seccompProfile }}
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: {{ .Values.podSecurity.readOnlyRootFilesystem }}
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            {{- toYaml .Values.api.resources | nindent 12 }}

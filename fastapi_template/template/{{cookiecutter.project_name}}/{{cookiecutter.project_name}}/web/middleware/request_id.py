@@ -21,13 +21,18 @@ logs may stay empty until auth middleware writes trusted state.
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Awaitable, Callable
+from time import perf_counter
 
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from {{cookiecutter.project_name}}.core.logging import trace_context
+from {{cookiecutter.project_name}}.core.logging import get_logger
 from {{cookiecutter.project_name}}.core.security import get_request_id
+
+logger = get_logger(__name__)
 
 
 def _resolve_trusted_identity(request: Request) -> tuple[str | None, str | None]:
@@ -80,6 +85,7 @@ class RequestIdMiddleware(BaseHTTPMiddleware):
     ) -> Response:
         rid = get_request_id(request)
         tid = _otel_trace_id()
+        started = perf_counter()
 
         user_id, org_id = _resolve_trusted_identity(request)
 
@@ -91,10 +97,41 @@ class RequestIdMiddleware(BaseHTTPMiddleware):
         ):
             request.state.request_id = rid
             request.state.trace_id = tid
-            response: Response = await call_next(request)
+            shutdown_state = getattr(request.app.state, "shutdown_state", None)
+            task = asyncio.current_task()
+            if shutdown_state is not None and task is not None:
+                shutdown_state.track_task(task)
+            try:
+                response: Response = await call_next(request)
+            finally:
+                if shutdown_state is not None and task is not None:
+                    shutdown_state.untrack_task(task)
             response.headers["x-request-id"] = rid
             if tid:
                 response.headers["x-trace-id"] = tid
+            route = request.scope.get("route")
+            route_path = getattr(route, "path", None) or "unmatched"
+            principal = getattr(request.state, "principal", None)
+            tenant = getattr(request.state, "tenant", None)
+            logger.info(
+                "http.request.completed",
+                extra={
+                    "event": "http.request.completed",
+                    "method": request.method,
+                    "route": route_path,
+                    "status_code": response.status_code,
+                    "duration_ms": round(
+                        (perf_counter() - started) * 1000,
+                        3,
+                    ),
+                    "user_id": getattr(principal, "user_id", None),
+                    "org_id": getattr(
+                        tenant,
+                        "org_id",
+                        getattr(principal, "org_id", None),
+                    ),
+                },
+            )
             return response
 
 

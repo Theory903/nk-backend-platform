@@ -1,7 +1,7 @@
 """Added users models.
 
 Revision ID: 8caca4abd7b4
-{%- if cookiecutter.add_dummy == 'True' %}
+{%- if cookiecutter.add_dummy in [True, "True", "true", 1, "1"] %}
 Revises: 2b7380507a71
 {%- else %}
 Revises: 819cbf6e030b
@@ -18,7 +18,7 @@ import fastapi_users_db_sqlalchemy
 # revision identifiers, used by Alembic.
 revision = "8caca4abd7b4"
 down_revision = "2b7380507a71"
-{%- if cookiecutter.add_dummy == 'True' %}
+{%- if cookiecutter.add_dummy in [True, "True", "true", 1, "1"] %}
 down_revision = "2b7380507a71"
 {%- else %}
 down_revision = "819cbf6e030b"

@@ -71,6 +71,9 @@
     "profile": {
         "type": "string"
     },
+    "use_case": {
+        "type": "string"
+    },
     "enable_llm": {
         "type": "bool"
     },
@@ -104,6 +107,9 @@
         "frontend/src/*",
         "frontend/index.html",
         "frontend/node_modules/*",
+        "frontend/node_modules/**",
+        "deploy/helm/*",
+        "deploy/helm/**",
         "*/static/studio/dist/*"
     ]
 }

@@ -1,0 +1,112 @@
+{{- if .Values.stream.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "nk-backend.fullname" . }}-stream
+  labels:
+    {{- include "nk-backend.labels" . | nindent 4 }}
+    app.kubernetes.io/component: stream
+spec:
+  replicas: {{ .Values.stream.replicas }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "nk-backend.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: stream
+  template:
+    metadata:
+      labels:
+        {{- include "nk-backend.labels" . | nindent 8 }}
+        app.kubernetes.io/component: stream
+    spec:
+      serviceAccountName: {{ .Values.serviceAccount.name | default (include "nk-backend.fullname" .) }}
+      automountServiceAccountToken: {{ .Values.serviceAccount.automount }}
+      securityContext:
+        runAsNonRoot: {{ .Values.podSecurity.runAsNonRoot }}
+        seccompProfile:
+          type: {{ .Values.podSecurity.seccompProfile }}
+      volumes:
+        - name: prometheus-tmp
+          emptyDir: {}
+      containers:
+        - name: stream
+          image: {{ include "nk-backend.image" . | quote }}
+          command: ["nk", "start"]
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+          volumeMounts:
+            - name: prometheus-tmp
+              mountPath: /tmp/prom
+          {{- if or .Values.runtime.identityEnabled .Values.externalSecrets.enabled .Values.secrets.existingSecret }}
+          envFrom:
+            - secretRef:
+                name: {{ include "nk-backend.secretName" . }}
+          {{- end }}
+          env:
+            {{- include "nk-backend.runtimeEnv" . | nindent 12 }}
+          readinessProbe:
+            httpGet: {path: /api/ready, port: http}
+          livenessProbe:
+            httpGet: {path: /api/health, port: http}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: {{ .Values.podSecurity.readOnlyRootFilesystem }}
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            {{- toYaml .Values.stream.resources | nindent 12 }}
+{{- end }}
+{{- if .Values.worker.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "nk-backend.fullname" . }}-worker
+  labels:
+    {{- include "nk-backend.labels" . | nindent 4 }}
+    app.kubernetes.io/component: worker
+spec:
+  replicas: {{ .Values.worker.replicas }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "nk-backend.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: worker
+  template:
+    metadata:
+      labels:
+        {{- include "nk-backend.labels" . | nindent 8 }}
+        app.kubernetes.io/component: worker
+    spec:
+      serviceAccountName: {{ .Values.serviceAccount.name | default (include "nk-backend.fullname" .) }}
+      automountServiceAccountToken: {{ .Values.serviceAccount.automount }}
+      securityContext:
+        runAsNonRoot: {{ .Values.podSecurity.runAsNonRoot }}
+        seccompProfile:
+          type: {{ .Values.podSecurity.seccompProfile }}
+      volumes:
+        - name: prometheus-tmp
+          emptyDir: {}
+      containers:
+        - name: worker
+          image: {{ include "nk-backend.image" . | quote }}
+          command: {{ toJson .Values.worker.command }}
+          volumeMounts:
+            - name: prometheus-tmp
+              mountPath: /tmp/prom
+          {{- if or .Values.runtime.identityEnabled .Values.externalSecrets.enabled .Values.secrets.existingSecret }}
+          envFrom:
+            - secretRef:
+                name: {{ include "nk-backend.secretName" . }}
+          {{- end }}
+          env:
+            {{- include "nk-backend.runtimeEnv" . | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: {{ .Values.podSecurity.readOnlyRootFilesystem }}
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            {{- toYaml .Values.worker.resources | nindent 12 }}
+{{- end }}

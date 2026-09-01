@@ -1,0 +1,29 @@
+server:
+  http_listen_port: 3200
+
+distributor:
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+        http:
+
+storage:
+  trace:
+    backend: local
+    local:
+      path: /var/tempo/traces
+
+compactor:
+  compaction:
+    block_retention: ${TEMPO_RETENTION:-168h}
+
+metrics_generator:
+  registry:
+    external_labels:
+      source: tempo
+      cluster: "{{cookiecutter.project_name}}"
+  storage:
+    path: /var/tempo/generator
+  traces_storage:
+    path: /var/tempo/generator

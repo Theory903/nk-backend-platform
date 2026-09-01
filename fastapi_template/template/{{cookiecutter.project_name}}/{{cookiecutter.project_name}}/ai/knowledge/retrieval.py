@@ -5,6 +5,7 @@ from typing import Any
 from {{cookiecutter.project_name}}.ai.embeddings import EmbeddingProvider
 from {{cookiecutter.project_name}}.ai.knowledge.chunking import Chunk, TextChunker
 from {{cookiecutter.project_name}}.ai.knowledge.vector_store import VectorStore
+from {{cookiecutter.project_name}}.platform.contracts import Scope
 
 
 @dataclass
@@ -45,13 +46,33 @@ class HybridRetriever:
         self.dense_weight = dense_weight
         self._chunks: dict[str, Chunk] = {}  # type: ignore[type-arg]
 
-    async def ingest(self, doc_id: str, text: str, source: str = "") -> int:
+    async def ingest(
+        self,
+        doc_id: str,
+        text: str,
+        source: str = "",
+        *,
+        scope: Scope | None = None,
+        acl: tuple[str, ...] = (),
+    ) -> int:
         chunks = self.chunker.chunk(text, source=source)
         count = 0
         for chunk in chunks:
             chunk_id = f"{doc_id}:{chunk.index}"
             embedding = self.embeddings.embed(chunk.text)
-            await self.store.upsert(chunk_id, embedding, {"text": chunk.text, "source": source})
+            await self.store.upsert(
+                chunk_id,
+                embedding,
+                {
+                    "text": chunk.text,
+                    "source": source,
+                    "organization_id": scope.organization_id if scope else "",
+                    "acl": acl,
+                    "document_id": doc_id,
+                    "version_id": "local",
+                    "ordinal": chunk.index,
+                },
+            )
             self._chunks[chunk_id] = chunk
             count += 1
         return count

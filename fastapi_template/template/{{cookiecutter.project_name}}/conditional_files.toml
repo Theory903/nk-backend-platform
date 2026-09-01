@@ -44,6 +44,7 @@ name = "Identity platform"
 enabled = "{{cookiecutter.add_users}}"
 resources = [
   "{{cookiecutter.project_name}}/identity",
+  "{{cookiecutter.project_name}}/web/middleware/auth.py",
   "tests/test_identity_all_auth.py",
   "tests/test_identity_certification.py",
   "tests/test_identity_deps.py",
@@ -152,6 +153,9 @@ name = "Object storage"
 enabled = "{{cookiecutter.add_users}}"
 resources = [
   "{{cookiecutter.project_name}}/platform/files",
+  "{{cookiecutter.project_name}}/platform/notifications.py",
+  "{{cookiecutter.project_name}}/platform/billing.py",
+  "{{cookiecutter.project_name}}/integrations/webhooks/delivery.py",
   "tests/test_files_module.py"
 ]
 
@@ -242,9 +246,9 @@ resources = [
 [[features]]
 name = "Resilience"
 enabled = "{{cookiecutter.enable_taskiq}}"
-resources = [
-  "{{cookiecutter.project_name}}/core/circuit_breaker.py"
-]
+# Circuit-breaker primitives are imported by the always-generated rate-limit
+# tests, so keep this module available even when task workers are disabled.
+resources = []
 
 # ---------------------------------------------------------------------------
 # Observability
@@ -253,13 +257,21 @@ resources = [
 [[features]]
 name = "OpenTelemetry support"
 enabled = "{{cookiecutter.otlp_enabled}}"
-resources = ["deploy/docker-compose.otlp.yml"]
+resources = [
+  "deploy/docker-compose.otlp.yml",
+  "deploy/otel",
+  "deploy/prometheus.yml",
+  "deploy/prometheus-rules.yml",
+  "deploy/loki",
+  "deploy/tempo",
+  "deploy/grafana"
+]
 
 [[features]]
 name = "Prometheus metrics"
 enabled = "{{cookiecutter.prometheus_enabled}}"
 resources = [
-  "{{cookiecutter.project_name}}/operations/metrics.py",
+  "{{cookiecutter.project_name}}/web/middleware/metrics.py",
   "tests/test_metrics.py"
 ]
 
@@ -276,6 +288,13 @@ resources = ["{{cookiecutter.project_name}}/log.py"]
 # ---------------------------------------------------------------------------
 # Data layer / ORM
 # ---------------------------------------------------------------------------
+
+[[features]]
+name = "PostgreSQL runtime role bootstrap"
+enabled = "{{cookiecutter.db_info.name == 'postgresql'}}"
+resources = [
+  "deploy/postgres-init-runtime-role.sh"
+]
 
 [[features]]
 name = "Database support"
@@ -436,6 +455,8 @@ enabled = "{{cookiecutter.enable_llm}}"
 resources = [
   "{{cookiecutter.project_name}}/ai/llm.py",
   "{{cookiecutter.project_name}}/ai/usage.py",
+  "{{cookiecutter.project_name}}/ai/moderation.py",
+  "{{cookiecutter.project_name}}/ai/multimodal.py",
   "{{cookiecutter.project_name}}/ai/gateway",
   "{{cookiecutter.project_name}}/ai/prompts",
   "{{cookiecutter.project_name}}/ai/providers",
@@ -449,32 +470,56 @@ enabled = "{{cookiecutter.enable_vector}}"
 resources = [
   "{{cookiecutter.project_name}}/ai/embeddings.py",
   "{{cookiecutter.project_name}}/ai/knowledge",
+  "{{cookiecutter.project_name}}/ai/knowledge/ingestion.py",
+  "{{cookiecutter.project_name}}/ai/knowledge/ranking.py",
+  "{{cookiecutter.project_name}}/ai/knowledge/access.py",
+  "{{cookiecutter.project_name}}/ai/knowledge/answer.py",
+  "{{cookiecutter.project_name}}/ai/knowledge/runtime.py",
   "tests/test_ai_knowledge.py",
-  "tests/test_pgvector_store.py"
+  "tests/test_pgvector_store.py",
+  "tests/test_knowledge_lifecycle.py",
+  "tests/test_rag_answer.py"
 ]
 
 [[features]]
 name = "Traditional RAG"
 enabled = "{{cookiecutter.enable_rag_traditional}}"
-resources = []
+resources = [
+  "{{cookiecutter.project_name}}/ai/knowledge/ingestion.py",
+  "{{cookiecutter.project_name}}/ai/knowledge/ranking.py",
+  "{{cookiecutter.project_name}}/ai/knowledge/answer.py",
+  "{{cookiecutter.project_name}}/ai/knowledge/runtime.py",
+  "{{cookiecutter.project_name}}/web/api/knowledge.py",
+  "tests/test_knowledge_api.py"
+]
 
 [[features]]
 name = "GraphRAG retrieval"
 enabled = "{{cookiecutter.enable_graphrag}}"
-resources = []
+resources = [
+  "{{cookiecutter.project_name}}/ai/knowledge/graph.py",
+  "tests/test_graph_retrieval.py"
+]
 
 [[features]]
 name = "Agent runtime"
 enabled = "{{cookiecutter.enable_agents}}"
 resources = [
   "{{cookiecutter.project_name}}/agents",
+  "{{cookiecutter.project_name}}/agents/sandbox.py",
+  "{{cookiecutter.project_name}}/web/api/agent_protocol.py",
   "tests/test_agents_ai.py",
   "tests/test_agents_runtime.py",
   "tests/test_agents_memory.py",
   "tests/test_agents_budgets_extended.py",
   "tests/test_agents_guardrails_3layer.py",
   "tests/test_agentic_rag.py",
-  "tests/test_evaluation_harness.py"
+  "tests/test_evaluation_harness.py",
+  "tests/test_agent_runtime_contract.py",
+  "tests/test_agent_security.py",
+  "tests/test_evaluation_governance.py",
+  "scripts/eval.py",
+  "tests/evals"
 ]
 
 # ---------------------------------------------------------------------------
@@ -513,3 +558,8 @@ resources = [
 name = "Gunicorn support"
 enabled = "{{cookiecutter.gunicorn}}"
 resources = ["{{cookiecutter.project_name}}/gunicorn_runner.py"]
+
+[[features]]
+name = "Helm deployment"
+enabled = "{{cookiecutter.db_info.name != 'none'}}"
+resources = ["deploy/helm", "deploy/gitops/application.yaml"]

@@ -1,0 +1,95 @@
+scale:
+  stage: S1
+image:
+  repository: nk-backend
+  tag: latest
+  digest: ""
+  pullPolicy: IfNotPresent
+api:
+  replicas: 2
+  command: ["nk", "start"]
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 1
+      memory: 1Gi
+stream:
+  enabled: false
+  replicas: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 1
+      memory: 1Gi
+worker:
+  enabled: __ENABLE_TASKIQ__
+  replicas: 1
+  command: ["nk", "worker"]
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 1
+      memory: 1Gi
+migrate:
+  enabled: __ENABLE_MIGRATE__
+  hook: pre-sync
+  ownerRole: __OWNER_ROLE__
+service:
+  port: 8000
+serviceAccount:
+  create: true
+  name: ""
+  automount: false
+runtime:
+  environment: production
+  allowedHosts: "[]"
+  corsAllowedOrigins: "[]"
+  securityRequireAuth: __SECURITY_REQUIRE_AUTH__
+  identityEnabled: __IDENTITY_ENABLED__
+  databaseEnabled: __DATABASE_ENABLED__
+  authStoreBackend: __AUTH_STORE_BACKEND__
+secrets:
+  existingSecret: nk-backend-secrets
+migrationSecrets:
+  existingSecret: ""
+ingress:
+  enabled: true
+  className: nginx
+  tls: true
+  host: api.example.com
+  routes:
+    - path: /api/v1/runs
+      service: stream
+    - path: /ws
+      service: stream
+    - path: /
+      service: api
+autoscaling:
+  api:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 6
+    cpu: 70
+  worker:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 10
+podSecurity:
+  runAsNonRoot: true
+  readOnlyRootFilesystem: true
+  seccompProfile: RuntimeDefault
+networkPolicy:
+  enabled: true
+  ingressNamespace: ingress-nginx
+prometheusRule:
+  enabled: false
+externalSecrets:
+  enabled: false
+  store: platform-secrets
+  key: nk-backend

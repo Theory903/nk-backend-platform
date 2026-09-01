@@ -17,8 +17,9 @@ from __future__ import annotations
 import contextvars
 import json
 import logging
+import re
 import sys
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from typing import Any
@@ -192,11 +193,108 @@ _RESERVED_LOG_RECORD_FIELDS = {
     "asctime",
 }
 
+_SENSITIVE_KEY_PARTS = (
+    "authorization",
+    "cookie",
+    "password",
+    "passwd",
+    "secret",
+    "token",
+    "api_key",
+    "apikey",
+    "private_key",
+    "access_key",
+)
+_SECRET_TEXT_PATTERN = re.compile(
+    r"(?i)(\b(?:password|passwd|secret|token|api[_-]?key|authorization)"
+    r"\s*[:=]\s*)(?:(Bearer|Basic)\s+)?([^\s,;]+)",
+)
+_SENSITIVE_MESSAGE_PATTERN = re.compile(
+    r"(?i)\b(?:authorization|password|passwd|secret|token|api[_-]?key)\b",
+)
+_AUTH_SCHEME_PATTERN = re.compile(
+    r"(?i)\b(Bearer|Basic)\s+[^\s,;]+",
+)
+_REDACTED = "[REDACTED]"
+
+
+def _is_sensitive_key(key: str) -> bool:
+    """Return whether a structured field name may contain a secret."""
+    normalized = key.lower().replace("-", "_")
+    return any(part in normalized for part in _SENSITIVE_KEY_PARTS)
+
+
+def _redact_text(value: str) -> str:
+    """Redact common secret assignments from free-form log messages."""
+    redacted = _SECRET_TEXT_PATTERN.sub(
+        lambda match: (
+            f"{match.group(1)}"
+            f"{match.group(2) + ' ' if match.group(2) else ''}"
+            f"{_REDACTED}"
+        ),
+        value,
+    )
+    return _AUTH_SCHEME_PATTERN.sub(
+        lambda match: f"{match.group(1)} {_REDACTED}",
+        redacted,
+    )
+
+
+def redact_text(value: str) -> str:
+    """Redact credentials from a user-visible or exported string."""
+    return _redact_text(value)
+
+
+class RedactionFilter(logging.Filter):
+    """Sanitize log records before any handler or exporter receives them."""
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        if isinstance(record.msg, str):
+            if _SENSITIVE_MESSAGE_PATTERN.search(record.msg) and record.args:
+                record.args = tuple(_REDACTED for _ in record.args)
+            else:
+                record.msg = _redact_text(record.msg)
+
+        if record.exc_info and record.exc_info[1] is not None:
+            exception = record.exc_info[1]
+            safe_message = _redact_text(str(exception))
+            if safe_message != str(exception):
+                record.exc_info = (
+                    record.exc_info[0],
+                    Exception(safe_message),
+                    None,
+                )
+
+        for key, value in record.__dict__.items():
+            if key in _RESERVED_LOG_RECORD_FIELDS or key.startswith("_"):
+                continue
+            if _is_sensitive_key(key):
+                setattr(record, key, _REDACTED)
+            elif isinstance(value, str):
+                setattr(record, key, _redact_text(value))
+        return True
+
 
 def _json_safe(
     value: Any,
+    *,
+    key: str | None = None,
 ) -> Any:
-    """Convert arbitrary logging values into JSON-safe values."""
+    """Convert arbitrary logging values into JSON-safe, redacted values."""
+    if key is not None and _is_sensitive_key(key):
+        return _REDACTED
+
+    if isinstance(value, Mapping):
+        return {
+            str(child_key): _json_safe(child_value, key=str(child_key))
+            for child_key, child_value in value.items()
+        }
+
+    if isinstance(value, (list, tuple, set, frozenset)):
+        return [_json_safe(item) for item in value]
+
+    if isinstance(value, str):
+        return _redact_text(value)
 
     try:
         json.dumps(
@@ -242,21 +340,18 @@ class JsonFormatter(logging.Formatter):
         )
 
         entry: dict[str, Any] = {
+            "schema_version": "1.0",
             "timestamp": timestamp.isoformat(),
             "level": record.levelname,
             "logger": record.name,
-            "message": record.getMessage(),
+            "message": _redact_text(record.getMessage()),
             "module": record.module,
             "function": record.funcName,
             "line": record.lineno,
             "environment": self.environment,
+            "service": self.service or "unknown",
+            "version": self.version or "unknown",
         }
-
-        if self.service:
-            entry["service"] = self.service
-
-        if self.version:
-            entry["version"] = self.version
 
         context = {
             "trace_id": trace_id,
@@ -277,7 +372,7 @@ class JsonFormatter(logging.Formatter):
             ):
                 continue
 
-            entry[key] = _json_safe(value)
+            entry[key] = _json_safe(value, key=key)
 
         if record.exc_info:
             entry["exception"] = {
@@ -286,11 +381,9 @@ class JsonFormatter(logging.Formatter):
                     if record.exc_info[0]
                     else "Exception"
                 ),
-                "message": str(
-                    record.exc_info[1]
-                ),
-                "traceback": self.formatException(
-                    record.exc_info
+                "message": _redact_text(str(record.exc_info[1])),
+                "traceback": _redact_text(
+                    self.formatException(record.exc_info)
                 ),
             }
 
@@ -423,10 +516,9 @@ def configure_logging(
 
     if force:
         for handler in root.handlers[:]:
-            root.removeHandler(
-                handler
-            )
-            handler.close()
+            if handler.get_name() == "platform-structured":
+                root.removeHandler(handler)
+                handler.close()
 
     handler = logging.StreamHandler(
         sys.stdout
@@ -435,6 +527,7 @@ def configure_logging(
     handler.set_name(
         "platform-structured"
     )
+    handler.addFilter(RedactionFilter())
 
     if log_format == "json":
         handler.setFormatter(

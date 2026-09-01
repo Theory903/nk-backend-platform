@@ -1,11 +1,10 @@
 import logging
-import sys
 from typing import Any, Union
 
 from loguru import logger
 from {{cookiecutter.project_name}}.settings import settings
 
-{%- if cookiecutter.otlp_enabled == "True" %}
+{%- if cookiecutter.otlp_enabled in [True, "True", "true", 1, "1"] %}
 from opentelemetry.trace import INVALID_SPAN, INVALID_SPAN_CONTEXT, get_current_span
 
 {%- endif %}
@@ -44,7 +43,7 @@ class InterceptHandler(logging.Handler):
             record.getMessage(),
         )
 
-{%- if cookiecutter.otlp_enabled == "True" %}
+{%- if cookiecutter.otlp_enabled in [True, "True", "true", 1, "1"] %}
 
 def record_formatter(record: dict[str, Any]) -> str:  # pragma: no cover
     """
@@ -82,29 +81,15 @@ def record_formatter(record: dict[str, Any]) -> str:  # pragma: no cover
 {%- endif %}
 
 def configure_logging() -> None:  # pragma: no cover
-    """Configures logging."""
-    intercept_handler = InterceptHandler()
-
-    logging.basicConfig(handlers=[intercept_handler], level=logging.NOTSET)
-
-    for logger_name in logging.root.manager.loggerDict:
-        if logger_name.startswith("uvicorn."):
-            logging.getLogger(logger_name).handlers = []
-        {%- if cookiecutter.enable_taskiq == "True" %}
-        if logger_name.startswith("taskiq."):
-            logging.getLogger(logger_name).root.handlers = [intercept_handler]
-        {%- endif %}
-
-    # change handler for default uvicorn logger
-    logging.getLogger("uvicorn").handlers = [intercept_handler]
-    logging.getLogger("uvicorn.access").handlers = [intercept_handler]
-
-    # set logs output, level and format
+    """Forward Loguru records into the canonical structured logger."""
     logger.remove()
     logger.add(
-        sys.stdout,
+        lambda message: logging.getLogger(
+            "{{cookiecutter.project_name}}.loguru"
+        ).info(str(message).rstrip()),
         level=settings.log_level.value,
-        {%- if cookiecutter.otlp_enabled == "True" %}
-        format=record_formatter,  # type: ignore
-        {%- endif %}
+        format="{message}",
+        enqueue=True,
+        backtrace=False,
+        diagnose=False,
     )

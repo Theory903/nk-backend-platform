@@ -5,6 +5,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, FastAPI, Query, Request, Response, status
 from fastapi.responses import JSONResponse
 
+from ..identity.deps import RequirePermission
 from ..core.scim import (
     ScimError,
     ScimErrorResponse,
@@ -18,6 +19,7 @@ from ..services.scim import ScimService
 router = APIRouter(
     prefix="/scim/v2",
     tags=["SCIM"],
+    dependencies=[Depends(RequirePermission("identity.provision"))],
 )
 
 

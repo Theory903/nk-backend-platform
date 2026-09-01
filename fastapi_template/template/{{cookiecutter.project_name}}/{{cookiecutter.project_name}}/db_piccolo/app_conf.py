@@ -10,7 +10,7 @@ APP_CONFIG = AppConfig(
     app_name='{{cookiecutter.project_name}}_db',
     migrations_folder_path=str(CURRENT_DIRECTORY / 'migrations'),
     table_classes=table_finder(modules=[
-        {%- if cookiecutter.add_dummy == "True" %}
+        {%- if cookiecutter.add_dummy in [True, "True", "true", 1, "1"] %}
         "{{cookiecutter.project_name}}.db.models.dummy_model"
         {%- endif %}
     ]),

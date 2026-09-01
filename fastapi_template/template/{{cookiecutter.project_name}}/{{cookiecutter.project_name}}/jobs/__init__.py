@@ -32,12 +32,17 @@ enqueues in the DLQ for replay tooling.
 from __future__ import annotations
 
 import logging
+import json
+import sys
 import time
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from typing import Any, Protocol
 
 from {{cookiecutter.project_name}}.core.circuit_breaker import CircuitBreaker
+from {{cookiecutter.project_name}}.operations.metrics import (
+    record_queue_enqueue,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -167,6 +172,72 @@ class InMemoryDeadLetterQueue:
             item_id,
             None,
         ) is not None
+
+
+class RedisDeadLetterQueue:
+    """Shared durable DLQ using Redis values and a sorted index."""
+
+    def __init__(self, redis_client: Any, *, prefix: str = "nk:dlq") -> None:
+        self._redis = redis_client
+        self._prefix = prefix.rstrip(":")
+
+    def _item_key(self, item_id: str) -> str:
+        return f"{self._prefix}:item:{item_id}"
+
+    @property
+    def _index_key(self) -> str:
+        return f"{self._prefix}:index"
+
+    async def push(
+        self,
+        *,
+        task_name: str,
+        payload: dict[str, Any],
+        reason: str,
+        attempts: int = 0,
+        last_error: str | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> str:
+        item = DeadLetterItem(
+            id=f"dlq_{uuid.uuid4().hex}",
+            task_name=task_name,
+            payload=dict(payload),
+            reason=reason,
+            attempts=attempts,
+            last_error=last_error,
+            metadata=dict(metadata or {}),
+        )
+        await self._redis.set(
+            self._item_key(item.id),
+            json.dumps(asdict(item)),
+        )
+        await self._redis.zadd(self._index_key, {item.id: item.created_at})
+        return item.id
+
+    async def get(self, item_id: str) -> DeadLetterItem | None:
+        raw = await self._redis.get(self._item_key(item_id))
+        if raw is None:
+            return None
+        if isinstance(raw, bytes):
+            raw = raw.decode("utf-8")
+        return DeadLetterItem(**json.loads(raw))
+
+    async def list(self, *, limit: int = 100) -> list[DeadLetterItem]:
+        if limit <= 0:
+            return []
+        ids = await self._redis.zrange(self._index_key, 0, limit - 1)
+        items: list[DeadLetterItem] = []
+        for raw_id in ids:
+            item_id = raw_id.decode("utf-8") if isinstance(raw_id, bytes) else str(raw_id)
+            item = await self.get(item_id)
+            if item is not None:
+                items.append(item)
+        return items
+
+    async def remove(self, item_id: str) -> bool:
+        removed = bool(await self._redis.delete(self._item_key(item_id)))
+        await self._redis.zrem(self._index_key, item_id)
+        return removed
 
 
 # ---------------------------------------------------------------------------
@@ -417,6 +488,10 @@ class TaskEnqueuer:
                 ):
                     self.breaker.record_success()
 
+                record_queue_enqueue(
+                    task=task_name,
+                    outcome="accepted",
+                )
                 return EnqueueResult(
                     accepted=True,
                     task_id=task_id,
@@ -434,6 +509,12 @@ class TaskEnqueuer:
                         "max_attempts": policy.max_attempts,
                         "error": str(exc),
                     },
+                )
+                record_queue_enqueue(
+                    task=task_name,
+                    outcome="retrying"
+                    if attempt + 1 < policy.max_attempts
+                    else "failed",
                 )
 
                 if hasattr(
@@ -502,6 +583,10 @@ class TaskEnqueuer:
                 "attempts": policy.max_attempts,
                 "error": error_text,
             },
+        )
+        record_queue_enqueue(
+            task=task_name,
+            outcome="dlq",
         )
 
         return EnqueueResult(
@@ -578,11 +663,39 @@ async def enqueue(
     return result.task_id
 
 
+async def replay_dlq(item_ids: list[str] | None = None) -> list[str]:
+    """Replay selected (or all currently visible) dead-letter items."""
+    items = []
+    if item_ids:
+        for item_id in item_ids:
+            item = await get_dlq().get(item_id)
+            if item is not None:
+                items.append(item)
+    else:
+        items = await get_dlq().list()
+
+    replayed: list[str] = []
+    for item in items:
+        result = await get_enqueuer().enqueue(item.task_name, item.payload)
+        if result.accepted:
+            await get_dlq().remove(item.id)
+            replayed.append(item.id)
+    return replayed
+
+
+def _run_replay_command() -> None:
+    import asyncio
+
+    replayed = asyncio.run(replay_dlq(sys.argv[2:] or None))
+    print(f"replayed {len(replayed)} dead-letter job(s)")
+
+
 __all__ = [
     "DeadLetterItem",
     "DeadLetterQueue",
     "EnqueueResult",
     "InMemoryDeadLetterQueue",
+    "RedisDeadLetterQueue",
     "RetryPolicy",
     "TaskBroker",
     "TaskEnqueuer",
@@ -590,4 +703,10 @@ __all__ = [
     "get_breaker",
     "get_dlq",
     "get_enqueuer",
+    "replay_dlq",
 ]
+
+
+if __name__ == "__main__" and len(sys.argv) > 1:
+    if sys.argv[1] == "replay":
+        _run_replay_command()

@@ -27,6 +27,7 @@ class Principal:
     user_id: str
     org_id: str | None = None
     roles: frozenset[str] = frozenset()
+    scopes: frozenset[str] = frozenset()
     provider: str = "local"
     is_service: bool = False
 
@@ -63,6 +64,17 @@ class Principal:
             self,
             "roles",
             normalized_roles,
+        )
+
+        normalized_scopes = frozenset(
+            scope.strip()
+            for scope in self.scopes
+            if scope and scope.strip()
+        )
+        object.__setattr__(
+            self,
+            "scopes",
+            normalized_scopes,
         )
 
         object.__setattr__(
@@ -138,6 +150,7 @@ class Principal:
             user_id=self.user_id,
             org_id=self.org_id,
             roles=frozenset(roles),
+            scopes=self.scopes,
             provider=self.provider,
             is_service=self.is_service,
         )
@@ -152,6 +165,7 @@ class Principal:
             user_id=self.user_id,
             org_id=org_id,
             roles=self.roles,
+            scopes=self.scopes,
             provider=self.provider,
             is_service=self.is_service,
         )

@@ -46,6 +46,7 @@ __all__ = [
     "AuditQuery",
     "AuditSink",
     "InMemoryAuditSink",
+    "RedisAuditSink",
     "AuditLogger",
     "configure_audit_logger",
     "get_audit_log",
@@ -416,6 +417,101 @@ class InMemoryAuditSink(AuditSink):
                 filtered.append(event)
 
         return filtered
+
+
+class RedisAuditSink(AuditSink):
+    """Durable shared audit sink backed by a Redis list and ID hash."""
+
+    def __init__(self, redis_client: Any, *, prefix: str = "nk:audit") -> None:
+        self._redis = redis_client
+        self._prefix = prefix.rstrip(":")
+
+    @property
+    def _events_key(self) -> str:
+        return f"{self._prefix}:events"
+
+    @property
+    def _index_key(self) -> str:
+        return f"{self._prefix}:index"
+
+    def _event_key(self, event_id: str) -> str:
+        return f"{self._prefix}:event:{event_id}"
+
+    async def append(self, event: AuditEvent) -> AuditEvent:
+        stored = event.sanitized()
+        payload = stored.model_dump_json()
+        created = await self._redis.eval(
+            """
+            if redis.call('EXISTS', KEYS[1]) == 1 then
+                return 0
+            end
+            redis.call('HSET', KEYS[1], 'payload', ARGV[1])
+            redis.call('ZADD', KEYS[2], ARGV[2], ARGV[3])
+            return 1
+            """,
+            2,
+            self._event_key(stored.id),
+            self._index_key,
+            payload,
+            stored.created_at.timestamp(),
+            stored.id,
+        )
+        if not created:
+            raise ValueError(f"audit event already exists: {stored.id}")
+        await self._redis.zadd(
+            self._index_key,
+            {stored.id: stored.created_at.timestamp()},
+        )
+        return stored
+
+    async def get(self, event_id: str) -> AuditEvent | None:
+        payload = await self._redis.hget(self._event_key(event_id), "payload")
+        if payload is None:
+            return None
+        if isinstance(payload, bytes):
+            payload = payload.decode("utf-8")
+        return AuditEvent.model_validate_json(payload)
+
+    async def query(self, query: AuditQuery) -> list[AuditEvent]:
+        raw_ids = await self._redis.zrevrange(self._index_key, 0, -1)
+        events: list[AuditEvent] = []
+        for raw_id in raw_ids:
+            event_id = raw_id.decode("utf-8") if isinstance(raw_id, bytes) else str(raw_id)
+            event = await self.get(event_id)
+            if event is None:
+                continue
+            if not self._matches(event, query):
+                continue
+            events.append(event)
+        if query.cursor:
+            events = InMemoryAuditSink._after_cursor(events, query.cursor)
+        return events[: query.limit]
+
+    async def count(self, query: AuditQuery) -> int:
+        raw_ids = await self._redis.zrevrange(self._index_key, 0, -1)
+        total = 0
+        for raw_id in raw_ids:
+            event_id = raw_id.decode("utf-8") if isinstance(raw_id, bytes) else str(raw_id)
+            event = await self.get(event_id)
+            if event is not None and self._matches(event, query):
+                total += 1
+        return total
+
+    @staticmethod
+    def _matches(event: AuditEvent, query: AuditQuery) -> bool:
+        return (
+            (query.org_id is None or event.org_id == query.org_id)
+            and (query.actor_id is None or event.actor_id == query.actor_id)
+            and (query.action is None or event.action == query.action)
+            and (query.resource is None or event.resource == query.resource)
+            and (
+                query.resource_id is None
+                or event.resource_id == query.resource_id
+            )
+            and (query.outcome is None or event.outcome == query.outcome)
+            and (query.since is None or event.created_at >= query.since)
+            and (query.until is None or event.created_at <= query.until)
+        )
 
 
 # ---------------------------------------------------------------------------

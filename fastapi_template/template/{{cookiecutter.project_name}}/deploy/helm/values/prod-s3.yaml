@@ -1,0 +1,15 @@
+scale:
+  stage: S3
+image:
+  repository: nk-backend
+  tag: production
+api:
+  replicas: 4
+stream:
+  enabled: true
+  replicas: 3
+worker:
+  replicas: 3
+autoscaling:
+  api: {enabled: true, minReplicas: 4, maxReplicas: 30, cpu: 65}
+  worker: {enabled: true, minReplicas: 3, maxReplicas: 50}

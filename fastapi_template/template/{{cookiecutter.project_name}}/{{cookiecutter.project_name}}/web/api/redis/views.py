@@ -2,12 +2,17 @@ from fastapi import APIRouter
 from fastapi.param_functions import Depends
 from redis.asyncio import ConnectionPool, Redis
 from {{cookiecutter.project_name}}.services.redis.dependency import get_redis_pool
+from {{cookiecutter.project_name}}.identity.deps import RequirePermission
 from {{cookiecutter.project_name}}.web.api.redis.schema import RedisValueDTO
 
 router = APIRouter()
 
 
-@router.get("/", response_model=RedisValueDTO)
+@router.get(
+    "/",
+    response_model=RedisValueDTO,
+    dependencies=[Depends(RequirePermission("cache.read"))],
+)
 async def get_redis_value(
     key: str,
     redis_pool: ConnectionPool = Depends(get_redis_pool),
@@ -27,7 +32,10 @@ async def get_redis_value(
     )
 
 
-@router.put("/")
+@router.put(
+    "/",
+    dependencies=[Depends(RequirePermission("cache.write"))],
+)
 async def set_redis_value(
     redis_value: RedisValueDTO,
     redis_pool: ConnectionPool = Depends(get_redis_pool),

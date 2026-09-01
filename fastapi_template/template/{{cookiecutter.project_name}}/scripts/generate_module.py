@@ -85,6 +85,31 @@ def generate_module(
     update_fields = "\n".join(
         f"    {fname}: {ftype} | None = None" for fname, ftype in fields
     )
+    has_identity = (root / package / "identity").is_dir()
+    auth_import = (
+        "from fastapi import Depends, Request"
+        if has_identity
+        else "from fastapi import Request"
+    )
+    auth_dependencies = (
+        "    dependencies=[Depends(CurrentUser), Depends(RequireCsrf())],\n"
+        if has_identity
+        else ""
+    )
+    auth_import_block = (
+        f"from {package}.identity.deps import CurrentUser, RequireCsrf\n"
+        if has_identity
+        else ""
+    )
+    auth_guard = (
+        "    if principal is None or not principal.is_authenticated:\n"
+        "        _raise_not_authenticated()\n"
+        "    org_id = principal.org_id\n"
+        '    scope_id = "org:" + org_id if org_id is not None else "user:" + principal.user_id\n'
+        "    scoped_repository = repository.scoped(org_id, scope_id=scope_id)\n"
+        if has_identity
+        else "    scoped_repository = repository\n"
+    )
 
     files: dict[str, str] = {
         "__init__.py": f'''"""{pascal} business module."""\n''',
@@ -144,15 +169,13 @@ repository = InMemoryRepository(
 
 from typing import NoReturn
 
-from fastapi import {{"Depends, Request" if cookiecutter.add_users|string|lower == "true" else "Request"}}
+{auth_import}
 
 from {package}.core.crud import CrudConfig, CrudContext, crud_router
 from {package}.core.errors import Problem
 from {package}.core.query import QueryAllowList
 from {package}.data.adapters.memory.repository import InMemoryRepository
-{%- if cookiecutter.add_users|string|lower == "true" %}
-from {package}.identity.deps import CurrentUser, RequireCsrf
-{%- endif %}
+{auth_import_block}
 from {package}.settings import settings
 
 from .repository import repository
@@ -192,15 +215,7 @@ async def _service_factory(request: Request) -> {pascal}Service:
     """
     principal = getattr(request.state, "principal", None)
     org_id: str | None = None
-{%- if cookiecutter.add_users|string|lower == "true" %}
-    if principal is None or not principal.is_authenticated:
-        _raise_not_authenticated()
-    org_id = principal.org_id
-    scope_id = "org:" + org_id if org_id is not None else "user:" + principal.user_id
-    scoped_repository = repository.scoped(org_id, scope_id=scope_id)
-{%- else %}
-    scoped_repository = repository
-{%- endif %}
+{auth_guard}
     return {pascal}Service(
         scoped_repository,
         context=CrudContext(
@@ -233,9 +248,7 @@ router = crud_router(
             search_fields=frozenset({search_query_fields}),
         ),
     ),
-{%- if cookiecutter.add_users|string|lower == "true" %}
-    dependencies=[Depends(CurrentUser), Depends(RequireCsrf())],
-{%- endif %}
+{auth_dependencies}
 )
 ''',
     }

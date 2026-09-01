@@ -21,6 +21,32 @@ class ProvidersConfig(BaseModel):
     database: str = "none"
     orm: str = "none"
     ci: str = "none"
+    cache: str = "none"
+    queue: str = "none"
+    identity: str = "none"
+    llm: str = "none"
+    vector: str = "none"
+    workflow: str = "none"
+
+
+class FrameworkConfig(BaseModel):
+    """Framework release metadata."""
+
+    version: str = "1.x"
+
+
+class ScaleConfig(BaseModel):
+    """Deployment stage from the NK scale ladder."""
+
+    stage: str = "S0"
+
+
+class DeployConfig(BaseModel):
+    """Deployment topology switches."""
+
+    path_split_stream: bool = False
+    compose: bool = True
+    helm: bool = False
 
 
 class ObservabilityConfig(BaseModel):
@@ -29,6 +55,104 @@ class ObservabilityConfig(BaseModel):
     prometheus: bool = False
     opentelemetry: bool = False
     sentry: bool = False
+    sampling_ratio: float = Field(default=0.1, ge=0.0, le=1.0)
+
+
+class StackLayersConfig(BaseModel):
+    """Six-layer AI Stack capability map."""
+
+    compute: str = "external"
+    model_development: str = "external"
+    inference_serving: bool = False
+    data_retrieval_protocols: bool = False
+    orchestration_agents: bool = False
+    applications_products: bool = True
+
+
+class StackConfig(BaseModel):
+    """Ownership and layer map for the generated platform."""
+
+    layers: StackLayersConfig = Field(default_factory=StackLayersConfig)
+    ownership: dict[str, str] = Field(default_factory=dict)
+
+
+class RuntimeConfig(BaseModel):
+    """Runtime-plane and generated control-plane boundary."""
+
+    plane: str = "runtime"
+    control_plane: str = "generated-metadata"
+    workflow_state: bool = False
+    durable_state: bool = False
+
+
+class ProtocolConfig(BaseModel):
+    """External protocol adapters enabled for the application."""
+
+    mcp: bool = False
+    a2a: bool = False
+
+
+class AIConfig(BaseModel):
+    """Model, gateway, and protocol capabilities."""
+
+    enabled: bool = False
+    model_gateway: bool = False
+    model_routing: bool = False
+    embeddings: bool = False
+    protocols: ProtocolConfig = Field(default_factory=ProtocolConfig)
+
+
+class KnowledgeConfig(BaseModel):
+    """Knowledge lifecycle and retrieval capabilities."""
+
+    enabled: bool = False
+    ingestion: bool = False
+    hybrid_retrieval: bool = False
+    reranking: bool = False
+    graph_retrieval: bool = False
+    acl_filtering: bool = False
+    freshness_tracking: bool = False
+
+
+class AgentsConfig(BaseModel):
+    """Bounded agent runtime capabilities."""
+
+    enabled: bool = False
+    bounded_runtime: bool = False
+    checkpointing: bool = False
+    approvals: bool = False
+    multi_agent: bool = False
+
+
+class StorageConfig(BaseModel):
+    """Storage roles, kept separate even when one backend serves many roles."""
+
+    metadata: str = "none"
+    vectors: str = "none"
+    lexical: str = "none"
+    objects: str = "none"
+    cache: str = "none"
+    queue: str = "none"
+    checkpoints: str = "none"
+
+
+class EvaluationConfig(BaseModel):
+    """Evaluation and release-gate capabilities."""
+
+    enabled: bool = False
+    golden_dataset: bool = False
+    regression_gates: bool = False
+    red_team: bool = False
+
+
+class ReproducibilityConfig(BaseModel):
+    """Versioning inputs needed to reproduce a generated runtime."""
+
+    config_version: str = "1"
+    lockfile: bool = True
+    model_versions: bool = False
+    prompt_versions: bool = False
+    tool_versions: bool = False
 
 
 class PlatformConfig(BaseModel):
@@ -41,6 +165,9 @@ class PlatformConfig(BaseModel):
 
     project: str
     profile: str = ""
+    use_case: str | None = None
+    framework: FrameworkConfig = Field(default_factory=FrameworkConfig)
+    scale: ScaleConfig = Field(default_factory=ScaleConfig)
     providers: ProvidersConfig = Field(
         default_factory=ProvidersConfig,
     )
@@ -50,6 +177,17 @@ class PlatformConfig(BaseModel):
     observability: ObservabilityConfig = Field(
         default_factory=ObservabilityConfig,
     )
+    stack: StackConfig = Field(default_factory=StackConfig)
+    runtime: RuntimeConfig = Field(default_factory=RuntimeConfig)
+    ai: AIConfig = Field(default_factory=AIConfig)
+    knowledge: KnowledgeConfig = Field(default_factory=KnowledgeConfig)
+    agents: AgentsConfig = Field(default_factory=AgentsConfig)
+    storage: StorageConfig = Field(default_factory=StorageConfig)
+    evaluation: EvaluationConfig = Field(default_factory=EvaluationConfig)
+    reproducibility: ReproducibilityConfig = Field(
+        default_factory=ReproducibilityConfig,
+    )
+    deploy: DeployConfig = Field(default_factory=DeployConfig)
 
     def module_enabled(
         self,
@@ -90,6 +228,13 @@ class PlatformConfig(BaseModel):
                 False,
             )
         )
+
+    def scale_at_least(self, stage: str) -> bool:
+        """Return whether the configured stage has reached ``stage``."""
+        order = {f"S{index}": index for index in range(7)}
+        current = order.get(self.scale.stage.upper())
+        requested = order.get(stage.upper())
+        return current is not None and requested is not None and current >= requested
 
 
 def manifest_path() -> Path:
@@ -204,9 +349,21 @@ def validate_platform_config(
 
 __all__ = [
     "MANIFEST_FILENAME",
+    "AIConfig",
+    "AgentsConfig",
+    "DeployConfig",
+    "EvaluationConfig",
+    "FrameworkConfig",
+    "KnowledgeConfig",
     "ObservabilityConfig",
     "PlatformConfig",
     "ProvidersConfig",
+    "ReproducibilityConfig",
+    "RuntimeConfig",
+    "ScaleConfig",
+    "StackConfig",
+    "StackLayersConfig",
+    "StorageConfig",
     "get_platform_config",
     "manifest_path",
     "reload_platform_config",

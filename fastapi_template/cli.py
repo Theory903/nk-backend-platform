@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import re
 import shutil
 from importlib.metadata import version
-from typing import Any, Callable, List, Optional
+from typing import Any, Callable, List, Optional, Sequence
 
 from click import Choice, Command, Option
 from prompt_toolkit import prompt
@@ -17,7 +19,14 @@ from fastapi_template.input_model import (
     MultiselectMenuModel,
     SingularMenuModel,
 )
-from fastapi_template.profiles import PROFILES, expand_profile
+from fastapi_template.profiles import (
+    PROFILES,
+    complete_profile,
+    profile_description,
+    use_case_description,
+    use_case_names,
+    use_case_profile,
+)
 
 
 class SnakeCaseValidator(Validator):
@@ -33,9 +42,7 @@ def db_menu_update_info(ctx: BuilderContext, menu: SingularMenuModel) -> Builder
             info = entry.additional_info
             if info is None:
                 continue
-            ctx.db_info = (
-                info.model_dump() if hasattr(info, "model_dump") else info.dict()
-            )
+            ctx.db_info = info.model_dump() if hasattr(info, "model_dump") else info.dict()
     return ctx
 
 
@@ -75,10 +82,13 @@ def check_orm(allowed_values: List[str]) -> Callable[[BuilderContext], bool]:
 
 
 api_menu = SingularMenuModel(
-    title="API type",
+    title="1/4 — API contract",
     code="api_type",
     cli_name="api-type",
-    description="Select API type for your application",
+    description=(
+        "Choose the external API contract. REST is the production default; "
+        "GraphQL is best when clients need deep, flexible relationships."
+    ),
     entries=[
         MenuEntry(
             code="rest",
@@ -99,9 +109,7 @@ api_menu = SingularMenuModel(
                 "Choose this option if you want to create a service with {name}.\n"
                 "It's more suitable for services with {reason} and deep nesting.".format(
                     name=colored("GraphQL", color="green"),
-                    reason=colored(
-                        "lots of entities", color="cyan", attrs=["underline"]
-                    ),
+                    reason=colored("lots of entities", color="cyan", attrs=["underline"]),
                 )
             ),
         ),
@@ -109,9 +117,12 @@ api_menu = SingularMenuModel(
 )
 
 db_menu = SingularMenuModel(
-    title="Database",
+    title="2/4 — Data storage",
     code="db",
-    description="Select a database for your app",
+    description=(
+        "Choose the system-of-record database. The next question only shows "
+        "ORMs compatible with this database."
+    ),
     after_ask_fun=db_menu_update_info,
     entries=[
         MenuEntry(
@@ -163,7 +174,7 @@ db_menu = SingularMenuModel(
             ),
             additional_info=Database(
                 name="mysql",
-                image="mysql:9.6",
+                image="mysql:9.6@sha256:c5df04bee1a42b74a5841c6409e669cf62126cd0416f00c1cea8ab933b9361b9",
                 async_driver="mysql+aiomysql",
                 driver_short="mysql",
                 driver="mysql",
@@ -182,7 +193,7 @@ db_menu = SingularMenuModel(
             ),
             additional_info=Database(
                 name="postgresql",
-                image="postgres:18.3-trixie",
+                image="postgres:18.3-trixie@sha256:7e32e9833a6fb1c92c32552794cb6ed569d51b445a54907d35fc112ef39684db",
                 async_driver="postgresql+asyncpg",
                 driver_short="postgres",
                 driver="postgresql",
@@ -199,7 +210,7 @@ db_menu = SingularMenuModel(
             ),
             additional_info=Database(
                 name="mongodb",
-                image="mongo:7.0",
+                image="mongo:7.0@sha256:b6421fd6d1c5ded6377b397d8983e2f82e2100dc5123332dcfda2065a472be5b",
                 async_driver="beanie",
                 driver_short="mongodb",
                 driver="mongodb",
@@ -210,10 +221,13 @@ db_menu = SingularMenuModel(
 )
 
 ci_menu = SingularMenuModel(
-    title="CI|CD",
+    title="3/4 — Delivery pipeline",
     code="ci_type",
     cli_name="ci",
-    description="Select a CI for your app",
+    description=(
+        "Choose the CI workflow that will run formatting, tests, typing, "
+        "and generated-project checks."
+    ),
     entries=[
         MenuEntry(
             code="none",
@@ -256,9 +270,12 @@ ci_menu = SingularMenuModel(
 )
 
 orm_menu = SingularMenuModel(
-    title="ORM",
+    title="2/4 — Data access",
     code="orm",
-    description="Choose Object–Relational Mapper lib",
+    description=(
+        "Choose the data-access layer for the selected database. "
+        "Use SQLAlchemy for the broadest production ecosystem."
+    ),
     cli_name="orm",
     before_ask_fun=disable_orm,
     entries=[
@@ -266,8 +283,7 @@ orm_menu = SingularMenuModel(
             code="none",
             user_view="Without ORMs",
             description=(
-                "If you select this option, you will get only {what}.\n"
-                "The rest {warn}.".format(
+                "If you select this option, you will get only {what}.\nThe rest {warn}.".format(
                     what=colored("raw database", color="green"),
                     warn=colored("is up to you", color="red", attrs=["underline"]),
                 )
@@ -348,9 +364,14 @@ orm_menu = SingularMenuModel(
 )
 
 features_menu = MultiselectMenuModel(
-    title="Additional tweaks",
+    title="4/4 — Runtime and production capabilities",
     code="features",
-    description="Additional project features",
+    description=(
+        "Select capabilities that belong in this architecture. "
+        "Redis is the cache/result backend; RabbitMQ, Kafka, and NATS are "
+        "message brokers and may be combined for different workloads. "
+        "Redis + Taskiq is the recommended default for a web API."
+    ),
     multiselect=True,
     before_ask=do_not_ask_features_if_quiet,
     entries=[
@@ -613,8 +634,7 @@ features_menu = MultiselectMenuModel(
             cli_name="rag-traditional",
             user_view="Add traditional RAG pipeline",
             description=(
-                "{what}: embed, store, retrieve, generate.\n"
-                "Requires {vector} support.".format(
+                "{what}: embed, store, retrieve, generate.\nRequires {vector} support.".format(
                     what=colored("Traditional RAG", color="green"),
                     vector=colored("vector", color="cyan"),
                 )
@@ -637,9 +657,7 @@ features_menu = MultiselectMenuModel(
             user_view="Add GraphRAG retrieval",
             description=(
                 "{what} mode: knowledge-graph augmented retrieval\n"
-                "routed alongside traditional RAG.".format(
-                    what=colored("GraphRAG", color="green")
-                )
+                "routed alongside traditional RAG.".format(what=colored("GraphRAG", color="green"))
             ),
         ),
         MenuEntry(
@@ -668,9 +686,12 @@ features_menu = MultiselectMenuModel(
 )
 
 users_backend_menu = MultiselectMenuModel(
-    title="FastApi Users Backend",
+    title="4/4 — Authentication transports",
     code="users_menu",
-    description="Available backends for authentication with fastapi_users",
+    description=(
+        "Select the authentication transports to expose. JWT is the usual "
+        "choice for APIs; cookie auth is intended for browser sessions."
+    ),
     multiselect=True,
     before_ask=do_not_ask_features_if_no_users,
     entries=[
@@ -721,8 +742,13 @@ def handle_cli(
                 validator=SnakeCaseValidator(),
             )
 
+        if context.use_case:
+            selected_profile = use_case_profile(context.use_case)
+            if context.profile is None and selected_profile is not None:
+                context.profile = selected_profile
+
         if context.profile:
-            context = expand_profile(context.profile, context)
+            context = complete_profile(context.profile, context)
 
         for menu in menus:
             if menu.need_ask(context):
@@ -734,12 +760,21 @@ def handle_cli(
 
             context = BuilderContext(**menu.after_ask(context=context).dict())
 
+        # Profile values skip prompts, so run normalization hooks once more
+        # before rendering (notably hydrate db_info from the selected db).
+        context = BuilderContext(**db_menu.after_ask(context=context).dict())
         callback(context)
 
     return inner_callback
 
 
-def run_command(callback: Callable[[BuilderContext], None]) -> None:
+def run_command(
+    callback: Callable[[BuilderContext], None],
+    *,
+    argv: Sequence[str] | None = None,
+    prog_name: str | None = None,
+) -> None:
+    """Run the interactive generator command with optional CLI arguments."""
     menus: "List[BaseMenuModel]" = [
         api_menu,
         db_menu,
@@ -749,8 +784,31 @@ def run_command(callback: Callable[[BuilderContext], None]) -> None:
         users_backend_menu,
     ]
 
+    profile_help = (
+        "Apply a complete architecture preset. Omit this option to choose "
+        "every option interactively.\n"
+    )
+    profile_help += "\n".join(f"  {name}: {profile_description(name)}" for name in PROFILES)
+    use_case_help = (
+        "Choose the product shape first. The selected use case maps to an "
+        "architecture profile; explicit --profile and feature flags remain "
+        "available for advanced composition.\n"
+    )
+    use_case_help += "\n".join(
+        f"  {name}: {use_case_description(name)}" for name in use_case_names()
+    )
+
     cmd = Command(
         None,
+        help=(
+            "NK Backend OS project generator. Recommended usage: "
+            "nk init NAME --use-case USE_CASE."
+        ),
+        epilog=(
+            "Examples:\n"
+            "  nk init my_app --use-case minimal-api\n"
+            "  nk init my_app --use-case saas"
+        ),
         params=[
             Option(
                 ["-n", "--name", "project_name"],
@@ -775,7 +833,13 @@ def run_command(callback: Callable[[BuilderContext], None]) -> None:
                 ["--profile", "profile"],
                 type=Choice(list(PROFILES.keys()), case_sensitive=False),
                 default=None,
-                help="Apply a preset bundle of features",
+                help=profile_help,
+            ),
+            Option(
+                ["--use-case", "use_case"],
+                type=Choice(list(use_case_names()), case_sensitive=False),
+                default=None,
+                help=use_case_help,
             ),
         ],
         callback=handle_cli(
@@ -799,4 +863,7 @@ def run_command(callback: Callable[[BuilderContext], None]) -> None:
             )
             return
 
-    cmd.main()
+    cmd.main(
+        args=list(argv) if argv is not None else None,
+        prog_name=prog_name,
+    )

@@ -67,9 +67,9 @@ ROLE_PERMISSIONS: Final = MappingProxyType(
 def permissions_for(
     principal: Principal,
 ) -> frozenset[str]:
-    """Return the effective permissions granted by the principal's roles."""
+    """Return permissions granted by roles plus scoped machine credentials."""
 
-    permissions: set[str] = set()
+    permissions: set[str] = set(principal.scopes)
 
     for role in principal.roles:
         permissions.update(

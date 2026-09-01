@@ -42,6 +42,7 @@ from {{cookiecutter.project_name}}.identity.tenant_context import (
 # ---------------------------------------------------------------------------
 
 _tenant_authorization: TenantAuthorizationService | None = None
+_membership_registry: MembershipResolver | None = None
 
 
 def configure_tenant_authorization(
@@ -56,10 +57,11 @@ def configure_tenant_authorization(
     Pass either a fully built ``service``, or ``memberships`` (and optional
     ``resources``) to construct one via ``create_tenant_authorization``.
     """
-    global _tenant_authorization
+    global _tenant_authorization, _membership_registry
 
     if service is not None:
         _tenant_authorization = service
+        _membership_registry = memberships
         return service
 
     if memberships is None:
@@ -72,6 +74,7 @@ def configure_tenant_authorization(
         resources or InMemoryResourceOwnershipRegistry(),
     )
     _tenant_authorization = built
+    _membership_registry = memberships
     return built
 
 
@@ -95,10 +98,13 @@ def get_membership_registry() -> MembershipResolver:
 
     Prefer ``get_tenant_authorization`` / ``configure_tenant_authorization``.
     """
-    raise NotImplementedError(
-        "inject via configure_tenant_authorization(memberships=...); "
-        "do not invent a production MembershipRegistry here"
-    )
+    if _membership_registry is None:
+        raise Problem(
+            title="Tenant Membership Not Configured",
+            status_code=500,
+            detail="configure tenant authorization during application startup",
+        )
+    return _membership_registry
 
 
 # ---------------------------------------------------------------------------

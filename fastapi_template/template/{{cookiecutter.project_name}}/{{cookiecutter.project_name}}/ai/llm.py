@@ -38,7 +38,7 @@ class ChatModel(Protocol):
     ) -> AssistantReply: ...
 
 
-def get_chat_model(provider: str) -> ChatModel:
+def get_chat_model(provider: str, *, model: str | None = None) -> ChatModel:
     """
     Resolve a chat model by provider name.
 
@@ -55,7 +55,7 @@ def get_chat_model(provider: str) -> ChatModel:
                 f"provider {provider!r} needs any-llm-sdk; "
                 f"install the LLM extra or use a ScriptedChatModel in tests",
             ) from exc
-        return AnyLLMChatModel(provider=provider)
+        return AnyLLMChatModel(provider=provider, model=model)
 
     raise ValueError(
         f"chat model provider {provider!r} is not configured; "

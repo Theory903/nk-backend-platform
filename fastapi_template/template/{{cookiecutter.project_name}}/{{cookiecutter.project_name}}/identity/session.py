@@ -13,6 +13,9 @@ import ``SessionStore`` from this module.
 
 from __future__ import annotations
 
+import hashlib
+import hmac
+import json
 import secrets
 import time
 from dataclasses import dataclass, field
@@ -374,6 +377,12 @@ class SessionStore:
             if session.principal_id == principal_id
         ]
 
+        now = time.time()
+        sessions = [
+            session
+            for session in sessions
+            if session.expires_at > now and session.idle_expires_at > now
+        ]
         if not include_inactive:
             sessions = [s for s in sessions if s.is_active]
 
@@ -518,10 +527,349 @@ class SessionStore:
         }
 
 
+class RedisSessionStore(SessionStore):
+    """Shared opaque-session store for deployments with Redis."""
+
+    def __init__(
+        self,
+        redis_client: Any,
+        *,
+        prefix: str = "nk:session",
+        secret: str,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(**kwargs)
+        if not secret:
+            raise ValueError("session digest secret is required")
+        self._redis = redis_client
+        self._prefix = prefix.rstrip(":")
+        self._secret = secret.encode("utf-8")
+
+    def _key(self, session_id: str) -> str:
+        # Callers pass the internal digest; external IDs are hashed by
+        # _lookup_digest before reaching this method.
+        return f"{self._prefix}:{session_id}"
+
+    def _digest(self, session_id: str) -> str:
+        return hmac.new(
+            self._secret,
+            session_id.encode("utf-8"),
+            hashlib.sha256,
+        ).hexdigest()
+
+    def _lookup_digest(self, session_id: str) -> str:
+        # A digest is an internal storage key, never an accepted bearer
+        # credential. Always hash values supplied at the API boundary.
+        return self._digest(session_id)
+
+    def _index_key(self) -> str:
+        return f"{self._prefix}:index"
+
+    def _session_lock(self, session_id: str) -> Any:
+        digest = self._lookup_digest(session_id)
+        return self._redis.lock(
+            f"{self._prefix}:mutate:{digest}",
+            timeout=30,
+            blocking_timeout=5,
+        )
+
+    def _digest_lock(self, digest: str) -> Any:
+        return self._redis.lock(
+            f"{self._prefix}:mutate:{digest}",
+            timeout=30,
+            blocking_timeout=5,
+        )
+
+    def create(self, principal_id: str, data: dict[str, Any] | None = None, **kwargs: Any) -> str:
+        session_id = super().create(principal_id, data, **kwargs)
+        session = super().get_session(session_id, touch=False)
+        if session is not None:
+            self._persist(session)
+            self._enforce_durable_limit(principal_id)
+        return session_id
+
+    def get_session(self, session_id: str, *, touch: bool = True) -> Session | None:
+        digest = self._lookup_digest(session_id)
+        raw = self._redis.get(self._key(digest))
+        if raw is None:
+            return None
+        if isinstance(raw, bytes):
+            raw = raw.decode("utf-8")
+        session = self._decode(
+            json.loads(raw),
+            session_id=session_id,
+        )
+        now = time.time()
+        if not session.is_active or now >= session.expires_at or now >= session.idle_expires_at:
+            self._redis.delete(self._key(digest))
+            self._redis.srem(self._index_key(), digest)
+            return None
+        if touch:
+            session.last_activity = now
+            if self.idle_timeout_s is not None:
+                session.idle_expires_at = min(
+                    now + self.idle_timeout_s,
+                    session.expires_at,
+                )
+            # Do not persist a read-modify-write touch. A concurrent revoke
+            # or rotation must never be resurrected by a stale authentication
+            # read; durable lifecycle mutations use explicit locks.
+        return session
+
+    def revoke(self, session_id: str, *, reason: SessionRevocationReason = SessionRevocationReason.LOGOUT) -> bool:
+        lock = self._session_lock(session_id)
+        if not lock.acquire():
+            return False
+        try:
+            session = self.get_session(session_id, touch=False)
+            if session is None or not session.is_active:
+                return False
+            self._revoke(session, reason)
+            self._persist(session)
+            return True
+        finally:
+            lock.release()
+
+    def list_for_principal(
+        self,
+        principal_id: str,
+        *,
+        include_inactive: bool = False,
+    ) -> list[Session]:
+        sessions: list[Session] = []
+        for raw_digest in self._redis.smembers(self._index_key()):
+            digest = (
+                raw_digest.decode("utf-8")
+                if isinstance(raw_digest, bytes)
+                else str(raw_digest)
+            )
+            raw = self._redis.get(self._key(digest))
+            if raw is None:
+                self._redis.srem(self._index_key(), digest)
+                continue
+            if isinstance(raw, bytes):
+                raw = raw.decode("utf-8")
+            session = self._decode(
+                json.loads(raw),
+                session_id="",
+            )
+            setattr(session, "_storage_digest", digest)
+            if (
+                session.expires_at <= time.time()
+                or session.idle_expires_at <= time.time()
+            ):
+                self._redis.delete(self._key(digest))
+                self._redis.srem(self._index_key(), digest)
+                continue
+            if session.principal_id == principal_id and (
+                include_inactive or session.is_active
+            ):
+                sessions.append(session)
+        sessions.sort(key=lambda item: (item.last_activity, item.session_id), reverse=True)
+        return sessions
+
+    def _enforce_durable_limit(self, principal_id: str) -> None:
+        # Redis' list/read/revoke sequence must be serialized across API
+        # instances. Without the lock, concurrent logins can both observe the
+        # same pre-limit state and leave too many active sessions.
+        lock_name = hashlib.sha256(
+            principal_id.encode("utf-8"),
+        ).hexdigest()
+        lock = self._redis.lock(
+            f"{self._prefix}:limit:{lock_name}",
+            timeout=10,
+            blocking_timeout=5,
+        )
+        if not lock.acquire():
+            raise RuntimeError(
+                "could not acquire distributed session-limit lock",
+            )
+        try:
+            active = self.list_for_principal(principal_id)
+            for session in active[self.max_concurrent :]:
+                self._revoke_digest(
+                    getattr(session, "_storage_digest"),
+                    reason=SessionRevocationReason.CONCURRENT_LIMIT,
+                )
+        finally:
+            lock.release()
+
+    def revoke_all_for_principal(
+        self,
+        principal_id: str,
+        *,
+        except_session: str | None = None,
+        reason: SessionRevocationReason = SessionRevocationReason.ACCOUNT_DISABLED,
+    ) -> int:
+        count = 0
+        for session in self.list_for_principal(principal_id):
+            if (
+                except_session is not None
+                and getattr(session, "_storage_digest")
+                == self._lookup_digest(except_session)
+            ):
+                continue
+            if self._revoke_digest(
+                getattr(session, "_storage_digest"),
+                reason=reason,
+            ):
+                count += 1
+        return count
+
+    def _revoke_digest(
+        self,
+        digest: str,
+        *,
+        reason: SessionRevocationReason,
+    ) -> bool:
+        lock = self._digest_lock(digest)
+        if not lock.acquire():
+            return False
+        try:
+            raw = self._redis.get(self._key(digest))
+            if raw is None:
+                return False
+            if isinstance(raw, bytes):
+                raw = raw.decode("utf-8")
+            session = self._decode(json.loads(raw), session_id="")
+            if not session.is_active:
+                return False
+            self._revoke(session, reason)
+            ttl = max(1, int(session.expires_at - time.time()))
+            self._redis.set(
+                self._key(digest),
+                json.dumps(self._encode(session)),
+                ex=ttl,
+            )
+            return True
+        finally:
+            lock.release()
+
+    def rotate(
+        self,
+        session_id: str,
+        *,
+        user_agent: str = "",
+        ip_address: str = "",
+    ) -> str | None:
+        lock = self._session_lock(session_id)
+        if not lock.acquire():
+            return None
+        try:
+            old = self.get_session(session_id, touch=False)
+            if old is None or time.time() >= old.expires_at:
+                return None
+            now = time.time()
+            new_session_id = secrets.token_urlsafe(32)
+            idle_expiry = (
+                now + self.idle_timeout_s
+                if self.idle_timeout_s is not None
+                else old.expires_at
+            )
+            new_session = Session(
+                session_id=new_session_id,
+                principal_id=old.principal_id,
+                data=dict(old.data),
+                created_at=now,
+                last_activity=now,
+                expires_at=old.expires_at,
+                idle_expires_at=min(idle_expiry, old.expires_at),
+                rotated_from=self._lookup_digest(old.session_id),
+                user_agent=user_agent or old.user_agent,
+                ip_address=ip_address or old.ip_address,
+                device_id=old.device_id,
+            )
+            old.rotated_to = self._lookup_digest(new_session_id)
+            self._revoke(old, SessionRevocationReason.ROTATED, status=SessionStatus.ROTATED)
+            self._persist(old)
+            self._persist(new_session)
+            return new_session_id
+        finally:
+            lock.release()
+
+    def update_data(self, session_id: str, updates: dict[str, Any]) -> bool:
+        lock = self._session_lock(session_id)
+        if not lock.acquire():
+            return False
+        try:
+            session = self.get_session(session_id, touch=False)
+            if session is None:
+                return False
+            session.data.update(updates)
+            self._persist(session)
+            return True
+        finally:
+            lock.release()
+
+    def delete_data(self, session_id: str, *keys: str) -> bool:
+        lock = self._session_lock(session_id)
+        if not lock.acquire():
+            return False
+        try:
+            session = self.get_session(session_id, touch=False)
+            if session is None:
+                return False
+            for key in keys:
+                session.data.pop(key, None)
+            self._persist(session)
+            return True
+        finally:
+            lock.release()
+
+    def _persist(self, session: Session) -> None:
+        ttl = max(1, int(session.expires_at - time.time()))
+        digest = self._lookup_digest(session.session_id)
+        self._redis.set(self._key(digest), json.dumps(self._encode(session)), ex=ttl)
+        self._redis.sadd(
+            self._index_key(),
+            self._lookup_digest(session.session_id),
+        )
+
+    def _encode(self, session: Session) -> dict[str, Any]:
+        data = SessionStore._serialize(session)
+        data.pop("session_id", None)
+        data.update(
+            status=session.status.value,
+            revoked_reason=session.revoked_reason.value if session.revoked_reason else None,
+            rotated_from=session.rotated_from,
+            rotated_to=session.rotated_to,
+        )
+        return data
+
+    @staticmethod
+    def _decode(
+        data: dict[str, Any],
+        *,
+        session_id: str,
+    ) -> Session:
+        return Session(
+            session_id=session_id,
+            principal_id=str(data["principal_id"]),
+            data=dict(data.get("data") or {}),
+            created_at=float(data.get("created_at", time.time())),
+            last_activity=float(data.get("last_activity", time.time())),
+            expires_at=float(data["expires_at"]),
+            idle_expires_at=float(data["idle_expires_at"]),
+            status=SessionStatus(str(data.get("status", SessionStatus.ACTIVE.value))),
+            rotated_from=data.get("rotated_from"),
+            rotated_to=data.get("rotated_to"),
+            revoked_at=data.get("revoked_at"),
+            revoked_reason=(
+                SessionRevocationReason(str(data["revoked_reason"]))
+                if data.get("revoked_reason")
+                else None
+            ),
+            user_agent=str(data.get("user_agent", "")),
+            ip_address=str(data.get("ip_address", "")),
+            device_id=str(data.get("device_id", "")),
+        )
+
+
 __all__ = [
     "DeviceInfo",
     "Session",
     "SessionRevocationReason",
     "SessionStatus",
     "SessionStore",
+    "RedisSessionStore",
 ]

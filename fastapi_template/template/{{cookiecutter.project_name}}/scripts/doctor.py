@@ -75,6 +75,19 @@ def run_doctor(project_root: Path | None = None) -> bool:
                 _check(f"import {mod_name}", True)
             except ImportError as exc:
                 _check(f"import {mod_name}", False, str(exc))
+        try:
+            from importlib import import_module
+
+            platform = import_module(f"{pkg_name}.core.platform")
+            config = platform.validate_platform_config(str(manifest))
+            _check(
+                "typed platform configuration",
+                config.runtime.plane == "runtime"
+                and config.runtime.control_plane == "generated-metadata",
+                "Regenerate platform.yaml with a supported template",
+            )
+        except (ImportError, AttributeError, ValueError) as exc:
+            _check("typed platform configuration", False, str(exc))
 
     if modules.get("redis") in (True, "True", "true"):
         _check(

@@ -1,7 +1,7 @@
 from typing import AsyncGenerator
 import uuid
 
-from fastapi import Depends
+from fastapi import Depends, Request
 from fastapi_users import BaseUserManager, FastAPIUsers, UUIDIDMixin, schemas
 from fastapi_users.authentication import (
     AuthenticationBackend,
@@ -10,6 +10,7 @@ from fastapi_users.authentication import (
     CookieTransport,
     JWTStrategy,
 )
+from fastapi_users.authentication.strategy.db import DatabaseStrategy
 from fastapi_users.db import SQLAlchemyBaseUserTableUUID, SQLAlchemyUserDatabase
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -66,10 +67,30 @@ def get_jwt_strategy() -> JWTStrategy[User, uuid.UUID]:
 
     :returns: instance of JWTStrategy with provided settings.
     """
-    return JWTStrategy(secret=settings.users_secret, lifetime_seconds=None)
+    return JWTStrategy(
+        secret=settings.users_secret,
+        lifetime_seconds=settings.auth_token_ttl_seconds,
+    )
 
 
-{%- if cookiecutter.jwt_auth == "True" %}
+async def get_access_token_db(request: Request):
+    """Resolve the startup-configured durable cookie-token store."""
+    store = getattr(request.app.state, "access_token_store", None)
+    if store is None:
+        raise RuntimeError("durable access-token store is not configured")
+    return store
+
+
+def get_cookie_strategy(
+    access_token_db=Depends(get_access_token_db),
+) -> DatabaseStrategy:
+    return DatabaseStrategy(
+        access_token_db,
+        lifetime_seconds=settings.session_cookie_max_age_seconds,
+    )
+
+
+{%- if cookiecutter.jwt_auth in [True, "True", "true", 1, "1"] %}
 bearer_transport = BearerTransport(tokenUrl="auth/jwt/login")
 auth_jwt = AuthenticationBackend(
     name="jwt",
@@ -78,18 +99,24 @@ auth_jwt = AuthenticationBackend(
 )
 {%- endif %}
 
-{%- if cookiecutter.cookie_auth == "True" %}
-cookie_transport = CookieTransport()
+{%- if cookiecutter.cookie_auth in [True, "True", "true", 1, "1"] %}
+cookie_transport = CookieTransport(
+    cookie_name="auth_session",
+    cookie_max_age=settings.session_cookie_max_age_seconds,
+    cookie_secure=settings.secure_cookies,
+    cookie_httponly=True,
+    cookie_samesite="lax",
+)
 auth_cookie = AuthenticationBackend(
-    name="cookie", transport=cookie_transport, get_strategy=get_jwt_strategy
+    name="cookie", transport=cookie_transport, get_strategy=get_cookie_strategy
 )
 {%- endif %}
 
 backends: list[AuthenticationBackend] = [
-    {%- if cookiecutter.cookie_auth == "True" %}
+    {%- if cookiecutter.cookie_auth in [True, "True", "true", 1, "1"] %}
     auth_cookie,
     {%- endif %}
-    {%- if cookiecutter.jwt_auth == "True" %}
+    {%- if cookiecutter.jwt_auth in [True, "True", "true", 1, "1"] %}
     auth_jwt,
     {%- endif %}
 ]

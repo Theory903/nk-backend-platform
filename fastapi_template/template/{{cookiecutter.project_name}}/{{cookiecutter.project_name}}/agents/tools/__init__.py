@@ -10,6 +10,7 @@ from langchain_core.tools import StructuredTool
 from pydantic import BaseModel, TypeAdapter
 
 from {{cookiecutter.project_name}}.ai.llm import ToolSpec
+from {{cookiecutter.project_name}}.platform.contracts import ToolRisk
 
 
 @dataclass(frozen=True, slots=True)
@@ -20,6 +21,8 @@ class AgentTool:
     description: str
     fn: Callable[..., Any]
     parameters: dict[str, Any]
+    risk: ToolRisk = ToolRisk.LOW
+    requires_approval: bool = False
 
     def as_langchain(self) -> StructuredTool:
         """Adapt the NK tool to LangChain/LangGraph."""
@@ -33,6 +36,9 @@ class AgentTool:
 
 def agent_tool(
     description: str,
+    *,
+    risk: ToolRisk = ToolRisk.LOW,
+    requires_approval: bool = False,
 ) -> Callable[[Callable[..., Any]], AgentTool]:
     """Turn a typed Python function into an NK agent tool."""
 
@@ -47,6 +53,8 @@ def agent_tool(
             description=description,
             fn=fn,
             parameters=_schema_from_signature(fn),
+            risk=risk,
+            requires_approval=requires_approval,
         )
 
     return wrap

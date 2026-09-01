@@ -5,14 +5,14 @@ from nats.aio.client import Client as NATS
 
 from {{cookiecutter.project_name}}.services.nats.lifespan import NATS_STATE_KEY
 
-{%- if cookiecutter.enable_taskiq == "True" %}
+{%- if cookiecutter.enable_taskiq in [True, "True", "true", 1, "1"] %}
 from taskiq import TaskiqDepends
 {%- endif %}
 
 
 def get_nats(
     request: Request
-    {%- if cookiecutter.enable_taskiq == "True" %}
+    {%- if cookiecutter.enable_taskiq in [True, "True", "true", 1, "1"] %}
     = TaskiqDepends()
     {%- endif %}
 ) -> NATS:

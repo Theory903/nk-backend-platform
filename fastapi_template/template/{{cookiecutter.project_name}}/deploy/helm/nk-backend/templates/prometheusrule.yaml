@@ -1,0 +1,23 @@
+{{- if .Values.prometheusRule.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "nk-backend.fullname" . }}-slo
+  labels:
+    {{- include "nk-backend.labels" . | nindent 4 }}
+spec:
+  groups:
+    - name: nk.backend.slo
+      rules:
+        - alert: NKAPIHighErrorRate
+          expr: |
+            sum(rate(nk_http_requests_total{status=~"5.."}[5m]))
+            / sum(rate(nk_http_requests_total[5m])) > 0.01
+          for: 5m
+          labels:
+            severity: page
+        - alert: NKDLQGrowth
+          expr: increase(nk_dlq_messages[15m]) > 0
+          labels:
+            severity: ticket
+{{- end }}

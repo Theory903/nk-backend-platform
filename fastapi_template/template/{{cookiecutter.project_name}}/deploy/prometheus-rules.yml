@@ -1,0 +1,35 @@
+groups:
+  - name: "{{cookiecutter.project_name}}-service"
+    rules:
+      - alert: ApiHighErrorRate
+        expr: |
+          sum(rate(nk_http_requests_total{status=~"5.."}[5m]))
+          /
+          clamp_min(sum(rate(nk_http_requests_total[5m])), 1) > 0.05
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "API 5xx error rate is above 5%"
+          runbook: "https://docs.example.invalid/runbooks/api-high-error-rate"
+
+      - alert: ApiHighLatency
+        expr: |
+          histogram_quantile(
+            0.95,
+            sum by (le) (rate(nk_http_request_duration_seconds_bucket[5m]))
+          ) > 1
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "API p95 latency is above one second"
+          runbook: "https://docs.example.invalid/runbooks/api-high-latency"
+
+      - alert: ApiNotReady
+        expr: up{job="{{cookiecutter.project_name}}-api"} == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "API metrics endpoint is unavailable"

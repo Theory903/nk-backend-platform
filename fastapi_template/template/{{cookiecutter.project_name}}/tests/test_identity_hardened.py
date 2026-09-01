@@ -87,6 +87,37 @@ def test_api_key_revoke() -> None:
     assert store.revoke(raw) is False
 
 
+def test_api_key_scopes_become_principal_permissions() -> None:
+    store = ApiKeyStore()
+    raw, meta = store.create(
+        "publisher",
+        scopes={"messaging.publish"},
+    )
+    verified = store.verify(raw)
+
+    assert verified is not None
+    principal = Principal(
+        user_id=f"svc:{meta.key_id}",
+        scopes=verified.scopes,
+        is_service=True,
+        provider="api_key",
+    )
+    assert has_permission(principal, "messaging.publish")
+    assert not has_permission(principal, "messaging.consume")
+
+
+def test_api_key_ip_allowlist_is_enforced() -> None:
+    store = ApiKeyStore()
+    raw, _meta = store.create(
+        "restricted",
+        ip_allowlist=("192.0.2.0/24",),
+    )
+
+    assert store.verify(raw, client_ip="192.0.2.10") is not None
+    assert store.verify(raw, client_ip="198.51.100.10") is None
+    assert store.verify(raw) is None
+
+
 # --- RBAC ---
 
 def _principal(roles: set[str]) -> Principal:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import sys
 from collections.abc import Mapping
 from typing import Any
 
@@ -13,6 +14,8 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.requests import ClientDisconnect
 from starlette.websockets import WebSocketDisconnect
 
+from .logging import redact_text
+
 logger = logging.getLogger(__name__)
 
 PROBLEM_CONTENT_TYPE = "application/problem+json"
@@ -21,6 +24,19 @@ PROBLEM_TYPE_RFC = "https://datatracker.ietf.org/doc/html/rfc9457"
 _RESERVED_PROBLEM_MEMBERS = frozenset(
     {"type", "title", "status", "detail", "instance"}
 )
+_SENSITIVE_PROBLEM_KEY_PARTS = (
+    "authorization",
+    "cookie",
+    "password",
+    "passwd",
+    "secret",
+    "token",
+    "api_key",
+    "apikey",
+    "private_key",
+    "access_key",
+)
+_REDACTED = "[REDACTED]"
 
 _HTTP_TITLES: dict[int, str] = {
     400: "Bad Request",
@@ -63,6 +79,27 @@ def _validate_extensions(extensions: Mapping[str, Any] | None) -> dict[str, Any]
             )
         cleaned[key] = value
     return cleaned
+
+
+def _safe_problem_value(value: Any, *, key: str | None = None) -> Any:
+    """Redact secrets from problem details and extension values."""
+    if key is not None:
+        normalized = key.lower().replace("-", "_")
+        if any(part in normalized for part in _SENSITIVE_PROBLEM_KEY_PARTS):
+            return _REDACTED
+    if isinstance(value, str):
+        return redact_text(value)
+    if isinstance(value, Mapping):
+        return {
+            str(child_key): _safe_problem_value(
+                child,
+                key=str(child_key),
+            )
+            for child_key, child in value.items()
+        }
+    if isinstance(value, (list, tuple)):
+        return [_safe_problem_value(child) for child in value]
+    return value
 
 
 class Problem(Exception):
@@ -123,12 +160,14 @@ def problem_response(
     }
 
     if detail is not None:
-        content["detail"] = detail
+        content["detail"] = _safe_problem_value(detail)
 
     if instance is not None:
         content["instance"] = instance
 
-    content.update(_validate_extensions(extensions))
+    content.update(
+        _safe_problem_value(_validate_extensions(extensions))
+    )
 
     return JSONResponse(
         content=content,
@@ -140,6 +179,29 @@ def problem_response(
 
 def _http_title(status_code: int) -> str:
     return _HTTP_TITLES.get(status_code, "Request Failed")
+
+
+def _correlation_headers(request: Request) -> dict[str, str]:
+    """Return safe identifiers that let operators find the failed request."""
+    headers: dict[str, str] = {}
+    request_id = getattr(request.state, "request_id", None)
+    trace_id = getattr(request.state, "trace_id", None)
+    if isinstance(request_id, str) and request_id:
+        headers["X-Request-ID"] = request_id
+    if isinstance(trace_id, str) and trace_id:
+        headers["X-Trace-ID"] = trace_id
+    return headers
+
+
+def _capture_unexpected(exc: Exception) -> None:
+    """Report an unexpected error to Sentry when the optional SDK is active."""
+    sentry_sdk = sys.modules.get("sentry_sdk")
+    if sentry_sdk is None:
+        return
+    try:
+        sentry_sdk.capture_exception(exc)
+    except Exception:
+        logger.exception("failed to report exception to Sentry")
 
 
 def _normalize_http_detail(
@@ -212,13 +274,15 @@ def register_problem_handlers(app: FastAPI) -> None:
         request: Request,
         exc: Problem,
     ) -> JSONResponse:
+        headers = _correlation_headers(request)
+        headers.update(exc.headers)
         return problem_response(
             status_code=exc.status_code,
             title=exc.title,
             detail=exc.detail,
             type_uri=exc.type_uri,
             instance=exc.instance or str(request.url.path),
-            headers=exc.headers,
+            headers=headers,
             extensions=exc.extensions,
         )
 
@@ -231,6 +295,7 @@ def register_problem_handlers(app: FastAPI) -> None:
             title="Validation Failed",
             detail="One or more request fields failed validation.",
             instance=str(request.url.path),
+            headers=_correlation_headers(request),
             extensions={"errors": _format_validation_errors(exc)},
         )
 
@@ -242,12 +307,15 @@ def register_problem_handlers(app: FastAPI) -> None:
             exc.status_code,
             exc.detail,
         )
+        headers = _correlation_headers(request)
+        if exc.headers:
+            headers.update(exc.headers)
         return problem_response(
             status_code=exc.status_code,
             title=_http_title(exc.status_code),
             detail=detail,
             instance=str(request.url.path),
-            headers=exc.headers,
+            headers=headers,
             extensions=extensions or None,
         )
 
@@ -267,11 +335,13 @@ def register_problem_handlers(app: FastAPI) -> None:
             request.method,
             request.url.path,
         )
+        _capture_unexpected(exc)
         return problem_response(
             status_code=500,
             title="Internal Server Error",
             detail="An unexpected error occurred.",
             instance=str(request.url.path),
+            headers=_correlation_headers(request),
         )
 
     app.add_exception_handler(Problem, handle_problem)

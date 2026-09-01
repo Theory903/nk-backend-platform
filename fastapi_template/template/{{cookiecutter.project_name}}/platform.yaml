@@ -1,11 +1,40 @@
 project: "{{ cookiecutter.project_name }}"
-profile: "{{ cookiecutter.profile }}"
+{% if cookiecutter.profile %}profile: "{{ cookiecutter.profile }}"{% else %}profile: ""{% endif %}
+{% if cookiecutter.use_case %}use_case: "{{ cookiecutter.use_case }}"{% else %}use_case: null{% endif %}
+framework:
+  version: "1.x"
+scale:
+  stage: "{% if cookiecutter.profile == 'minimal' %}S0{% elif cookiecutter.profile == 'saas' %}S1{% elif cookiecutter.profile == 'ai-saas' %}S2{% elif cookiecutter.profile == 'agentic' %}S3{% elif cookiecutter.profile == 'fintech' %}S2{% else %}S0{% endif %}"
 
 providers:
   api_type: {{ cookiecutter.api_type }}
   database: {{ cookiecutter.db_info.name }}
-  orm: {{ cookiecutter.orm }}
+  orm: "{{ cookiecutter.orm }}"
   ci: {{ cookiecutter.ci_type }}
+  cache: "{% if cookiecutter.enable_redis in [True, "True", "true", 1, "1"] %}redis{% else %}none{% endif %}"
+  queue: "{% if cookiecutter.enable_taskiq in [True, "True", "true", 1, "1"] %}taskiq{% else %}none{% endif %}"
+  identity: "{% if cookiecutter.add_users in [True, "True", "true", 1, "1"] %}local{% else %}none{% endif %}"
+  llm: "{% if cookiecutter.enable_llm in [True, "True", "true", 1, "1"] %}any_llm{% else %}none{% endif %}"
+  vector: "{% if cookiecutter.enable_vector in [True, "True", "true", 1, "1"] %}{% if cookiecutter.db_info.name == 'postgresql' %}pgvector{% else %}external{% endif %}{% else %}none{% endif %}"
+  workflow: "{% if cookiecutter.enable_agents in [True, "True", "true", 1, "1"] %}local{% else %}none{% endif %}"
+
+stack:
+  layers:
+    compute: external
+    model_development: external
+    inference_serving: {{ cookiecutter.enable_llm }}
+    data_retrieval_protocols: {{ cookiecutter.enable_vector }}
+    orchestration_agents: {{ cookiecutter.enable_agents }}
+    applications_products: true
+  ownership:
+    generated: "layers-4-6-and-layer-1-3-contracts"
+    external: "training-accelerator-fleet-hosted-serving"
+
+runtime:
+  plane: runtime
+  control_plane: generated-metadata
+  workflow_state: {{ cookiecutter.enable_agents }}
+  durable_state: {{ cookiecutter.db_info.name != "none" }}
 
 modules:
   redis: {{ cookiecutter.enable_redis }}
@@ -13,6 +42,7 @@ modules:
   kafka: {{ cookiecutter.enable_kafka }}
   nats: {{ cookiecutter.enable_nats }}
   taskiq: {{ cookiecutter.enable_taskiq }}
+  migrations: {{ cookiecutter.enable_migrations }}
   users: {{ cookiecutter.add_users }}
   files: {{ cookiecutter.add_users }}
   llm: {{ cookiecutter.enable_llm }}
@@ -24,7 +54,60 @@ modules:
   idempotency: {{ cookiecutter.enable_idempotency }}
   fintech: {{ cookiecutter.enable_fintech }}
 
+ai:
+  enabled: {{ cookiecutter.enable_llm }}
+  model_gateway: {{ cookiecutter.enable_llm }}
+  model_routing: {{ cookiecutter.enable_llm }}
+  embeddings: {{ cookiecutter.enable_vector }}
+  protocols:
+    mcp: {{ cookiecutter.enable_agents }}
+    a2a: false
+
+knowledge:
+  enabled: {{ cookiecutter.enable_rag_traditional }}
+  ingestion: {{ cookiecutter.enable_rag_traditional }}
+  hybrid_retrieval: {{ cookiecutter.enable_rag_traditional }}
+  reranking: false
+  graph_retrieval: {{ cookiecutter.enable_graphrag }}
+  acl_filtering: {{ cookiecutter.add_users }}
+  freshness_tracking: {{ cookiecutter.enable_rag_traditional }}
+
+agents:
+  enabled: {{ cookiecutter.enable_agents }}
+  bounded_runtime: {{ cookiecutter.enable_agents }}
+  checkpointing: {% if cookiecutter.enable_agents in [True, "True", "true", 1, "1"] and cookiecutter.db_info.name != "none" %}true{% else %}false{% endif %}
+  approvals: {{ cookiecutter.enable_agents }}
+  multi_agent: false
+
+storage:
+  metadata: {{ cookiecutter.db_info.name }}
+  vectors: "{% if cookiecutter.enable_vector in [True, "True", "true", 1, "1"] and cookiecutter.db_info.name == 'postgresql' %}pgvector{% elif cookiecutter.enable_vector in [True, "True", "true", 1, "1"] %}external{% else %}none{% endif %}"
+  lexical: "{% if cookiecutter.enable_rag_traditional in [True, "True", "true", 1, "1"] and cookiecutter.db_info.name == 'postgresql' %}postgresql-fts{% elif cookiecutter.enable_rag_traditional in [True, "True", "true", 1, "1"] %}external{% else %}none{% endif %}"
+  objects: "{% if cookiecutter.add_users in [True, "True", "true", 1, "1"] %}local{% else %}none{% endif %}"
+  cache: "{% if cookiecutter.enable_redis in [True, "True", "true", 1, "1"] %}redis{% else %}none{% endif %}"
+  queue: "{% if cookiecutter.enable_taskiq in [True, "True", "true", 1, "1"] %}taskiq{% else %}none{% endif %}"
+  checkpoints: "{% if cookiecutter.enable_agents in [True, "True", "true", 1, "1"] and cookiecutter.db_info.name != "none" %}{{ cookiecutter.db_info.name }}{% else %}none{% endif %}"
+
+evaluation:
+  enabled: {{ cookiecutter.enable_llm }}
+  golden_dataset: false
+  regression_gates: false
+  red_team: false
+
 observability:
   prometheus: {{ cookiecutter.prometheus_enabled }}
   opentelemetry: {{ cookiecutter.otlp_enabled }}
   sentry: {{ cookiecutter.sentry_enabled }}
+  sampling_ratio: 0.1
+
+deploy:
+  path_split_stream: {% if cookiecutter.enable_agents in [True, "True", "true", 1, "1"] %}true{% else %}false{% endif %}
+  compose: true
+  helm: {% if cookiecutter.db_info.name != 'none' %}true{% else %}false{% endif %}
+
+reproducibility:
+  config_version: "1"
+  lockfile: true
+  model_versions: {{ cookiecutter.enable_llm }}
+  prompt_versions: {{ cookiecutter.enable_llm }}
+  tool_versions: {{ cookiecutter.enable_agents }}

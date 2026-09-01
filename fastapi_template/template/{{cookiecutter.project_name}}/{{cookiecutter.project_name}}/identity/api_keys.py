@@ -30,6 +30,8 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import ipaddress
+import json
 import secrets
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -57,6 +59,7 @@ class ApiKeyRecord:
     scopes: frozenset[str] = field(
         default_factory=lambda: frozenset({"read"}),
     )
+    ip_allowlist: tuple[str, ...] = ()
 
     created_at: datetime = field(
         default_factory=lambda: datetime.now(UTC),
@@ -142,6 +145,7 @@ class ApiKeyStore:
         owner_id: str | None = None,
         org_id: str | None = None,
         scopes: set[str] | frozenset[str] | None = None,
+        ip_allowlist: tuple[str, ...] | None = None,
         expires_at: datetime | None = None,
         metadata: dict[str, Any] | None = None,
     ) -> tuple[str, ApiKeyRecord]:
@@ -179,6 +183,7 @@ class ApiKeyStore:
             owner_id=owner_id,
             org_id=org_id,
             scopes=frozenset(scopes or {"read"}),
+            ip_allowlist=tuple(ip_allowlist or ()),
             created_at=now,
             expires_at=expires_at,
             metadata=dict(metadata or {}),
@@ -212,12 +217,9 @@ class ApiKeyStore:
             - expired
             - secret mismatch (constant-time)
 
-        ``client_ip`` is accepted for DI compatibility with auth deps; this
-        primitive does not enforce IP allowlists. Use ApiKeyLifecycleService
-        for production IP / scope policy.
+        If an IP allowlist is configured, the client address must belong to at
+        least one configured network.
         """
-
-        del client_ip  # unused — IP policy lives in api_key_lifecycle
 
         if not isinstance(raw_key, str) or not raw_key:
             return None
@@ -235,6 +237,12 @@ class ApiKeyStore:
             return None
 
         if not record.is_active:
+            return None
+
+        if record.ip_allowlist and not self._ip_allowed(
+            client_ip,
+            record.ip_allowlist,
+        ):
             return None
 
         supplied_digest = self._digest(raw_key)
@@ -362,8 +370,10 @@ class ApiKeyStore:
     def has(
         self,
         raw_key: str,
+        *,
+        client_ip: str | None = None,
     ) -> bool:
-        return self.verify(raw_key) is not None
+        return self.verify(raw_key, client_ip=client_ip) is not None
 
     # ------------------------------------------------------------------
     # Scope
@@ -373,8 +383,10 @@ class ApiKeyStore:
         self,
         raw_key: str,
         scope: str,
+        *,
+        client_ip: str | None = None,
     ) -> bool:
-        record = self.verify(raw_key)
+        record = self.verify(raw_key, client_ip=client_ip)
 
         if record is None:
             return False
@@ -401,6 +413,24 @@ class ApiKeyStore:
         return hmac.compare_digest(a, b)
 
     @staticmethod
+    def _ip_allowed(
+        client_ip: str | None,
+        allowlist: tuple[str, ...],
+    ) -> bool:
+        """Return whether a client address matches the configured networks."""
+        if not client_ip:
+            return False
+
+        try:
+            address = ipaddress.ip_address(client_ip)
+            return any(
+                address in ipaddress.ip_network(network, strict=False)
+                for network in allowlist
+            )
+        except ValueError:
+            return False
+
+    @staticmethod
     def _parse(
         raw_key: str,
     ) -> tuple[str, str] | None:
@@ -421,3 +451,160 @@ class ApiKeyStore:
             return None
 
         return key_id, secret
+
+
+class RedisApiKeyStore(ApiKeyStore):
+    """Redis-backed API-key store with the same sync authentication contract."""
+
+    def __init__(self, redis_client: Any, *, prefix: str = "nk:api-key") -> None:
+        super().__init__()
+        self._redis = redis_client
+        self._prefix = prefix.rstrip(":")
+
+    def _record_key(self, key_id: str) -> str:
+        return f"{self._prefix}:{key_id}"
+
+    def _index_key(self) -> str:
+        return f"{self._prefix}:index"
+
+    def create(self, *args: Any, **kwargs: Any) -> tuple[str, ApiKeyRecord]:
+        raw_key, record = super().create(*args, **kwargs)
+        self._persist(record)
+        self._redis.sadd(self._index_key(), record.key_id)
+        return raw_key, record
+
+    def verify(
+        self,
+        raw_key: str,
+        *,
+        client_ip: str | None = None,
+    ) -> ApiKeyRecord | None:
+        if not isinstance(raw_key, str) or not raw_key:
+            return None
+        parsed = self._parse(raw_key)
+        if parsed is None:
+            return None
+        key_id, _secret = parsed
+        record = self.get(key_id)
+        if record is None or not record.is_active:
+            return None
+        if record.ip_allowlist and not self._ip_allowed(
+            client_ip,
+            record.ip_allowlist,
+        ):
+            return None
+        if not self._constant_time_equal(
+            self._digest(raw_key),
+            record.digest,
+        ):
+            return None
+        record.last_used_at = datetime.now(UTC)
+        self._persist(record)
+        return record
+
+    def get(self, key_id: str) -> ApiKeyRecord | None:
+        raw = self._redis.get(self._record_key(key_id))
+        if raw is None:
+            return None
+        if isinstance(raw, bytes):
+            raw = raw.decode("utf-8")
+        return self._decode(json.loads(raw))
+
+    def list(
+        self,
+        *,
+        owner_id: str | None = None,
+        org_id: str | None = None,
+        include_revoked: bool = False,
+    ) -> list[ApiKeyRecord]:
+        result: list[ApiKeyRecord] = []
+        for raw_key_id in self._redis.smembers(self._index_key()):
+            key_id = (
+                raw_key_id.decode("utf-8")
+                if isinstance(raw_key_id, bytes)
+                else str(raw_key_id)
+            )
+            record = self.get(key_id)
+            if record is None:
+                continue
+            if owner_id is not None and record.owner_id != owner_id:
+                continue
+            if org_id is not None and record.org_id != org_id:
+                continue
+            if not include_revoked and record.is_revoked:
+                continue
+            result.append(record)
+        return result
+
+    def revoke_by_id(self, key_id: str) -> bool:
+        record = self.get(key_id)
+        if record is None or record.is_revoked:
+            return False
+        record.revoked_at = datetime.now(UTC)
+        self._persist(record)
+        return True
+
+    def revoke_all_for_owner(self, owner_id: str) -> int:
+        count = 0
+        for record in self.list(owner_id=owner_id):
+            if self.revoke_by_id(record.key_id):
+                count += 1
+        return count
+
+    def _persist(self, record: ApiKeyRecord) -> None:
+        self._redis.set(
+            self._record_key(record.key_id),
+            json.dumps(self._encode(record)),
+        )
+
+    @staticmethod
+    def _encode(record: ApiKeyRecord) -> dict[str, Any]:
+        return {
+            "key_id": record.key_id,
+            "name": record.name,
+            "digest": record.digest,
+            "prefix": record.prefix,
+            "owner_id": record.owner_id,
+            "org_id": record.org_id,
+            "scopes": sorted(record.scopes),
+            "ip_allowlist": list(record.ip_allowlist),
+            "created_at": record.created_at.isoformat(),
+            "expires_at": (
+                record.expires_at.isoformat()
+                if record.expires_at is not None
+                else None
+            ),
+            "revoked_at": (
+                record.revoked_at.isoformat()
+                if record.revoked_at is not None
+                else None
+            ),
+            "last_used_at": (
+                record.last_used_at.isoformat()
+                if record.last_used_at is not None
+                else None
+            ),
+            "metadata": record.metadata,
+        }
+
+    @staticmethod
+    def _decode(data: dict[str, Any]) -> ApiKeyRecord:
+        def parse_date(value: str | None) -> datetime | None:
+            return datetime.fromisoformat(value) if value else None
+
+        created_at = parse_date(data.get("created_at")) or datetime.now(UTC)
+        return ApiKeyRecord(
+            key_id=str(data["key_id"]),
+            name=str(data["name"]),
+            digest=str(data["digest"]),
+            prefix=str(data.get("prefix", "nk")),
+            owner_id=data.get("owner_id"),
+            org_id=data.get("org_id"),
+            scopes=frozenset(data.get("scopes") or ()),
+            ip_allowlist=tuple(data.get("ip_allowlist") or ()),
+            created_at=created_at,
+            expires_at=parse_date(data.get("expires_at")),
+            revoked_at=parse_date(data.get("revoked_at")),
+            last_used_at=parse_date(data.get("last_used_at")),
+            metadata=dict(data.get("metadata") or {}),
+        )

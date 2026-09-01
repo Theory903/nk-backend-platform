@@ -3,7 +3,7 @@ from __future__ import annotations
 from redis.asyncio import ConnectionPool
 from starlette.requests import Request
 
-{%- if cookiecutter.enable_taskiq == "True" %}
+{%- if cookiecutter.enable_taskiq in [True, "True", "true", 1, "1"] %}
 from taskiq import TaskiqDepends
 {%- endif %}
 
@@ -14,7 +14,7 @@ from {{cookiecutter.project_name}}.services.redis.lifespan import (
 
 def get_redis_pool(
     request: Request
-    {%- if cookiecutter.enable_taskiq == "True" %}
+    {%- if cookiecutter.enable_taskiq in [True, "True", "true", 1, "1"] %}
     = TaskiqDepends()
     {%- endif %}
 ) -> ConnectionPool:  # pragma: no cover

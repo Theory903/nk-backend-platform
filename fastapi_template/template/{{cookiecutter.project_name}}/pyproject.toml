@@ -10,10 +10,10 @@ dependencies = [
   "fastapi >=0.122.0,<1",
   "python-multipart >=0.0.20,<1",
   "uvicorn[standard] >=0.38.0,<1",
-  {%- if cookiecutter.gunicorn == "True" %}
+  {%- if cookiecutter.gunicorn in [True, "True", "true", 1, "1"] %}
   "gunicorn >=23.0.0,<24",
   {%- endif %}
-  {%- if cookiecutter.add_users == "True" %}
+  {%- if cookiecutter.add_users in [True, "True", "true", 1, "1"] %}
   {%- if cookiecutter.orm == "sqlalchemy" %}
   "fastapi-users >=15.0.1,<16",
   "httpx-oauth >=0.16.1,<1",
@@ -37,11 +37,12 @@ dependencies = [
 {%- endif %}
 {%- if cookiecutter.orm == "sqlalchemy" %}
   "SQLAlchemy[asyncio] >=2.0.44,<3",
-{%- if cookiecutter.enable_migrations == "True" %}
+{%- if cookiecutter.enable_migrations in [True, "True", "true", 1, "1"] %}
   "alembic >=1.17.2,<2",
 {%- endif %}
 {%- if cookiecutter.db_info.name == "postgresql" %}
   "asyncpg >=0.31.0,<1",
+  "psycopg2-binary >=2.9.11,<3",
 {%- elif cookiecutter.db_info.name == "sqlite" %}
   "aiosqlite >=0.21.0,<1",
 {%- elif cookiecutter.db_info.name == "mysql" %}
@@ -52,7 +53,7 @@ dependencies = [
 {%- endif %}
 {%- if cookiecutter.orm == "tortoise" %}
   "tortoise-orm >=0.25.1,<1",
-{%- if cookiecutter.enable_migrations == "True" %}
+{%- if cookiecutter.enable_migrations in [True, "True", "true", 1, "1"] %}
   "aerich >=0.9.2,<1",
 {%- endif %}
 {%- if cookiecutter.db_info.name == "postgresql" %}
@@ -67,7 +68,7 @@ dependencies = [
 {%- endif %}
 {%- if cookiecutter.orm == "ormar" %}
   "ormar >=0.20.2,<1",
-{%- if cookiecutter.enable_migrations == "True" %}
+{%- if cookiecutter.enable_migrations in [True, "True", "true", 1, "1"] %}
   "alembic >=1.17.2,<2",
 {%- endif %}
 {%- if cookiecutter.db_info.name == "postgresql" %}
@@ -80,10 +81,10 @@ dependencies = [
   "mysqlclient >=2.2.7,<3",
 {%- endif %}
 {%- endif %}
-{%- if cookiecutter.enable_redis == "True" %}
+{%- if cookiecutter.enable_redis in [True, "True", "true", 1, "1"] %}
   "redis[hiredis] >=6,<7",
 {%- endif %}
-{%- if cookiecutter.self_hosted_swagger == 'True' %}
+{%- if cookiecutter.self_hosted_swagger in [True, "True", "true", 1, "1"] %}
   "aiofiles >=25.1.0,<26",
 {%- endif %}
 {%- if cookiecutter.orm == "psycopg" %}
@@ -101,23 +102,22 @@ dependencies = [
 {%- if cookiecutter.api_type == "graphql" %}
   "strawberry-graphql[fastapi] >=0.287.0,<1",
 {%- endif %}
-{%- if cookiecutter.enable_rmq == "True" %}
+{%- if cookiecutter.enable_rmq in [True, "True", "true", 1, "1"] %}
   "aio-pika >=9.5.8,<10",
 {%- endif %}
-{%- if cookiecutter.prometheus_enabled == "True" %}
+{%- if cookiecutter.prometheus_enabled in [True, "True", "true", 1, "1"] %}
   "prometheus-client >=0.23.1,<1",
-  "prometheus-fastapi-instrumentator >=7.1.0,<8",
 {%- endif %}
-{%- if cookiecutter.sentry_enabled == "True" %}
+{%- if cookiecutter.sentry_enabled in [True, "True", "true", 1, "1"] %}
   "sentry-sdk >=2.46.0,<3",
 {%- endif %}
-{%- if cookiecutter.otlp_enabled == "True" %}
+{%- if cookiecutter.otlp_enabled in [True, "True", "true", 1, "1"] %}
   "opentelemetry-api >=1.38.0,<2",
   "opentelemetry-sdk >=1.38.0,<2",
   "opentelemetry-exporter-otlp >=1.38.0,<2",
   "opentelemetry-instrumentation >=0.59b0,<1",
   "opentelemetry-instrumentation-fastapi >=0.59b0,<1",
-{%- if cookiecutter.enable_redis == "True" %}
+{%- if cookiecutter.enable_redis in [True, "True", "true", 1, "1"] %}
   "opentelemetry-instrumentation-redis >=0.59b0,<1",
 {%- endif %}
 {%- if cookiecutter.db_info.name == "postgresql" and cookiecutter.orm in ["ormar", "tortoise"] %}
@@ -126,39 +126,50 @@ dependencies = [
 {%- if cookiecutter.orm == "sqlalchemy" %}
   "opentelemetry-instrumentation-sqlalchemy >=0.59b0,<1",
 {%- endif %}
-{%- if cookiecutter.enable_rmq == "True" %}
+{%- if cookiecutter.enable_rmq in [True, "True", "true", 1, "1"] %}
   "opentelemetry-instrumentation-aio-pika >=0.59b0,<1",
 {%- endif %}
+{%- if cookiecutter.enable_loguru not in [True, "True", "true", 1, "1"] %}
+  "opentelemetry-instrumentation-logging >=0.59b0,<1",
 {%- endif %}
-{%- if cookiecutter.enable_loguru == "True" %}
+{%- endif %}
+{%- if cookiecutter.enable_loguru in [True, "True", "true", 1, "1"] %}
   "loguru >=0.7.3,<1",
 {%- endif %}
-{%- if cookiecutter.enable_kafka == "True" %}
+{%- if cookiecutter.enable_kafka in [True, "True", "true", 1, "1"] %}
   "aiokafka >=0.12.0,<1",
 {%- endif %}
-{%- if cookiecutter.enable_agents == "True" %}
+{%- if cookiecutter.enable_agents in [True, "True", "true", 1, "1"] %}
   "langchain >=1.0,<2",
   "langgraph >=1.0,<2",
 {%- endif %}
-{%- if cookiecutter.enable_nats == "True" %}
+{%- if cookiecutter.enable_llm in [True, "True", "true", 1, "1"] %}
+  "any-llm-sdk >=0.20.0,<1",
+{%- endif %}
+{%- if cookiecutter.enable_vector in [True, "True", "true", 1, "1"] %}
+  "fastembed >=0.7.0,<1",
+  "pypdf >=6.0.0,<7",
+  "python-docx >=1.2.0,<2",
+{%- endif %}
+{%- if cookiecutter.enable_nats in [True, "True", "true", 1, "1"] %}
   "nats-py>=2.9,<3",
 {%- endif %}
 
-{%- if cookiecutter.enable_taskiq == "True" %}
+{%- if cookiecutter.enable_taskiq in [True, "True", "true", 1, "1"] %}
   "taskiq >=0.12.0,<1",
   "taskiq-fastapi >=0.3.6,<1",
-{%- if cookiecutter.otlp_enabled == "True" %}
+{%- if cookiecutter.otlp_enabled in [True, "True", "true", 1, "1"] %}
   "psutil >=7.0.0,<8",
 {%- endif %}
-{%- if cookiecutter.enable_redis == "True" %}
+{%- if cookiecutter.enable_redis in [True, "True", "true", 1, "1"] %}
   "taskiq-redis >=1.1.2,<2",
 {%- endif %}
 
-{%- if cookiecutter.enable_rmq == "True" %}
+{%- if cookiecutter.enable_rmq in [True, "True", "true", 1, "1"] %}
   "taskiq-aio-pika >=0.5.0,<1",
 {%- endif %}
 
-{%- if (cookiecutter.enable_rmq or cookiecutter.enable_rmq) != "True" %}
+{%- if cookiecutter.enable_rmq not in [True, "True", "true", 1, "1"] and cookiecutter.enable_redis not in [True, "True", "true", 1, "1"] %}
   "pyzmq >=27.1.0,<28",
 {%- endif %}
 {%- endif %}
@@ -174,13 +185,14 @@ dev = [
   "pytest-cov >=7.0.0,<8",
   "anyio >=4.11.0,<5",
   "pytest-env >=1.2.0,<2",
+  "aiosqlite >=0.21.0,<1",
 {%- if cookiecutter.orm == "tortoise" %}
   "asynctest >=0.13.0,<1",
   "nest-asyncio >=1.6.0,<2",
 {%- endif %}
   "httpx >=0.28.1,<1",
   "PyYAML >=6.0.2,<7",
-{%- if cookiecutter.enable_taskiq == "True" %}
+{%- if cookiecutter.enable_taskiq in [True, "True", "true", 1, "1"] %}
   "taskiq[reload] >=0.12.0,<1",
 {%- endif %}
 ]
@@ -223,7 +235,7 @@ namespace_packages = true
 plugins = []
 {%- endif %}
 
-{%- if cookiecutter.enable_redis == "True" %}
+{%- if cookiecutter.enable_redis in [True, "True", "true", 1, "1"] %}
 
 # Remove this and add `types-redis`
 # when the issue https://github.com/python/typeshed/issues/8242 is resolved.
@@ -266,13 +278,13 @@ env = [
     {%- if cookiecutter.orm == "piccolo" %}
     "PICCOLO_CONF={{cookiecutter.project_name}}.piccolo_conf",
     {%- endif %}
-    {%- if cookiecutter.sentry_enabled == "True" %}
+    {%- if cookiecutter.sentry_enabled in [True, "True", "true", 1, "1"] %}
     "{{cookiecutter.project_name | upper}}_SENTRY_DSN=",
     {%- endif %}
 ]
 
 {%- if cookiecutter.orm == "tortoise" %}
-{%- if cookiecutter.enable_migrations == "True" %}
+{%- if cookiecutter.enable_migrations in [True, "True", "true", 1, "1"] %}
 [tool.aerich]
 tortoise_orm = "{{cookiecutter.project_name}}.db.config.TORTOISE_CONFIG"
 location = "./{{cookiecutter.project_name}}/db/migrations"
@@ -324,6 +336,9 @@ lint.ignore = [
     "ANN401",  # typing.Any are disallowed in `**kwargs
     "PLR0913", # Too many arguments for function call
     "D106",    # Missing docstring in public nested class
+    "D101",    # Missing docstring in public class
+    "D102",    # Missing docstring in public method
+    "D103",    # Missing docstring in public function
     "UP043",   # Unnecessary default argument specified (conflicts with mypy).
 ]
 exclude = [
@@ -338,7 +353,32 @@ line-length = 88
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = [
     "S101",    # Use of assert detected
+    "S105",    # Test fixture secrets
+    "S106",    # Test fixture secrets
 	"PLC0415", # Import outside toplevel
+]
+"{{cookiecutter.project_name}}/cli/*" = [
+    "S603",    # Controlled subprocess for nk/compose tooling
+    "S607",    # Partial executable paths for docker/pg tools
+    "S104",    # Dev bind defaults are intentional
+    "T201",    # CLI output is intentional
+    "PLC0415", # Optional dependency imports
+    "PLW2901", # CLI env parsing style
+]
+"scripts/*" = [
+    "S603",    # Operational scripts invoke pg_dump/pg_restore
+    "S607",
+    "T201",
+]
+"{{cookiecutter.project_name}}/web/middleware/request_id.py" = [
+    "S110",    # Trace extraction must not break requests
+]
+"{{cookiecutter.project_name}}/core/logging.py" = [
+    "S110",    # Logging must never break execution
+    "B905",    # zip strictness in logging helpers
+]
+"{{cookiecutter.project_name}}/operations/metrics.py" = [
+    "S101",    # Optional prometheus import guards
 ]
 "scripts/generate_module.py" = [
     "T201",    # CLI output is intentional
@@ -353,7 +393,7 @@ allow-magic-value-types = ["int", "str", "float", "bytes"]
 
 [tool.ruff.lint.flake8-bugbear]
 extend-immutable-calls = [
-  {%- if cookiecutter.enable_taskiq == "True" %}
+  {%- if cookiecutter.enable_taskiq in [True, "True", "true", 1, "1"] %}
   "taskiq_dependencies.Depends",
   "taskiq.TaskiqDepends",
   {%- endif %}

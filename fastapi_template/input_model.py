@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import abc
+import builtins
 from collections import UserDict
 from collections.abc import Callable, Iterable
 from typing import Any
 
 import click
 from prompt_toolkit.shortcuts import checkboxlist_dialog, radiolist_dialog
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
 
 try:
     from simple_term_menu import TerminalMenu
@@ -17,6 +18,7 @@ except Exception:  # pragma: no cover
 # ============================================================================
 # Builder context
 # ============================================================================
+
 
 class BuilderContext(UserDict[str, Any]):
     """
@@ -66,7 +68,7 @@ class BuilderContext(UserDict[str, Any]):
 
     def update_from(
         self,
-        values: dict[str, Any],
+        values: builtins.dict[str, Any],
         *,
         overwrite: bool = True,
     ) -> None:
@@ -86,9 +88,11 @@ class BuilderContext(UserDict[str, Any]):
         """Return whether a key has a non-None value."""
         return self.data.get(key) is not None
 
+
 # ============================================================================
 # Database metadata
 # ============================================================================
+
 
 class Database(BaseModel):
     """Database definition used by the project generator."""
@@ -100,9 +104,11 @@ class Database(BaseModel):
     port: int | None = None
     driver_short: str | None = None
 
+
 # ============================================================================
 # Menu entries
 # ============================================================================
+
 
 class MenuEntry(BaseModel):
     """
@@ -123,6 +129,7 @@ class MenuEntry(BaseModel):
         """Return the CLI parameter name."""
         return self.cli_name or self.code
 
+
 SKIP_ENTRY = MenuEntry(
     code="skip",
     user_view="skip",
@@ -132,6 +139,7 @@ SKIP_ENTRY = MenuEntry(
 # ============================================================================
 # Base menu
 # ============================================================================
+
 
 class BaseMenuModel(BaseModel, abc.ABC):
     """
@@ -171,9 +179,11 @@ class BaseMenuModel(BaseModel, abc.ABC):
         """Hook executed after the menu finishes."""
         return context
 
+
 # ============================================================================
 # Singular selection
 # ============================================================================
+
 
 class SingularMenuModel(BaseMenuModel):
     """
@@ -192,20 +202,14 @@ class SingularMenuModel(BaseMenuModel):
 
     before_ask_fun: Callable[[BuilderContext], MenuEntry | None] | None = None
 
-    after_ask_fun: (
-        Callable[[BuilderContext, "SingularMenuModel"], BuilderContext]
-        | None
-    ) = None
+    after_ask_fun: Callable[[BuilderContext, "SingularMenuModel"], BuilderContext] | None = None
 
     parser: Callable[[str], Any] | None = None
 
     def get_cli_options(self) -> list[click.Option]:
         cli_name = self.cli_name or self.code
 
-        choices = [
-            entry.generated_name
-            for entry in self.entries
-        ]
+        choices = [entry.generated_name for entry in self.entries]
 
         return [
             click.Option(
@@ -262,10 +266,7 @@ class SingularMenuModel(BaseMenuModel):
 
         menu = TerminalMenu(
             title=self.title,
-            menu_entries=[
-                entry.user_view
-                for entry in entries
-            ],
+            menu_entries=[entry.user_view for entry in entries],
             multi_select=False,
             preview_title="Description",
             preview_command=self.preview,
@@ -286,10 +287,7 @@ class SingularMenuModel(BaseMenuModel):
         selected = radiolist_dialog(
             title=self.title,
             text=self.description,
-            values=[
-                (entry, entry.user_view)
-                for entry in entries
-            ],
+            values=[(entry, entry.user_view) for entry in entries],
         ).run()
 
         return selected or None
@@ -346,9 +344,11 @@ class SingularMenuModel(BaseMenuModel):
 
         return super().after_ask(context)
 
+
 # ============================================================================
 # Multi-selection
 # ============================================================================
+
 
 class MultiselectMenuModel(BaseMenuModel):
     """
@@ -363,10 +363,13 @@ class MultiselectMenuModel(BaseMenuModel):
 
     code: str = "features"
 
-    before_ask: Callable[
-        [BuilderContext],
-        list[MenuEntry] | None,
-    ] | None = None
+    before_ask: (
+        Callable[
+            [BuilderContext],
+            list[MenuEntry] | None,
+        ]
+        | None
+    ) = None
 
     def get_cli_options(self) -> list[click.Option]:
         options: list[click.Option] = []
@@ -387,10 +390,7 @@ class MultiselectMenuModel(BaseMenuModel):
         return options
 
     def need_ask(self, context: BuilderContext) -> bool:
-        return any(
-            not context.is_set(entry.code)
-            for entry in self.entries
-        )
+        return any(not context.is_set(entry.code) for entry in self.entries)
 
     def _visible_entries(
         self,
@@ -414,26 +414,18 @@ class MultiselectMenuModel(BaseMenuModel):
 
         # Interactive mode.
         if chosen_entries is None:
-            unknown_entries = [
-                entry
-                for entry in self.entries
-                if not context.is_set(entry.code)
-            ]
+            unknown_entries = [entry for entry in self.entries if not context.is_set(entry.code)]
 
             visible_entries = [
                 entry
                 for entry in unknown_entries
-                if entry.is_hidden is None
-                or not entry.is_hidden(context)
+                if entry.is_hidden is None or not entry.is_hidden(context)
             ]
 
             if TerminalMenu is not None:
                 menu = TerminalMenu(
                     title=self.title,
-                    menu_entries=[
-                        entry.user_view
-                        for entry in visible_entries
-                    ],
+                    menu_entries=[entry.user_view for entry in visible_entries],
                     multi_select=True,
                     preview_title="Description",
                     preview_command=self.preview,
@@ -444,19 +436,13 @@ class MultiselectMenuModel(BaseMenuModel):
                 if indexes is None:
                     return None
 
-                chosen_entries = [
-                    visible_entries[index]
-                    for index in indexes
-                ]
+                chosen_entries = [visible_entries[index] for index in indexes]
 
             else:
                 chosen_entries = checkboxlist_dialog(
                     title=self.title,
                     text=self.description,
-                    values=[
-                        (entry, entry.user_view)
-                        for entry in visible_entries
-                    ],
+                    values=[(entry, entry.user_view) for entry in visible_entries],
                 ).run()
 
                 if chosen_entries is None:
@@ -466,10 +452,7 @@ class MultiselectMenuModel(BaseMenuModel):
             setattr(context, entry.code, True)
 
         # Explicitly mark visible options that were not selected as False.
-        selected_codes = {
-            entry.code
-            for entry in chosen_entries
-        }
+        selected_codes = {entry.code for entry in chosen_entries}
 
         for entry in self.entries:
             if entry.code not in selected_codes:
@@ -478,9 +461,11 @@ class MultiselectMenuModel(BaseMenuModel):
 
         return context
 
+
 # ============================================================================
 # Menu collection
 # ============================================================================
+
 
 class MenuCollection:
     """
@@ -507,9 +492,11 @@ class MenuCollection:
         self,
         context: BuilderContext,
     ) -> BuilderContext | None:
-        current = context
+        current: BuilderContext | None = context
 
         for menu in self.menus:
+            if current is None:
+                return None
             if not menu.need_ask(current):
                 continue
 

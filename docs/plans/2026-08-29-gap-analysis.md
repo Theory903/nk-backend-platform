@@ -320,8 +320,8 @@ The **product is still the old package**:
 
 - Root `pyproject.toml`: `name = "fastapi_template"`, authors Pavel Kirilin, URLs → `s3rius/FastAPI-template`
 - README still documents `pip install fastapi_template` / `ghcr.io/s3rius/fastapi_template`
-- No published `nk` console script on the **generator**
-- Root Python `>=3.9` vs generated target 3.12
+- Local wheel now exposes `nk`; publishing the package under the NK product identity remains open
+- Root Python `>=3.12` now matches the generated target
 - Cookiecutter 1.x (`<2`)
 - `.project-intelligence/ARCHITECTURE.md` empty
 - Wiki does not document settings, auth setup, or Kubernetes

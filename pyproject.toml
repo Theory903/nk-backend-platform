@@ -3,7 +3,7 @@ name = "fastapi_template"
 version = "0.0.0"
 description = "Composable FastAPI project generator for NK Backend OS"
 authors = [{ name = "Pavel Kirilin", email = "win10@list.ru" }]
-requires-python = ">=3.9,<4"
+requires-python = ">=3.12,<4"
 readme = "README.md"
 keywords = [
     "FastAPI",
@@ -14,7 +14,7 @@ dependencies = [
     "cookiecutter>=1.7.3,<2",
     "pre-commit>=2.14.0,<3",
     "termcolor>=1.1.0,<2",
-    "pydantic>=1.10",
+    "pydantic>=2.12,<3",
     "simple-term-menu>=1.5.2,<2",
     "click>=8.1.3,<9",
     "prompt-toolkit>=3.0.36,<4",
@@ -26,6 +26,8 @@ Repository = "https://github.com/s3rius/FastAPI-template"
 
 [project.scripts]
 fastapi_template = "fastapi_template.__main__:main"
+fastapi-template = "fastapi_template.__main__:main"
+nk = "fastapi_template.__main__:main"
 
 [dependency-groups]
 dev = [
@@ -66,7 +68,13 @@ cumulative_timing = true
 
 [tool.ruff]
 line-length = 100
-extend-exclude = ["fastapi_template/template"]
+extend-exclude = [
+    "fastapi_template/template",
+    "fastapi_template/test_nk_backend",
+    "my_app",
+    "probe_identity_deps",
+    "temp",
+]
 
 [tool.ruff.lint]
 select = ["E", "F"]
@@ -74,7 +82,7 @@ select = ["E", "F"]
 [tool.mypy]
 python_version = "3.11"
 files = ["fastapi_template"]
-exclude = "fastapi_template/template"
+exclude = "fastapi_template/(template|test_nk_backend)"
 check_untyped_defs = true
 ignore_missing_imports = true
 warn_unused_ignores = true

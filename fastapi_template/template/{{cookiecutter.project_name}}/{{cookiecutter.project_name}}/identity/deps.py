@@ -39,6 +39,7 @@ instance — never construct ``SessionStore()`` inside CurrentUser.
 
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
 from typing import Annotated, Any, Callable
 
 from fastapi import Cookie, Depends, Header, Request
@@ -54,10 +55,28 @@ from {{cookiecutter.project_name}}.identity.permissions import has_permission
 from {{cookiecutter.project_name}}.identity.principal import Anonymous, Principal
 from {{cookiecutter.project_name}}.identity.session import SessionStore
 from {{cookiecutter.project_name}}.identity.session_lifecycle import SecureSessionStore
+from {{cookiecutter.project_name}}.identity.service_accounts import (
+    ServiceAccountRegistry,
+)
+from {{cookiecutter.project_name}}.identity.token_policy import (
+    TokenPolicy,
+    validate_token as validate_jwt,
+)
+from {{cookiecutter.project_name}}.platform.contracts import Scope
 from {{cookiecutter.project_name}}.settings import settings
 
 
 _STATE_CHANGING_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
+
+
+def _set_principal_state(request: Request, principal: Principal) -> None:
+    """Publish authenticated identity and its trusted tenant scope."""
+    request.state.principal = principal
+    if not principal.is_anonymous and principal.org_id:
+        request.state.scope = Scope(
+            principal_id=principal.user_id,
+            organization_id=principal.org_id,
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -67,6 +86,9 @@ _STATE_CHANGING_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
 _api_key_store: ApiKeyStore | None = None
 _session_store: SessionStore | None = None
 _csrf_protection: CsrfProtection | None = None
+_access_token_store: Any | None = None
+_service_accounts: ServiceAccountRegistry | None = None
+_account_active_checker: Callable[[str], bool] | None = None
 
 
 def configure_auth_stores(
@@ -74,6 +96,9 @@ def configure_auth_stores(
     api_keys: ApiKeyStore | None = None,
     sessions: SessionStore | None = None,
     csrf: CsrfProtection | None = None,
+    access_tokens: Any | None = None,
+    service_accounts: ServiceAccountRegistry | None = None,
+    account_active_checker: Callable[[str], bool] | None = None,
 ) -> None:
     """
     Configure authentication stores during application startup.
@@ -93,6 +118,9 @@ def configure_auth_stores(
     global _api_key_store
     global _session_store
     global _csrf_protection
+    global _access_token_store
+    global _service_accounts
+    global _account_active_checker
 
     if api_keys is not None:
         _api_key_store = api_keys
@@ -102,6 +130,15 @@ def configure_auth_stores(
 
     if csrf is not None:
         _csrf_protection = csrf
+
+    if access_tokens is not None:
+        _access_token_store = access_tokens
+
+    if service_accounts is not None:
+        _service_accounts = service_accounts
+
+    if account_active_checker is not None:
+        _account_active_checker = account_active_checker
 
 
 def get_api_key_store() -> ApiKeyStore:
@@ -134,6 +171,17 @@ def get_session_store() -> SessionStore:
     return _session_store
 
 
+def get_csrf_protection() -> CsrfProtection:
+    """Return the configured CSRF verifier or fail closed."""
+    if _csrf_protection is None:
+        raise Problem(
+            title="Server Misconfigured",
+            status_code=500,
+            detail="CSRF protection has not been configured",
+        )
+    return _csrf_protection
+
+
 # ---------------------------------------------------------------------------
 # JWT authentication
 # ---------------------------------------------------------------------------
@@ -163,16 +211,61 @@ def _resolve_jwt(token: str) -> Principal:
         secret,
     )
 
-    if not subject:
+    if subject:
+        if (
+            _account_active_checker is not None
+            and not _account_active_checker(subject)
+        ):
+            raise Problem(
+                title="Not Authenticated",
+                status_code=401,
+                detail="account is inactive",
+            )
+        return Principal(
+            user_id=subject,
+            provider="token",
+        )
+
+    # FastAPI Users emits a standard signed JWT. Validate it through the
+    # shared policy layer so the generated auth surface has one verifier.
+    jwt_result = validate_jwt(
+        token,
+        secret,
+        policy=TokenPolicy(
+            algorithms=frozenset({"HS256"}),
+            expected_audiences=frozenset({"fastapi-users:auth"}),
+            required_claims=frozenset({"sub", "exp"}),
+            max_token_age_s=settings.auth_token_ttl_seconds,
+        ),
+    )
+    if not jwt_result.valid:
         raise Problem(
             title="Invalid Token",
             status_code=401,
             detail="token expired or invalid",
         )
 
+    claims = jwt_result.claims
+    subject = str(claims["sub"])
+    if (
+        _account_active_checker is not None
+        and not _account_active_checker(subject)
+    ):
+        raise Problem(
+            title="Not Authenticated",
+            status_code=401,
+            detail="account is inactive",
+        )
+    scopes = claims.get("scope", "")
+    if isinstance(scopes, str):
+        normalized_scopes = frozenset(scopes.split())
+    else:
+        normalized_scopes = frozenset()
+
     return Principal(
         user_id=subject,
-        provider="token",
+        scopes=normalized_scopes,
+        provider="jwt",
     )
 
 
@@ -198,6 +291,7 @@ def _principal_from_api_key(
         user_id=f"svc:{record.key_id}",
         org_id=record.org_id,
         roles=frozenset(roles),
+        scopes=record.scopes,
         provider="api_key",
         is_service=True,
     )
@@ -231,7 +325,79 @@ def _resolve_api_key(
             detail="unrecognized, expired, revoked, or restricted key",
         )
 
-    return _principal_from_api_key(record)
+    account_id = record.metadata.get("account_id")
+    if account_id:
+        if _service_accounts is None:
+            raise Problem(
+                title="Server Misconfigured",
+                status_code=500,
+                detail="service-account registry has not been configured",
+            )
+        service_account = _service_accounts.get_active(
+            str(account_id),
+            org_id=record.org_id,
+        )
+        if service_account is None or not service_account.allows_ip(client_ip):
+            raise Problem(
+                title="Invalid API Key",
+                status_code=401,
+                detail="service account is inactive or restricted",
+            )
+
+    principal = _principal_from_api_key(record)
+    if (
+        _account_active_checker is not None
+        and not principal.is_service
+        and not _account_active_checker(record.owner_id)
+    ):
+        raise Problem(
+            title="Not Authenticated",
+            status_code=401,
+            detail="account is inactive",
+        )
+    return principal
+
+
+# ---------------------------------------------------------------------------
+# Durable cookie authentication
+# ---------------------------------------------------------------------------
+
+def _resolve_access_token(token: str) -> Principal:
+    if _access_token_store is None:
+        raise Problem(
+            title="Server Misconfigured",
+            status_code=500,
+            detail="access-token store has not been configured",
+        )
+    record = _access_token_store.get_sync(token)
+    if record is None:
+        raise Problem(
+            title="Not Authenticated",
+            status_code=401,
+            detail="cookie session is invalid or expired",
+        )
+    created_at = record.created_at
+    if created_at.tzinfo is None:
+        created_at = created_at.replace(tzinfo=UTC)
+    if datetime.now(UTC) - created_at > timedelta(
+        seconds=settings.session_cookie_max_age_seconds,
+    ):
+        raise Problem(
+            title="Not Authenticated",
+            status_code=401,
+            detail="cookie session is expired",
+        )
+    subject = str(record.user_id)
+    if (
+        _account_active_checker is not None
+        and not _account_active_checker(subject)
+    ):
+        raise Problem(
+            title="Not Authenticated",
+            status_code=401,
+            detail="account is inactive",
+        )
+    return Principal(user_id=subject, provider="session")
 
 
 # ---------------------------------------------------------------------------
@@ -272,15 +438,25 @@ def _resolve_session(
 
     # SessionStore.create keeps extras under "data"; accept top-level too.
     roles = session.get("roles")
+    scopes = session.get("scopes")
     data = session.get("data") or {}
     if roles is None:
         roles = data.get("roles", ())
+    if scopes is None:
+        scopes = data.get("scopes", ())
     org_id = session.get("org_id") or data.get("org_id")
+    if _account_active_checker is not None and not _account_active_checker(str(principal_id)):
+        raise Problem(
+            title="Not Authenticated",
+            status_code=401,
+            detail="account is inactive",
+        )
 
     return Principal(
         user_id=str(principal_id),
         org_id=str(org_id) if org_id is not None else None,
         roles=frozenset(str(role) for role in roles),
+        scopes=frozenset(str(scope) for scope in scopes),
         provider="session",
     )
 
@@ -333,6 +509,10 @@ def CurrentUser(
         str | None,
         Cookie(alias="session"),
     ] = None,
+    auth_cookie: Annotated[
+        str | None,
+        Cookie(alias="auth_session"),
+    ] = None,
     x_session_id: Annotated[
         str | None,
         Header(alias="X-Session-Id"),
@@ -353,6 +533,9 @@ def CurrentUser(
 
     The client IP is passed to API-key verification when supported.
     """
+    if not getattr(settings, "security_require_auth", True):
+        _set_principal_state(request, Anonymous)
+        return Anonymous
 
     if authorization:
         parsed = _parse_authorization(
@@ -386,7 +569,7 @@ def CurrentUser(
                 detail="unsupported Authorization scheme",
             )
 
-        request.state.principal = principal
+        _set_principal_state(request, principal)
 
         return principal
 
@@ -405,9 +588,16 @@ def CurrentUser(
             effective_session_id,
         )
 
-        request.state.principal = principal
+        _set_principal_state(request, principal)
         request.state.session_id = effective_session_id
 
+        return principal
+
+    if auth_cookie:
+        principal = _resolve_access_token(auth_cookie)
+        _set_principal_state(request, principal)
+        request.state.session_id = auth_cookie
+        request.state.auth_cookie = True
         return principal
 
     raise Problem(
@@ -431,6 +621,10 @@ def OptionalUser(
         str | None,
         Cookie(alias="session"),
     ] = None,
+    auth_cookie: Annotated[
+        str | None,
+        Cookie(alias="auth_session"),
+    ] = None,
 ) -> Principal:
     """
     Resolve a Principal when credentials are supplied.
@@ -440,14 +634,15 @@ def OptionalUser(
     Invalid supplied credentials still fail with 401.
     """
 
-    if not authorization and not session_cookie:
-        request.state.principal = Anonymous
+    if not authorization and not session_cookie and not auth_cookie:
+        _set_principal_state(request, Anonymous)
         return Anonymous
 
     return CurrentUser(
         request=request,
         authorization=authorization,
         session_cookie=session_cookie,
+        auth_cookie=auth_cookie,
     )
 
 
@@ -480,6 +675,8 @@ def RequirePermission(
             Depends(CurrentUser),
         ],
     ) -> Principal:
+        if not getattr(settings, "security_require_auth", True):
+            return principal
         if principal.is_anonymous:
             raise Problem(
                 title="Forbidden",
@@ -528,6 +725,8 @@ def RequireRole(
             Depends(CurrentUser),
         ],
     ) -> Principal:
+        if not getattr(settings, "security_require_auth", True):
+            return principal
         if principal.is_anonymous:
             raise Problem(
                 title="Forbidden",
@@ -556,10 +755,10 @@ def RequireCsrf(
     action: str = "",
 ) -> Callable[..., Any]:
     """
-    Validate ``X-CSRF-Token`` for cookie-session state-changing requests.
+    Validate ``X-CSRF-Token`` for browser cookie-authenticated state changes.
 
     Skips Bearer and ApiKey principals. Safe no-op for GET/HEAD/OPTIONS.
-    Requires ``request.state.session_id`` (set by CurrentUser on session auth)
+    Requires ``request.state.session_id`` (set by CurrentUser on cookie auth)
     and a configured ``CsrfProtection`` (via configure_auth_stores).
     """
 
@@ -570,9 +769,14 @@ def RequireCsrf(
             Header(alias=CSRF_HEADER),
         ] = None,
     ) -> None:
+        if not getattr(settings, "security_require_auth", True):
+            return
         principal = getattr(request.state, "principal", None)
 
-        if principal is None or getattr(principal, "provider", None) != "session":
+        if principal is None or (
+            getattr(principal, "provider", None) != "session"
+            and not getattr(request.state, "auth_cookie", False)
+        ):
             return
 
         if request.method.upper() not in _STATE_CHANGING_METHODS:
@@ -608,6 +812,24 @@ def RequireCsrf(
     return checker
 
 
+def issue_csrf_token(request: Request) -> str:
+    """Issue a token bound to the authenticated browser credential."""
+    binding = getattr(request.state, "session_id", None)
+    if not binding:
+        raise Problem(
+            title="CSRF Validation Failed",
+            status_code=403,
+            detail="browser cookie authentication is required",
+        )
+    if _csrf_protection is None:
+        raise Problem(
+            title="Server Misconfigured",
+            status_code=500,
+            detail="CSRF protection has not been configured",
+        )
+    return _csrf_protection.generate_token(binding)
+
+
 __all__ = [
     "Anonymous",
     "CurrentUser",
@@ -615,6 +837,7 @@ __all__ = [
     "RequireCsrf",
     "RequirePermission",
     "RequireRole",
+    "issue_csrf_token",
     "SecureSessionStore",
     "SessionStore",
     "configure_auth_stores",

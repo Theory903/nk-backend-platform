@@ -3,17 +3,22 @@
 #   docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 #
 # Host ports are intentional here so IDEs/CLIs can reach db/redis/brokers.
+# `nk dev` selects free host ports automatically; set NK_*_PORT to override.
 # Do not use this file as a production topology.
 
 services:
   api:
     build:
       target: dev
+    env_file:
+      - path: .env
+        required: false
     environment:
       {{cookiecutter.project_name | upper}}_RELOAD: "True"
       {{cookiecutter.project_name | upper}}_ENVIRONMENT: "dev"
+      {{cookiecutter.project_name | upper}}_PORT: "8000"
     ports:
-      - "8000:8000"
+      - "${NK_API_PORT:-8000}:8000"
     volumes:
       - .:/app/src/
       # Keep the Docker-built React bundle visible through the source mount.
@@ -22,11 +27,14 @@ services:
       - {{cookiecutter.project_name}}-db-data:/db_data/
       {%- endif %}
 
-  {%- if cookiecutter.enable_taskiq == "True" %}
+  {%- if cookiecutter.enable_taskiq in [True, "True", "true", 1, "1"] %}
 
   taskiq-worker:
     build:
       target: dev
+    env_file:
+      - path: .env
+        required: false
     environment:
       {{cookiecutter.project_name | upper}}_RELOAD: "True"
       {{cookiecutter.project_name | upper}}_ENVIRONMENT: "dev"
@@ -39,11 +47,14 @@ services:
       - --reload
   {%- endif %}
 
-  {%- if cookiecutter.enable_migrations == 'True' and cookiecutter.orm != 'psycopg' %}
+  {%- if cookiecutter.enable_migrations in [True, "True", "true", 1, "1"] and cookiecutter.orm != 'psycopg' %}
 
   migrator:
     build:
       target: dev
+    env_file:
+      - path: .env
+        required: false
     volumes:
       - .:/app/src/
   {%- endif %}
@@ -52,53 +63,53 @@ services:
 
   db:
     ports:
-      - "{{cookiecutter.db_info.port}}:{{cookiecutter.db_info.port}}"
+      - "${NK_DB_PORT:-{{cookiecutter.db_info.port}}}:{{cookiecutter.db_info.port}}"
   {%- endif %}
 
   {%- if cookiecutter.db_info.name == "mongodb" %}
 
   db:
     ports:
-      - "{{cookiecutter.db_info.port}}:{{cookiecutter.db_info.port}}"
+      - "${NK_DB_PORT:-{{cookiecutter.db_info.port}}}:{{cookiecutter.db_info.port}}"
   {%- endif %}
 
   {%- if cookiecutter.db_info.name == "mysql" %}
 
   db:
     ports:
-      - "{{cookiecutter.db_info.port}}:{{cookiecutter.db_info.port}}"
+      - "${NK_DB_PORT:-{{cookiecutter.db_info.port}}}:{{cookiecutter.db_info.port}}"
   {%- endif %}
 
-  {%- if cookiecutter.enable_redis == "True" %}
+  {%- if cookiecutter.enable_redis in [True, "True", "true", 1, "1"] %}
 
   redis:
     ports:
-      - "6379:6379"
+      - "${NK_REDIS_PORT:-6379}:6379"
   {%- endif %}
 
-  {%- if cookiecutter.enable_rmq == "True" %}
+  {%- if cookiecutter.enable_rmq in [True, "True", "true", 1, "1"] %}
 
   # guest/guest is acceptable for local-only RabbitMQ; override via RABBITMQ_* for shared envs.
   rmq:
     ports:
-      - "5672:5672"
-      - "15672:15672"
+      - "${NK_RABBIT_PORT:-5672}:5672"
+      - "${NK_RABBIT_MANAGEMENT_PORT:-15672}:15672"
   {%- endif %}
 
-  {%- if cookiecutter.enable_kafka == "True" %}
+  {%- if cookiecutter.enable_kafka in [True, "True", "true", 1, "1"] %}
 
   kafka:
     ports:
-      - "9094:9094"
+      - "${NK_KAFKA_PORT:-9094}:9094"
     environment:
       KAFKA_LISTENERS: "PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094"
-      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:9092,EXTERNAL://localhost:${NK_KAFKA_PORT:-9094}"
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT"
   {%- endif %}
 
-  {%- if cookiecutter.enable_nats == "True" %}
+  {%- if cookiecutter.enable_nats in [True, "True", "true", 1, "1"] %}
 
   nats:
     ports:
-      - "4222:4222"
+      - "${NK_NATS_PORT:-4222}:4222"
   {%- endif %}

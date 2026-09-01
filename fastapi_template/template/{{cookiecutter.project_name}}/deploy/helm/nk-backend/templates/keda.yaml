@@ -1,0 +1,20 @@
+{{- if and .Values.worker.enabled .Values.autoscaling.worker.enabled }}
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: {{ include "nk-backend.fullname" . }}-worker
+spec:
+  scaleTargetRef:
+    name: {{ include "nk-backend.fullname" . }}-worker
+  minReplicaCount: {{ .Values.autoscaling.worker.minReplicas }}
+  maxReplicaCount: {{ .Values.autoscaling.worker.maxReplicas }}
+  pollingInterval: 15
+  cooldownPeriod: 60
+  triggers:
+    - type: prometheus
+      metadata:
+        serverAddress: http://prometheus-operated.monitoring.svc:9090
+        metricName: nk_queue_depth
+        threshold: "10"
+        query: sum(nk_queue_depth)
+{{- end }}

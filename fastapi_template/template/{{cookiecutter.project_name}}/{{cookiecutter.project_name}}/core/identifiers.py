@@ -55,9 +55,10 @@ def is_valid_id(
         if not _PREFIX_RE.fullmatch(prefix):
             return False
 
+        suffix_pattern = "[0-9a-f]{32}"
         return bool(
             re.fullmatch(
-                rf"{re.escape(prefix)}_[0-9a-f]{{32}}",
+                f"{re.escape(prefix)}_{suffix_pattern}",
                 value,
             )
         )

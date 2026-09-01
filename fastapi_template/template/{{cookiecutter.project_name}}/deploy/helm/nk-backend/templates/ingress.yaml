@@ -1,0 +1,32 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "nk-backend.fullname" . }}
+  labels:
+    {{- include "nk-backend.labels" . | nindent 4 }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- if .Values.ingress.tls }}
+  tls:
+    - hosts: ["{{ .Values.ingress.host | default "api.example.com" }}"]
+      secretName: {{ include "nk-backend.fullname" . }}-tls
+  {{- end }}
+  rules:
+    - host: {{ .Values.ingress.host | default "" | quote }}
+      http:
+        paths:
+          {{- range .Values.ingress.routes }}
+          {{- $service := .service }}
+          {{- if and (eq $service "stream") (not $.Values.stream.enabled) }}
+          {{- $service = "api" }}
+          {{- end }}
+          - path: {{ .path }}
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "nk-backend.fullname" $ }}-{{ $service }}
+                port:
+                  number: {{ $.Values.service.port }}
+          {{- end }}
+{{- end }}

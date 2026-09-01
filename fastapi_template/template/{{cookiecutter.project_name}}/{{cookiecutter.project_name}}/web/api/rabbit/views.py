@@ -3,12 +3,16 @@ from aio_pika.pool import Pool
 from fastapi import APIRouter, Depends
 from {{cookiecutter.project_name}}.services.rabbit.dependencies import \
     get_rmq_channel_pool
+from {{cookiecutter.project_name}}.identity.deps import RequirePermission
 from {{cookiecutter.project_name}}.web.api.rabbit.schema import RMQMessageDTO
 
 router = APIRouter()
 
 
-@router.post("/")
+@router.post(
+    "/",
+    dependencies=[Depends(RequirePermission("messaging.publish"))],
+)
 async def send_rabbit_message(
     message: RMQMessageDTO,
     pool: Pool[Channel] = Depends(get_rmq_channel_pool),

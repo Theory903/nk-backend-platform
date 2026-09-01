@@ -4,14 +4,14 @@
 # Stage 1: uv
 # ============================================================================
 
-FROM ghcr.io/astral-sh/uv:0.11.7-python3.12-trixie AS uv
+FROM ghcr.io/astral-sh/uv:0.11.7-python3.12-trixie@sha256:3b66071aa339eec6e5149dbc7f2c07144d71f4c25c6aab3959e87747e5c45e35 AS uv
 
 
 # ============================================================================
 # Stage 2: React documentation assets
 # ============================================================================
 
-FROM node:22-alpine AS frontend
+FROM node:22-alpine@sha256:c610fcdfb1d5b4740dd70c284ed3cb16bb857e0f7166196e36a5501df7a3aa32 AS frontend
 
 WORKDIR /app/frontend
 
@@ -26,7 +26,7 @@ RUN npm run build
 # Stage 3: production
 # ============================================================================
 
-FROM python:3.12-slim-trixie AS prod
+FROM python:3.12-slim-trixie@sha256:09f7da3bc104798d0afb40bc08d23ab2da20a76130cec1f2ef170848f5d85217 AS prod
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -69,7 +69,8 @@ RUN apt-get update \
 RUN --mount=from=uv,source=/usr/local/bin/uv,target=/bin/uv \
     --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-    uv sync --no-install-project --no-dev
+    --mount=type=bind,source=uv.lock,target=uv.lock \
+    uv sync --locked --no-install-project --no-dev
 
 
 # ---------------------------------------------------------------------------
@@ -83,7 +84,8 @@ COPY --from=frontend /app/{{cookiecutter.project_name}}/static/studio/dist ./{{c
 # Install project itself.
 RUN --mount=from=uv,source=/usr/local/bin/uv,target=/bin/uv \
     --mount=type=cache,target=/root/.cache/uv \
-    uv sync --no-dev
+    --mount=type=bind,source=uv.lock,target=uv.lock \
+    uv sync --locked --no-dev
 
 
 # ---------------------------------------------------------------------------

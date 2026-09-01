@@ -106,6 +106,21 @@ class TestJsonFormatter:
         parsed = json.loads(formatter.format(record))
         assert parsed["custom_field"]["nested"] is True
 
+    def test_sensitive_fields_are_redacted(self) -> None:
+        formatter = JsonFormatter()
+        record = logging.LogRecord(
+            name="test", level=logging.INFO, pathname="t.py",
+            lineno=1, msg="password=hunter2", args=(), exc_info=None,
+        )
+        record.credentials = {
+            "api_key": "secret-value",
+            "nested": "safe",
+        }
+        parsed = json.loads(formatter.format(record))
+        assert parsed["message"] == "password=[REDACTED]"
+        assert parsed["credentials"]["api_key"] == "[REDACTED]"
+        assert parsed["credentials"]["nested"] == "safe"
+
     def test_exception_included(self) -> None:
         formatter = JsonFormatter()
         try:

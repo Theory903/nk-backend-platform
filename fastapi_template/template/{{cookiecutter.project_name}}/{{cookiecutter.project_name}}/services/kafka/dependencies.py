@@ -5,7 +5,7 @@ from typing import Annotated
 from aiokafka import AIOKafkaProducer
 from fastapi import Depends, Request
 
-{%- if cookiecutter.enable_taskiq == "True" %}
+{%- if cookiecutter.enable_taskiq in [True, "True", "true", 1, "1"] %}
 from taskiq import TaskiqDepends
 {%- endif %}
 
@@ -16,7 +16,7 @@ from {{cookiecutter.project_name}}.services.kafka.lifespan import (
 
 def get_kafka_producer(
     request: Request
-    {%- if cookiecutter.enable_taskiq == "True" %}
+    {%- if cookiecutter.enable_taskiq in [True, "True", "true", 1, "1"] %}
     = TaskiqDepends()
     {%- endif %}
 ) -> AIOKafkaProducer:

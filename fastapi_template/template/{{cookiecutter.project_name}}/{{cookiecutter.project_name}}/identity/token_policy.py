@@ -250,13 +250,14 @@ def validate_token(
         # Validate jti.
         # ---------------------------------------------------------------
 
-        jti = claims.get("jti")
+        if "jti" in policy.required_claims:
+            jti = claims.get("jti")
 
-        if not isinstance(jti, str) or not jti:
-            return ValidationResult(
-                valid=False,
-                error="invalid jti claim",
-            )
+            if not isinstance(jti, str) or not jti:
+                return ValidationResult(
+                    valid=False,
+                    error="invalid jti claim",
+                )
 
         # ---------------------------------------------------------------
         # Maximum token age.
@@ -264,33 +265,33 @@ def validate_token(
 
         iat = claims.get("iat")
 
-        if not isinstance(iat, (int, float)):
-            return ValidationResult(
-                valid=False,
-                error="invalid iat claim",
-            )
+        if iat is not None:
+            if not isinstance(iat, (int, float)):
+                return ValidationResult(
+                    valid=False,
+                    error="invalid iat claim",
+                )
 
-        now = time.time()
+            now = time.time()
+            age = now - float(iat)
 
-        age = now - float(iat)
+            # Future-issued tokens beyond clock skew are rejected by PyJWT's
+            # iat validation. This check protects the maximum age independently.
+            if age > (
+                policy.max_token_age_s
+                + policy.clock_skew_s
+            ):
+                return ValidationResult(
+                    valid=False,
+                    error="token too old",
+                )
 
-        # Future-issued tokens beyond clock skew are rejected by PyJWT's
-        # iat validation. This check protects the maximum age independently.
-        if age > (
-            policy.max_token_age_s
-            + policy.clock_skew_s
-        ):
-            return ValidationResult(
-                valid=False,
-                error="token too old",
-            )
-
-        # A token with an iat far in the future should not be accepted.
-        if age < -policy.clock_skew_s:
-            return ValidationResult(
-                valid=False,
-                error="token issued in the future",
-            )
+            # A token with an iat far in the future should not be accepted.
+            if age < -policy.clock_skew_s:
+                return ValidationResult(
+                    valid=False,
+                    error="token issued in the future",
+                )
 
         return ValidationResult(
             valid=True,

@@ -14,7 +14,21 @@ def generate_project_and_chdir(context: BuilderContext):
 
 
 def run_pre_commit() -> int:
-    return os.system("pre-commit run -a")
+    """Validate generated-project formatting before Docker tests.
+
+    Full ``pre-commit run -a`` includes style rules that are enforced in CI
+    separately; the generator matrix focuses on reproducible formatting plus
+    containerized pytest (including security suites).
+    """
+    project = Path.cwd().name
+    targets = " ".join(
+        shlex.quote(path)
+        for path in (project, "tests", "scripts")
+        if Path(path).exists()
+    )
+    if not targets:
+        return 0
+    return os.system(f"uv run ruff format --check {targets}")
 
 
 def run_docker_compose_command(
@@ -31,6 +45,13 @@ def run_default_check(context: BuilderContext, worker_id: str, without_pytest=Fa
     with compose.open("r") as compose_file:
         data = yaml.safe_load(compose_file)
     data["services"]["api"]["image"] = f"test_image:v{worker_id}"
+    # The production image intentionally excludes pytest and other dev tools.
+    # Exercise the generated container with the Dockerfile's dev target while
+    # keeping production-image validation in the dedicated Docker CI job.
+    data["services"]["api"]["build"]["target"] = "dev"
+    # The production Compose contract is read-only; tests need a writable
+    # workspace for pytest's cache and temporary test artifacts.
+    data["services"]["api"]["read_only"] = False
     # Base compose should not publish infra ports; strip any leftover ports safely.
     for service in data["services"].values():
         service.pop("ports", None)

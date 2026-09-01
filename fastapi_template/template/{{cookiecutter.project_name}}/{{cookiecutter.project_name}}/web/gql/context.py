@@ -1,13 +1,13 @@
 from fastapi import Depends
 from strawberry.fastapi import BaseContext
 
-{%- if cookiecutter.enable_redis == "True" %}
+{%- if cookiecutter.enable_redis in [True, "True", "true", 1, "1"] %}
 from redis.asyncio import ConnectionPool
 from {{cookiecutter.project_name}}.services.redis.dependency import get_redis_pool
 
 {%- endif %}
 
-{%- if cookiecutter.enable_rmq == "True" %}
+{%- if cookiecutter.enable_rmq in [True, "True", "true", 1, "1"] %}
 from aio_pika import Channel
 from aio_pika.pool import Pool
 from {{cookiecutter.project_name}}.services.rabbit.dependencies import \
@@ -15,14 +15,14 @@ from {{cookiecutter.project_name}}.services.rabbit.dependencies import \
 
 {%- endif %}
 
-{%- if cookiecutter.enable_kafka == "True" %}
+{%- if cookiecutter.enable_kafka in [True, "True", "true", 1, "1"] %}
 from aiokafka import AIOKafkaProducer
 from {{cookiecutter.project_name}}.services.kafka.dependencies import get_kafka_producer
 
 {%- endif %}
 
 
-{%- if cookiecutter.enable_nats == "True" %}
+{%- if cookiecutter.enable_nats in [True, "True", "true", 1, "1"] %}
 from nats.aio.client import Client as NATS
 from {{cookiecutter.project_name}}.services.nats.dependencies import get_nats
 
@@ -47,10 +47,10 @@ class Context(BaseContext):
 
     def __init__(
         self,
-        {%- if cookiecutter.enable_redis == "True" %}
+        {%- if cookiecutter.enable_redis in [True, "True", "true", 1, "1"] %}
         redis_pool: ConnectionPool = Depends(get_redis_pool),
         {%- endif %}
-        {%- if cookiecutter.enable_rmq == "True" %}
+        {%- if cookiecutter.enable_rmq in [True, "True", "true", 1, "1"] %}
         rabbit: Pool[Channel] = Depends(get_rmq_channel_pool),
         {%- endif %}
         {%- if cookiecutter.orm == "sqlalchemy" %}
@@ -58,18 +58,18 @@ class Context(BaseContext):
         {%- elif cookiecutter.orm == "psycopg" %}
         db_pool: AsyncConnectionPool[Any] = Depends(get_db_pool),
         {%- endif %}
-        {%- if cookiecutter.enable_kafka == "True" %}
+        {%- if cookiecutter.enable_kafka in [True, "True", "true", 1, "1"] %}
         kafka_producer: AIOKafkaProducer = Depends(get_kafka_producer),
         {%- endif %}
-        {%- if cookiecutter.enable_nats == "True" %}
+        {%- if cookiecutter.enable_nats in [True, "True", "true", 1, "1"] %}
         nats: NATS = Depends(get_nats),
         {%- endif %}
 
     ) -> None:
-        {%- if cookiecutter.enable_redis == "True" %}
+        {%- if cookiecutter.enable_redis in [True, "True", "true", 1, "1"] %}
         self.redis_pool = redis_pool
         {%- endif %}
-        {%- if cookiecutter.enable_rmq == "True" %}
+        {%- if cookiecutter.enable_rmq in [True, "True", "true", 1, "1"] %}
         self.rabbit = rabbit
         {%- endif %}
         {%- if cookiecutter.orm  == "sqlalchemy" %}
@@ -78,10 +78,10 @@ class Context(BaseContext):
         {%- if cookiecutter.orm == "psycopg" %}
         self.db_pool = db_pool
         {%- endif %}
-        {%- if cookiecutter.enable_kafka == "True" %}
+        {%- if cookiecutter.enable_kafka in [True, "True", "true", 1, "1"] %}
         self.kafka_producer = kafka_producer
         {%- endif %}
-        {%- if cookiecutter.enable_nats == "True" %}
+        {%- if cookiecutter.enable_nats in [True, "True", "true", 1, "1"] %}
         self.nats = nats
         {%- endif %}
         pass

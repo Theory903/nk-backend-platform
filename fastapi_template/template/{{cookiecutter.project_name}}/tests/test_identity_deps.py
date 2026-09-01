@@ -32,10 +32,16 @@ def _reset_auth_stores() -> None:
     auth_deps._api_key_store = None
     auth_deps._session_store = None
     auth_deps._csrf_protection = None
+    auth_deps._access_token_store = None
+    auth_deps._service_accounts = None
+    auth_deps._account_active_checker = None
     yield
     auth_deps._api_key_store = None
     auth_deps._session_store = None
     auth_deps._csrf_protection = None
+    auth_deps._access_token_store = None
+    auth_deps._service_accounts = None
+    auth_deps._account_active_checker = None
 
 
 @pytest.fixture
@@ -54,7 +60,16 @@ def app(api_keys: ApiKeyStore, sessions: SessionStore, monkeypatch: pytest.Monke
     monkeypatch.setattr(
         auth_deps,
         "settings",
-        type("SettingsStub", (), {"users_secret": SECRET})(),
+        type(
+            "SettingsStub",
+            (),
+            {
+                "users_secret": SECRET,
+                "auth_token_ttl_seconds": 3600,
+                "session_cookie_max_age_seconds": 86_400,
+                "security_require_auth": True,
+            },
+        )(),
     )
     configure_auth_stores(api_keys=api_keys, sessions=sessions)
 

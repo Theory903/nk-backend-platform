@@ -24,18 +24,16 @@ across multiple workers or nodes — wire a Redis-backed
 from __future__ import annotations
 
 import asyncio
+from contextlib import suppress
 import hashlib
 import json
 import logging
 import uuid
 from typing import Any
 
-from starlette.middleware.base import (
-    BaseHTTPMiddleware,
-    RequestResponseEndpoint,
-)
 from starlette.requests import Request
 from starlette.responses import Response
+from starlette.types import Receive, Scope, Send
 
 from {{cookiecutter.project_name}}.core.idempotency import (
     DEFAULT_LOCK_TTL_S,
@@ -71,7 +69,7 @@ CACHEABLE_STATUS_MIN = 200
 CACHEABLE_STATUS_MAX = 499
 
 
-class IdempotencyMiddleware(BaseHTTPMiddleware):
+class IdempotencyMiddleware:
     """
     Distributed idempotency middleware.
 
@@ -97,7 +95,7 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
         max_body_bytes: int = DEFAULT_MAX_BODY_BYTES,
         store: IdempotencyStore | None = None,
     ) -> None:
-        super().__init__(app)  # type: ignore[arg-type]
+        self.app = app
 
         if ttl_s <= 0:
             raise ValueError("ttl_s must be positive")
@@ -121,172 +119,176 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
         self.max_body_bytes = max_body_bytes
         self.store = store or get_idempotency_store()
 
-    async def dispatch(
+    async def __call__(
         self,
-        request: Request,
-        call_next: RequestResponseEndpoint,
-    ) -> Response:
-        # Safe methods do not require idempotency protection.
+        scope: Scope,
+        receive: Receive,
+        send: Send,
+    ) -> None:
+        """Process HTTP requests without BaseHTTPMiddleware buffering."""
+        if scope.get("type") != "http":
+            await self.app(scope, receive, send)
+            return
+
+        request = Request(scope, receive)
         if request.method not in UNSAFE_METHODS:
-            return await call_next(request)
+            await self.app(scope, receive, send)
+            return
 
         raw_key = request.headers.get("idempotency-key")
-
-        # Idempotency-Key is optional.
         if raw_key is None or not raw_key.strip():
-            return await call_next(request)
+            await self.app(scope, receive, send)
+            return
+        if request.headers.get("X-Org-Id") and not getattr(
+            request.state,
+            "tenant_context",
+            None,
+        ):
+            # Tenant membership is resolved inside route dependencies. Never
+            # use an unvalidated selector as a replay namespace.
+            await self.app(scope, receive, send)
+            return
 
         try:
             idem_key = validate_idempotency_key(raw_key)
+            body = await self._read_request_body(request)
         except InvalidIdempotencyKey as exc:
-            return _problem_response(
+            response = _problem_response(
                 status=400,
                 title="Invalid Idempotency Key",
                 detail=str(exc),
             )
-
-        try:
-            body = await self._read_request_body(request)
+            await response(scope, receive, send)
+            return
         except _RequestBodyTooLarge as exc:
-            return _problem_response(
+            response = _problem_response(
                 status=413,
                 title="Request Body Too Large",
-                detail=(
-                    f"Request body exceeds {exc.max_bytes} bytes."
-                ),
+                detail=f"Request body exceeds {exc.max_bytes} bytes.",
             )
+            await response(scope, receive, send)
+            return
 
-        # Restore the consumed ASGI body for downstream handlers.
         await self._restore_request_body(request, body)
-
         fingerprint = compute_fingerprint(
             request.method,
             request.url.path,
             body,
+            query=request.url.query,
         )
-
         cache_key = self._build_cache_key(
             request=request,
             idem_key=idem_key,
         )
 
-        # ------------------------------------------------------------------
-        # Fast path: completed request already exists.
-        # ------------------------------------------------------------------
-
         cached = await self._store_get(cache_key)
-
         if cached is not None:
-            return self._replay_or_conflict(
-                cached,
-                fingerprint,
-            )
-
-        # ------------------------------------------------------------------
-        # Acquire execution lease.
-        # ------------------------------------------------------------------
+            response = self._replay_or_conflict(cached, fingerprint)
+            await response(scope, receive, send)
+            return
 
         owner = uuid.uuid4().hex
-
         acquired = await self._store_acquire_lock(
             cache_key,
             ttl_s=self.lock_ttl_s,
             owner=owner,
         )
-
         if not acquired:
-            response = await self._wait_for_cached(
-                cache_key,
-                fingerprint,
-            )
-
-            if response is not None:
-                return response
-
-            return _problem_response(
-                status=409,
-                title="Idempotency In Progress",
-                detail=(
-                    "Another request with this Idempotency-Key "
-                    "is still processing."
-                ),
-            )
-
-        try:
-            # ------------------------------------------------------------------
-            # Close the GET → LOCK race.
-            #
-            # Another worker may have completed the operation immediately
-            # before we acquired the lock.
-            # ------------------------------------------------------------------
-
-            cached = await self._store_get(cache_key)
-
-            if cached is not None:
-                return self._replay_or_conflict(
-                    cached,
-                    fingerprint,
+            response = await self._wait_for_cached(cache_key, fingerprint)
+            if response is None:
+                response = _problem_response(
+                    status=409,
+                    title="Idempotency In Progress",
+                    detail=(
+                        "Another request with this Idempotency-Key "
+                        "is still processing."
+                    ),
                 )
+            await response(scope, receive, send)
+            return
 
-            # ------------------------------------------------------------------
-            # Execute application request.
-            # ------------------------------------------------------------------
+        capture = _ResponseCapture(send, max_bytes=self.max_body_bytes)
+        lease_state = {"owned": True}
+        renewal_task = asyncio.create_task(
+            self._renew_lock(cache_key, owner=owner, state=lease_state),
+        )
+        try:
+            cached = await self._store_get(cache_key)
+            if cached is not None:
+                response = self._replay_or_conflict(cached, fingerprint)
+                await response(scope, receive, send)
+                return
 
-            response = await call_next(request)
+            await self.app(scope, request._receive, capture)  # type: ignore[attr-defined]
+            if capture.passthrough:
+                return
 
-            # Do not consume streaming responses blindly.
-            #
-            # BaseHTTPMiddleware already introduces response buffering
-            # behavior, so we only cache responses that expose a concrete
-            # body.
-            response_body = await self._extract_response_body(response)
+            response = capture.as_response()
+            if response is None:
+                return
 
-            # Do not cache server errors. The client can safely retry the
-            # operation with the same Idempotency-Key.
-            if CACHEABLE_STATUS_MIN <= response.status_code <= CACHEABLE_STATUS_MAX:
+            anonymous = _is_anonymous(request)
+            anonymous_cookie_missing = (
+                anonymous and "nk_anon_id" not in request.cookies
+            )
+            if anonymous_cookie_missing:
+                _set_anonymous_cookie(response, request)
+
+            has_replay_sensitive_headers = (
+                capture.has_header("set-cookie")
+                or capture.has_header("location")
+            )
+            if (
+                not has_replay_sensitive_headers
+                and CACHEABLE_STATUS_MIN <= response.status_code <= CACHEABLE_STATUS_MAX
+            ):
                 await self._cache_response(
                     cache_key=cache_key,
                     fingerprint=fingerprint,
                     response=response,
-                    body=response_body,
-                )
-
-            return Response(
-                content=response_body,
-                status_code=response.status_code,
-                headers=_safe_response_headers(response),
-                media_type=response.headers.get("content-type"),
-            )
-
-        except Exception:
-            logger.exception(
-                "Unhandled exception during idempotent request",
-                extra={
-                    "method": request.method,
-                    "path": request.url.path,
-                    "idempotency_key": idem_key,
-                },
-            )
-
-            # Important:
-            # no response is cached, so a retry can execute again.
-            raise
-
-        finally:
-            # Release only our own lease.
-            #
-            # The backing store MUST implement owner-aware release
-            # atomically for distributed deployments.
-            try:
-                await self._store_release_lock(
-                    cache_key,
+                    body=capture.body,
                     owner=owner,
+                    lease_owned=lease_state["owned"],
                 )
+            if anonymous_cookie_missing:
+                await response(scope, request._receive, send)  # type: ignore[attr-defined]
+            else:
+                await capture.send_buffered()
+        finally:
+            renewal_task.cancel()
+            with suppress(asyncio.CancelledError):
+                await renewal_task
+            try:
+                await self._store_release_lock(cache_key, owner=owner)
             except Exception:
                 logger.exception(
                     "Failed to release idempotency lock",
                     extra={"cache_key": cache_key},
                 )
+
+    async def _renew_lock(
+        self,
+        cache_key: str,
+        *,
+        owner: str,
+        state: dict[str, bool],
+    ) -> None:
+        """Keep the lease alive while a long-running request executes."""
+        interval = max(0.1, self.lock_ttl_s / 3)
+        while True:
+            await asyncio.sleep(interval)
+            extended = await self._store_extend_lock(
+                cache_key,
+                ttl_s=self.lock_ttl_s,
+                owner=owner,
+            )
+            if not extended:
+                state["owned"] = False
+                logger.warning(
+                    "Idempotency lease renewal failed",
+                    extra={"cache_key": cache_key},
+                )
+                return
 
     async def _read_request_body(
         self,
@@ -315,14 +317,23 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
                     self.max_body_bytes,
                 )
 
-        body = await request.body()
+        chunks: list[bytes] = []
+        total = 0
+        while True:
+            message = await request._receive()  # type: ignore[attr-defined]
+            if message["type"] == "http.disconnect":
+                break
+            if message["type"] != "http.request":
+                continue
+            chunk = bytes(message.get("body", b""))
+            total += len(chunk)
+            if total > self.max_body_bytes:
+                raise _RequestBodyTooLarge(self.max_body_bytes)
+            chunks.append(chunk)
+            if not message.get("more_body", False):
+                break
 
-        if len(body) > self.max_body_bytes:
-            raise _RequestBodyTooLarge(
-                self.max_body_bytes,
-            )
-
-        return body
+        return b"".join(chunks)
 
     async def _restore_request_body(
         self,
@@ -355,14 +366,30 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
         this middleware runs.
         """
 
+        principal = getattr(request.state, "principal", None)
+        tenant_context = getattr(request.state, "tenant_context", None)
         org_id = _safe_identifier(
-            getattr(request.state, "org_id", None),
+            getattr(tenant_context, "org_id", None)
+            or getattr(principal, "org_id", None)
+            or getattr(request.state, "org_id", None),
         )
 
         principal_id = _safe_identifier(
-            getattr(request.state, "user_id", None)
+            getattr(principal, "user_id", None)
+            or getattr(request.state, "user_id", None)
             or getattr(request.state, "principal_id", None),
         )
+
+        # Authentication dependencies run inside the application call. Until
+        # then, bind the key to the presented credential without persisting it.
+        credential = (
+            request.headers.get("Authorization")
+            or request.cookies.get("session")
+            or request.cookies.get("auth_session")
+        )
+        credential_id = _safe_identifier(credential)
+        if credential_id:
+            principal_id = f"{principal_id or 'credential'}:{credential_id}"
 
         # Anonymous requests still need a stable namespace.
         if not principal_id:
@@ -411,7 +438,11 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
         fingerprint: str,
         response: Response,
         body: bytes,
-    ) -> None:
+        owner: str,
+        lease_owned: bool,
+    ) -> bool:
+        if not lease_owned:
+            return False
         now = _utc_timestamp()
 
         cached = CachedResponse(
@@ -426,10 +457,11 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
             expires_at=now + self.ttl_s,
         )
 
-        await self._store_set(
+        return await self._store_set_if_owner(
             cache_key,
             cached,
             ttl_s=self.ttl_s,
+            owner=owner,
         )
 
     def _replay_or_conflict(
@@ -472,23 +504,6 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
         caching rather than being fully accumulated in memory.
         """
 
-        body_iterator = getattr(
-            response,
-            "body_iterator",
-            None,
-        )
-
-        if body_iterator is not None:
-            chunks: list[bytes] = []
-
-            async for chunk in body_iterator:
-                if isinstance(chunk, str):
-                    chunk = chunk.encode()
-
-                chunks.append(bytes(chunk))
-
-            return b"".join(chunks)
-
         body = getattr(
             response,
             "body",
@@ -530,6 +545,27 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
             ttl_s=ttl_s,
         )
 
+    async def _store_set_if_owner(
+        self,
+        key: str,
+        value: CachedResponse,
+        *,
+        ttl_s: float,
+        owner: str,
+    ) -> bool:
+        setter = getattr(self.store, "set_if_owner", None)
+        if setter is None:
+            return False
+        return bool(
+            await asyncio.to_thread(
+                setter,
+                key,
+                value,
+                ttl_s=ttl_s,
+                owner=owner,
+            ),
+        )
+
     async def _store_acquire_lock(
         self,
         key: str,
@@ -554,6 +590,107 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
             self.store.release_lock,
             key,
             owner=owner,
+        )
+
+    async def _store_extend_lock(
+        self,
+        key: str,
+        *,
+        ttl_s: float,
+        owner: str,
+    ) -> bool:
+        extend = getattr(self.store, "extend_lock", None)
+        if extend is None:
+            return False
+        return bool(
+            await asyncio.to_thread(
+                extend,
+                key,
+                ttl_s=ttl_s,
+                owner=owner,
+            ),
+        )
+
+
+class _ResponseCapture:
+    """Capture bounded responses while preserving oversized streams."""
+
+    def __init__(self, send: Any, *, max_bytes: int) -> None:
+        self._send = send
+        self._max_bytes = max_bytes
+        self._start: dict[str, Any] | None = None
+        self._chunks: list[bytes] = []
+        self._size = 0
+        self.passthrough = False
+
+    @property
+    def body(self) -> bytes:
+        return b"".join(self._chunks)
+
+    def has_header(self, name: str) -> bool:
+        if self._start is None:
+            return False
+        normalized = name.lower().encode("latin-1")
+        return any(
+            key.lower() == normalized
+            for key, _value in self._start.get("headers", [])
+        )
+
+    async def __call__(self, message: dict[str, Any]) -> None:
+        message_type = message.get("type")
+        if message_type == "http.response.start":
+            self._start = message
+            return
+        if message_type != "http.response.body":
+            await self._send(message)
+            return
+        if self.passthrough:
+            await self._send(message)
+            return
+
+        chunk = bytes(message.get("body", b""))
+        if self._size + len(chunk) <= self._max_bytes:
+            self._chunks.append(chunk)
+            self._size += len(chunk)
+            return
+
+        self.passthrough = True
+        if self._start is not None:
+            await self._send(self._start)
+        for buffered in self._chunks:
+            await self._send(
+                {
+                    "type": "http.response.body",
+                    "body": buffered,
+                    "more_body": True,
+                },
+            )
+        self._chunks.clear()
+        await self._send(message)
+
+    def as_response(self) -> Response | None:
+        if self._start is None or self.passthrough:
+            return None
+        headers = {
+            key.decode("latin-1"): value.decode("latin-1")
+            for key, value in self._start.get("headers", [])
+        }
+        return Response(
+            content=self.body,
+            status_code=int(self._start["status"]),
+            headers=headers,
+        )
+
+    async def send_buffered(self) -> None:
+        if self._start is None or self.passthrough:
+            return
+        await self._send(self._start)
+        await self._send(
+            {
+                "type": "http.response.body",
+                "body": self.body,
+                "more_body": False,
+            },
         )
 
 
@@ -645,28 +782,41 @@ def _anonymous_namespace(
     authentication exists.
     """
 
-    forwarded = request.headers.get(
-        "x-forwarded-for",
-        "",
-    )
+    anonymous_id = getattr(request.state, "idempotency_anonymous_id", None)
+    if not anonymous_id:
+        anonymous_id = request.cookies.get("nk_anon_id") or uuid.uuid4().hex
+        request.state.idempotency_anonymous_id = anonymous_id
 
-    client_host = (
-        request.client.host
-        if request.client is not None
-        else ""
-    )
-
-    material = (
-        f"{client_host}|"
-        f"{forwarded}|"
-        f"{request.url.path}"
-    )
+    material = f"{anonymous_id}|{request.url.path}"
 
     return (
         "anon-"
         + hashlib.sha256(
             material.encode("utf-8"),
         ).hexdigest()[:32]
+    )
+
+
+def _is_anonymous(request: Request) -> bool:
+    principal = getattr(request.state, "principal", None)
+    return principal is None or getattr(principal, "is_anonymous", True)
+
+
+def _set_anonymous_cookie(response: Response, request: Request) -> None:
+    """Give unauthenticated clients a private, retry-stable namespace."""
+    principal = getattr(request.state, "principal", None)
+    if principal is not None and not getattr(principal, "is_anonymous", True):
+        return
+    anonymous_id = getattr(request.state, "idempotency_anonymous_id", None)
+    if anonymous_id is None or request.cookies.get("nk_anon_id"):
+        return
+    response.set_cookie(
+        "nk_anon_id",
+        anonymous_id,
+        max_age=DEFAULT_TTL_S,
+        httponly=True,
+        secure=request.url.scheme == "https",
+        samesite="lax",
     )
 
 

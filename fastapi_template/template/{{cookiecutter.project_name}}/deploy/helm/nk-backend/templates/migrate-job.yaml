@@ -1,0 +1,40 @@
+{{- if .Values.migrate.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "nk-backend.fullname" . }}-migrate
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        {{- include "nk-backend.labels" . | nindent 8 }}
+        app.kubernetes.io/component: migrate
+    spec:
+      restartPolicy: Never
+      serviceAccountName: {{ .Values.serviceAccount.name | default (include "nk-backend.fullname" .) }}
+      automountServiceAccountToken: {{ .Values.serviceAccount.automount }}
+      containers:
+        - name: migrate
+          image: {{ include "nk-backend.image" . | quote }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["nk", "migrate"]
+          envFrom:
+            - secretRef:
+                name: {{ include "nk-backend.migrationSecretName" . }}
+          env:
+            {{- include "nk-backend.runtimeEnv" . | nindent 12 }}
+            - name: __APP_ENV_PREFIX___DB_OWNER_ROLE
+              value: {{ .Values.migrate.ownerRole | quote }}
+          securityContext:
+            runAsNonRoot: {{ .Values.podSecurity.runAsNonRoot }}
+            seccompProfile:
+              type: {{ .Values.podSecurity.seccompProfile }}
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: {{ .Values.podSecurity.readOnlyRootFilesystem }}
+            capabilities:
+              drop: ["ALL"]
+{{- end }}

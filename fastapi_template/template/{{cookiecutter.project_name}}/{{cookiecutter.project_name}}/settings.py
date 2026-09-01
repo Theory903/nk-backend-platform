@@ -4,6 +4,7 @@ from pathlib import Path
 from tempfile import gettempdir
 from typing import List, Optional
 
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from yarl import URL
@@ -35,11 +36,39 @@ class Settings(BaseSettings):
     workers_count: int = 1
     # Enable uvicorn reloading
     reload: bool = False
+    readiness_timeout_s: float = 2.0
+    shutdown_drain_timeout_s: float = 30.0
+    shutdown_cleanup_timeout_s: float = 15.0
 
-    # Current environment
-    environment: str = "production"
+    # Current environment. Production deployments should set this explicitly
+    # through the Compose/Kubernetes environment rather than relying on the
+    # local-development default.
+    environment: str = "development"
+
+    # Request-plane security. Keep the host and origin lists explicit; an
+    # empty CORS list denies browser cross-origin access.
+    allowed_hosts: list[str] = ["localhost", "127.0.0.1", "testserver", "test"]
+    cors_allowed_origins: list[str] = []
+    cors_allow_credentials: bool = False
+    secure_cookies: bool = True
+    max_request_body_bytes: int = 10 * 1024 * 1024
+    auth_token_ttl_seconds: int = 900
+    session_cookie_max_age_seconds: int = 86_400
+    auth_store_backend: str = "memory"
+    auth_redis_prefix: str = "nk:session"
+    metrics_auth_token: str | None = None
+    security_identity_enabled: bool = {{ cookiecutter.add_users in [True, "True", "true", 1, "1"] }}
+    security_require_auth: bool = {{ cookiecutter.add_users in [True, "True", "true", 1, "1"] }}
 
     log_level: LogLevel = LogLevel.INFO
+    log_format: str = "json"
+    service_version: str = "0.1.0"
+    service_role: str = "api"
+    llm_provider: str = "ollama"
+    llm_model: str = "llama3.2"
+    llm_timeout_s: float = 30.0
+    llm_max_retries: int = 1
+    llm_cost_budget_usd: float | None = None
 
     # Reverse-proxy trust + browser security headers.
     # trusted_proxy_count > 0 allows X-Forwarded-Proto for HSTS detection.
@@ -51,9 +80,12 @@ class Settings(BaseSettings):
     # None → SecurityHeadersMiddleware DEFAULT_CSP
     security_csp: Optional[str] = None
 
-    {%- if cookiecutter.add_users == "True" %}
+    {%- if cookiecutter.add_users in [True, "True", "true", 1, "1"] %}
     {%- if cookiecutter.orm == "sqlalchemy" %}
-    users_secret: str = os.getenv("USERS_SECRET", "")
+    users_secret: str = os.getenv(
+        "{{cookiecutter.project_name | upper}}_USERS_SECRET",
+        "",
+    )
     {%- endif %}
     {%- endif %}
     {% if cookiecutter.db_info.name != "none" -%}
@@ -73,7 +105,7 @@ class Settings(BaseSettings):
     {%- endif %}
 
 
-    {%- if cookiecutter.enable_redis == "True" %}
+    {%- if cookiecutter.enable_redis in [True, "True", "true", 1, "1"] %}
 
     # Variables for Redis
     redis_host: str = "localhost"
@@ -86,7 +118,7 @@ class Settings(BaseSettings):
     {%- endif %}
 
 
-    {%- if cookiecutter.enable_rmq == "True" %}
+    {%- if cookiecutter.enable_rmq in [True, "True", "true", 1, "1"] %}
 
     # Variables for RabbitMQ
     rabbit_host: str = "localhost"
@@ -101,7 +133,7 @@ class Settings(BaseSettings):
     {%- endif %}
 
 
-    {%- if cookiecutter.prometheus_enabled == "True" %}
+    {%- if cookiecutter.prometheus_enabled in [True, "True", "true", 1, "1"] %}
 
     # This variable is used to define
     # multiproc_dir. It's required for [uvi|guni]corn projects.
@@ -110,24 +142,26 @@ class Settings(BaseSettings):
     {%- endif %}
 
 
-    {%- if cookiecutter.sentry_enabled == "True" %}
+    {%- if cookiecutter.sentry_enabled in [True, "True", "true", 1, "1"] %}
 
     # Sentry's configuration.
     sentry_dsn: Optional[str] = None
-    sentry_sample_rate: float = 1.0
+    sentry_error_sample_rate: float = 1.0
+    sentry_traces_sample_rate: float = 0.05
 
     {%- endif %}
 
 
-    {%- if cookiecutter.otlp_enabled == "True" %}
+    {%- if cookiecutter.otlp_enabled in [True, "True", "true", 1, "1"] %}
 
     # Grpc endpoint for opentelemetry.
     # E.G. http://localhost:4317
     opentelemetry_endpoint: Optional[str] = None
+    opentelemetry_trace_sample_rate: float = 0.05
 
     {%- endif %}
 
-    {%- if cookiecutter.enable_kafka == "True" %}
+    {%- if cookiecutter.enable_kafka in [True, "True", "true", 1, "1"] %}
 
     kafka_bootstrap_servers: List[str] = ["localhost:9092"]
     # Producer knobs (services.kafka.lifespan). Prefer these over hard-coded
@@ -142,7 +176,7 @@ class Settings(BaseSettings):
     {%- endif %}
 
 
-    {%- if cookiecutter.enable_nats == "True" %}
+    {%- if cookiecutter.enable_nats in [True, "True", "true", 1, "1"] %}
     nats_servers: list[str] = ["nats://localhost:4222"]
     {%- endif %}
 
@@ -187,7 +221,7 @@ class Settings(BaseSettings):
         {%- endif %}
     {%- endif %}
 
-    {%- if cookiecutter.enable_redis == "True" %}
+    {%- if cookiecutter.enable_redis in [True, "True", "true", 1, "1"] %}
     @property
     def redis_url(self) -> URL:
         """
@@ -208,7 +242,7 @@ class Settings(BaseSettings):
         )
     {%- endif %}
 
-    {%- if cookiecutter.enable_rmq == "True" %}
+    {%- if cookiecutter.enable_rmq in [True, "True", "true", 1, "1"] %}
     @property
     def rabbit_url(self) -> URL:
         """
@@ -234,6 +268,73 @@ class Settings(BaseSettings):
         # alongside prefixed app settings; ignore extras so Settings can load.
         extra = "ignore",
     )
+
+    @model_validator(mode="after")
+    def validate_security_configuration(self) -> "Settings":
+        """Reject unsafe production request and credential configuration."""
+        environment = self.environment.strip().lower()
+
+        if self.max_request_body_bytes <= 0:
+            raise ValueError("max_request_body_bytes must be greater than zero")
+        if self.auth_token_ttl_seconds <= 0:
+            raise ValueError("auth_token_ttl_seconds must be greater than zero")
+        if self.session_cookie_max_age_seconds <= 0:
+            raise ValueError(
+                "session_cookie_max_age_seconds must be greater than zero",
+            )
+        if self.cors_allow_credentials and "*" in self.cors_allowed_origins:
+            raise ValueError(
+                "credentialed CORS cannot use the wildcard origin",
+            )
+
+        if environment in {"prod", "production", "staging"}:
+            if self.reload:
+                raise ValueError("reload must be disabled outside development")
+            if not self.allowed_hosts or "*" in self.allowed_hosts:
+                raise ValueError(
+                    "production requires an explicit allowed_hosts list",
+                )
+            if not self.security_identity_enabled:
+                raise ValueError(
+                    "production requires an enabled identity provider",
+                )
+            if self.security_identity_enabled and not self.security_require_auth:
+                raise ValueError(
+                    "identity-enabled production requires authentication",
+                )
+
+            secret = getattr(self, "users_secret", "")
+            if self.security_require_auth and len(secret.encode("utf-8")) < 32:
+                raise ValueError(
+                    "production authentication requires a 32-byte USERS_SECRET",
+                )
+            durable_backends = {
+                "postgres",
+                "postgresql",
+                "redis",
+                "redis-or-sql",
+                "sql",
+                "sqlalchemy",
+            }
+            if (
+                self.security_require_auth
+                and self.auth_store_backend.strip().lower()
+                not in durable_backends
+            ):
+                raise ValueError(
+                    "production authentication requires a durable auth store",
+                )
+            {%- if cookiecutter.prometheus_enabled in [True, "True", "true", 1, "1"] and cookiecutter.add_users in [True, "True", "true", 1, "1"] %}
+            if (
+                not self.metrics_auth_token
+                or len(self.metrics_auth_token.strip()) < 16
+            ):
+                raise ValueError(
+                    "production metrics export requires METRICS_AUTH_TOKEN",
+                )
+            {%- endif %}
+
+        return self
 
 
 

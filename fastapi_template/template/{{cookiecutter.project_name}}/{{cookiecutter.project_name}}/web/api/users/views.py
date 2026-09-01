@@ -30,10 +30,10 @@ from {{cookiecutter.project_name}}.db.models.users import (
     UserRead,
     UserUpdate,
     api_users,
-{%- if cookiecutter.jwt_auth == "True" %}
+{%- if cookiecutter.jwt_auth in [True, "True", "true", 1, "1"] %}
     auth_jwt,
 {%- endif %}
-{%- if cookiecutter.cookie_auth == "True" %}
+{%- if cookiecutter.cookie_auth in [True, "True", "true", 1, "1"] %}
     auth_cookie,
 {%- endif %}
 )
@@ -88,7 +88,7 @@ router.include_router(
 # Authentication
 # ---------------------------------------------------------------------------
 
-{%- if cookiecutter.jwt_auth == "True" %}
+{%- if cookiecutter.jwt_auth in [True, "True", "true", 1, "1"] %}
 
 router.include_router(
     api_users.get_auth_router(
@@ -100,7 +100,7 @@ router.include_router(
 
 {%- endif %}
 
-{%- if cookiecutter.cookie_auth == "True" %}
+{%- if cookiecutter.cookie_auth in [True, "True", "true", 1, "1"] %}
 
 router.include_router(
     api_users.get_auth_router(

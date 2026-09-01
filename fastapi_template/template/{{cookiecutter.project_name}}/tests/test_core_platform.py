@@ -36,6 +36,14 @@ def test_platform_manifest_loads() -> None:
     assert config.project
     assert config.providers.database == "{{ cookiecutter.db_info.name }}"
     assert config.module_enabled("agents") is {{ cookiecutter.enable_agents }}
+    assert config.stack.layers.applications_products is True
+    assert config.runtime.plane == "runtime"
+    assert config.runtime.control_plane == "generated-metadata"
+    assert config.ai.enabled is {{ cookiecutter.enable_llm }}
+    assert config.knowledge.enabled is {{ cookiecutter.enable_rag_traditional }}
+    assert config.agents.enabled is {{ cookiecutter.enable_agents }}
+    assert config.storage.metadata == "{{ cookiecutter.db_info.name }}"
+    assert config.reproducibility.lockfile is True
 
 
 def test_module_lookup_defaults_to_disabled() -> None:

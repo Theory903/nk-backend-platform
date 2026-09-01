@@ -30,8 +30,12 @@ def run_validate(project_root: Path | None = None) -> bool:
     # Check platform.yaml modules match actual directories
     import yaml
     manifest_path = root / "platform.yaml"
+    manifest = {}
     if manifest_path.exists():
         manifest = yaml.safe_load(manifest_path.read_text())
+        if not isinstance(manifest, dict):
+            _issues.append("platform.yaml root must be a mapping")
+            manifest = {}
         modules = manifest.get("modules", {})
         module_map = {
             "redis": "services/redis",
@@ -46,6 +50,25 @@ def run_validate(project_root: Path | None = None) -> bool:
                 full_path = root / dir_path.split("/")[0]
                 if enabled and not full_path.exists():
                     _issues.append(f"module '{mod_name}' enabled but '{dir_path.split('/')[0]}/' missing")
+
+    # Validate the same typed architecture contract used by the application.
+    project_name = manifest.get("project")
+    if isinstance(project_name, str):
+        sys.path.insert(0, str(root))
+        try:
+            from importlib import import_module
+
+            platform = import_module(f"{project_name}.core.platform")
+            platform.validate_platform_config(str(manifest_path))
+            config = platform.get_platform_config(str(manifest_path))
+            if config.runtime.plane != "runtime":
+                _issues.append("runtime.plane must be 'runtime'")
+            if config.runtime.control_plane != "generated-metadata":
+                _issues.append(
+                    "runtime.control_plane must be 'generated-metadata'",
+                )
+        except (ImportError, AttributeError, ValueError) as exc:
+            _issues.append(f"typed platform configuration invalid: {exc}")
 
     if _issues:
         print(f"Found {len(_issues)} issues:")

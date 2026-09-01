@@ -1,15 +1,32 @@
+{%- if cookiecutter.prometheus_enabled in [True, "True", "true", 1, "1"] or cookiecutter.orm == "piccolo" %}
 import os
+{%- endif %}
+{%- if cookiecutter.prometheus_enabled in [True, "True", "true", 1, "1"] %}
 import shutil
 from pathlib import Path
 
+{%- endif %}
 import uvicorn
 
-{%- if cookiecutter.gunicorn == "True" %}
-from {{cookiecutter.project_name}}.gunicorn_runner import GunicornApplication
-{%- endif %}
 from {{cookiecutter.project_name}}.settings import settings
 
-{%- if cookiecutter.prometheus_enabled == "True" %}
+{%- if cookiecutter.prometheus_enabled in [True, "True", "true", 1, "1"] %}
+def _prepare_multiproc_env() -> None:
+    """Create the metrics directory before metric modules are imported."""
+    Path(settings.prometheus_dir).mkdir(parents=True, exist_ok=True)
+    directory = str(settings.prometheus_dir.expanduser().absolute())
+    os.environ["prometheus_multiproc_dir"] = directory  # noqa: SIM112
+    os.environ["PROMETHEUS_MULTIPROC_DIR"] = directory
+
+
+_prepare_multiproc_env()
+{%- endif %}
+
+{%- if cookiecutter.gunicorn in [True, "True", "true", 1, "1"] %}
+from {{cookiecutter.project_name}}.gunicorn_runner import GunicornApplication
+{%- endif %}
+
+{%- if cookiecutter.prometheus_enabled in [True, "True", "true", 1, "1"] %}
 def set_multiproc_dir() -> None:
     """
     Sets mutiproc_dir env variable.
@@ -38,13 +55,13 @@ def set_multiproc_dir() -> None:
 
 def main() -> None:
     """Entrypoint of the application."""
-    {%- if cookiecutter.prometheus_enabled == "True" %}
+    {%- if cookiecutter.prometheus_enabled in [True, "True", "true", 1, "1"] %}
     set_multiproc_dir()
     {%- endif %}
     {%- if cookiecutter.orm == "piccolo" %}
     os.environ['PICCOLO_CONF'] = "{{cookiecutter.project_name}}.piccolo_conf"
     {%- endif %}
-    {%- if cookiecutter.gunicorn == "True" %}
+    {%- if cookiecutter.gunicorn in [True, "True", "true", 1, "1"] %}
     if settings.reload:
         uvicorn.run(
             "{{cookiecutter.project_name}}.web.application:get_app",

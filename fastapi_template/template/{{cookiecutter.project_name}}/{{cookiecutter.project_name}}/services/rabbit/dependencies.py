@@ -6,7 +6,7 @@ from aio_pika import Channel
 from aio_pika.pool import Pool
 from fastapi import Depends, Request
 
-{%- if cookiecutter.enable_taskiq == "True" %}
+{%- if cookiecutter.enable_taskiq in [True, "True", "true", 1, "1"] %}
 from taskiq import TaskiqDepends
 {%- endif %}
 
@@ -17,7 +17,7 @@ from {{cookiecutter.project_name}}.services.rabbit.lifespan import (
 
 def get_rmq_channel_pool(
     request: Request
-    {%- if cookiecutter.enable_taskiq == "True" %}
+    {%- if cookiecutter.enable_taskiq in [True, "True", "true", 1, "1"] %}
     = TaskiqDepends()
     {%- endif %}
 ) -> Pool[Channel]:

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from unittest.mock import Mock
+
 import pytest
 
 from {{cookiecutter.project_name}}.operations.metrics import (
@@ -211,3 +213,42 @@ class TestMetricsEndpoint:
             resp = await client.get("/api/metrics")
             assert resp.status_code == 200
             assert isinstance(resp.content, bytes)
+
+    @pytest.mark.asyncio
+    async def test_metrics_middleware_handles_included_router(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        from fastapi import APIRouter, FastAPI
+        from httpx import ASGITransport, AsyncClient
+
+        from {{cookiecutter.project_name}}.web.middleware import metrics
+        from {{cookiecutter.project_name}}.web.middleware.metrics import (
+            PrometheusMetricsMiddleware,
+        )
+
+        record_request = Mock()
+        monkeypatch.setattr(metrics, "record_http_request", record_request)
+
+        router = APIRouter()
+
+        @router.get("/health")
+        async def health() -> dict[str, str]:
+            return {"status": "ok"}
+
+        app = FastAPI()
+        app.include_router(router, prefix="/api")
+        app.add_middleware(PrometheusMetricsMiddleware)
+
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            resp = await client.get("/api/health")
+
+        assert resp.status_code == 200
+        assert resp.json() == {"status": "ok"}
+        record_request.assert_called_once()
+        request_metrics = record_request.call_args.kwargs
+        assert request_metrics["method"] == "GET"
+        assert request_metrics["path"] == "/health"
+        assert request_metrics["status"] == 200
+        assert request_metrics["duration_s"] >= 0

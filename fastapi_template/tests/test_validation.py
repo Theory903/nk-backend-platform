@@ -62,6 +62,32 @@ def test_valid_minimal_passes() -> None:
     validate_context(ctx)
 
 
+def test_valid_use_case_passes_validation() -> None:
+    ctx = BuilderContext(
+        project_name="reliant",
+        use_case="enterprise-saas",
+        profile="saas",
+        db="postgresql",
+        orm="sqlalchemy",
+        enable_redis=True,
+        enable_taskiq=True,
+        add_users=True,
+        enable_migrations=True,
+    )
+    validate_context(ctx)
+
+
+def test_invalid_use_case_fails_validation() -> None:
+    ctx = BuilderContext(
+        project_name="reliant",
+        use_case="unknown-product",
+        db="none",
+        orm="none",
+    )
+    with pytest.raises(ValueError, match="unknown use case"):
+        validate_context(ctx)
+
+
 def test_hyphenated_project_name_rejected() -> None:
     ctx = BuilderContext(project_name="happy-app", db="none", orm="none")
     with pytest.raises(ValueError, match="snake_case"):
@@ -78,5 +104,32 @@ def test_valid_agentic_flags_pass() -> None:
         enable_rag_traditional=True,
         enable_agents=True,
         enable_graphrag=True,
+        add_users=True,
+        enable_redis=True,
     )
     validate_context(ctx)
+
+
+def test_identity_without_durable_backend_is_rejected() -> None:
+    ctx = BuilderContext(
+        project_name="x",
+        db="postgresql",
+        orm="sqlalchemy",
+        add_users=True,
+        enable_migrations=False,
+        enable_redis=False,
+    )
+    with pytest.raises(ValueError, match="migrations or --redis"):
+        validate_context(ctx)
+
+
+def test_idempotency_without_redis_is_rejected() -> None:
+    ctx = BuilderContext(
+        project_name="x",
+        db="postgresql",
+        orm="sqlalchemy",
+        enable_idempotency=True,
+        enable_redis=False,
+    )
+    with pytest.raises(ValueError, match="requires --redis"):
+        validate_context(ctx)

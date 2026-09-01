@@ -132,6 +132,7 @@ async def test_unexpected_exception_hides_internals(
     assert body["detail"] == "An unexpected error occurred."
     assert "secret" not in body["detail"].lower()
     assert "password" not in str(body).lower()
+    assert response.headers["x-request-id"]
 
 
 async def test_client_disconnect_is_not_mapped_to_500(
