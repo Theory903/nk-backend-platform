@@ -129,6 +129,8 @@ class MemoryRecord(BaseModel):
 class CacheKey(BaseModel):
     """Version-aware, tenant-scoped exact/semantic cache key."""
 
+    model_config = ConfigDict(protected_namespaces=())
+
     namespace: str
     operation: str
     request_hash: str

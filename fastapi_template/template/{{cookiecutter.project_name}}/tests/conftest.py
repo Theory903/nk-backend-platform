@@ -118,9 +118,22 @@ async def _engine(anyio_backend: Any) -> AsyncGenerator[AsyncEngine, None]:
 
     await create_database()
 
-    engine = create_async_engine(str(settings.db_url))
-    async with engine.begin() as conn:
+    from sqlalchemy.engine import make_url
+
+    ddl_url = make_url(str(settings.db_url))
+    {%- if cookiecutter.db_info.name == "postgresql" %}
+    if settings.db_admin_user and settings.db_admin_password:
+        ddl_url = ddl_url.set(
+            username=settings.db_admin_user,
+            password=settings.db_admin_password,
+        )
+    {%- endif %}
+    bootstrap = create_async_engine(ddl_url)
+    async with bootstrap.begin() as conn:
         await conn.run_sync(meta.create_all)
+    await bootstrap.dispose()
+
+    engine = create_async_engine(str(settings.db_url))
 
     try:
         yield engine
@@ -159,12 +172,13 @@ async def dbsession(
 
 {%- elif cookiecutter.orm == "tortoise" %}
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 async def initialize_db() -> AsyncGenerator[None, None]:
     """
     Initialize models and database.
 
-    :yields: Nothing.
+    Requested by ``fastapi_app`` / DB-backed tests — not autouse, so sync
+    unit tests are not forced onto an async fixture graph.
     """
     initializer(
         MODELS_MODULES,
@@ -180,12 +194,13 @@ async def initialize_db() -> AsyncGenerator[None, None]:
 
 {%- elif cookiecutter.orm == "ormar" %}
 
-@pytest.fixture(autouse=True, scope="function")
+@pytest.fixture(scope="function")
 async def initialize_db() -> AsyncGenerator[None, None]:
     """
     Create models and databases.
 
-    :yield: new engine.
+    Requested by ``fastapi_app`` / DB-backed tests — not autouse, so sync
+    unit tests are not forced onto an async fixture graph.
     """
     from {{cookiecutter.project_name}}.db.base import meta
     from {{cookiecutter.project_name}}.db.models import load_all_models
@@ -519,6 +534,8 @@ def fastapi_app(
     dbsession: AsyncSession,
     {%- elif cookiecutter.orm == "psycopg" %}
     dbpool: AsyncConnectionPool[Any],
+    {%- elif cookiecutter.orm in ["tortoise", "ormar"] %}
+    initialize_db: None,
     {%- endif %}
     {% if cookiecutter.enable_redis in [True, "True", "true", 1, "1"] -%}
     test_redis_pool: ConnectionPool,

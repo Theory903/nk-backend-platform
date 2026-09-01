@@ -44,15 +44,10 @@ def run_default_check(context: BuilderContext, worker_id: str, without_pytest=Fa
     compose = Path("./docker-compose.yml")
     with compose.open("r") as compose_file:
         data = yaml.safe_load(compose_file)
-    data["services"]["api"]["image"] = f"test_image:v{worker_id}"
-    # The production image intentionally excludes pytest and other dev tools.
-    # Exercise the generated container with the Dockerfile's dev target while
-    # keeping production-image validation in the dedicated Docker CI job.
+    image_tag = f"{context.project_name}_{worker_id}"
+    data["services"]["api"]["image"] = f"test_image:{image_tag}"
     data["services"]["api"]["build"]["target"] = "dev"
-    # The production Compose contract is read-only; tests need a writable
-    # workspace for pytest's cache and temporary test artifacts.
     data["services"]["api"]["read_only"] = False
-    # Base compose should not publish infra ports; strip any leftover ports safely.
     for service in data["services"].values():
         service.pop("ports", None)
     with compose.open("w") as compose_file:
@@ -63,7 +58,7 @@ def run_default_check(context: BuilderContext, worker_id: str, without_pytest=Fa
     if without_pytest:
         return
 
-    build = run_docker_compose_command("--progress=plain build")
+    build = run_docker_compose_command(f"--progress=plain build api")
     assert build == 0
     tests = run_docker_compose_command("--progress=plain run --rm api pytest -vv .")
     assert tests == 0

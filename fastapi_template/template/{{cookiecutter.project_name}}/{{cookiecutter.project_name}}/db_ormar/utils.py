@@ -6,9 +6,20 @@ from sqlalchemy.engine import URL, create_engine, make_url
 from {{cookiecutter.project_name}}.settings import settings
 
 {% if cookiecutter.db_info.name == "postgresql" -%}
+def _postgres_admin_url() -> URL:
+    """Return an admin-capable URL for test/provision DDL."""
+    url = make_url(str(settings.db_url.with_path("/postgres")))
+    if settings.db_admin_user and settings.db_admin_password:
+        return url.set(
+            username=settings.db_admin_user,
+            password=settings.db_admin_password,
+        )
+    return url
+
+
 def create_database() -> None:
     """Create a database."""
-    db_url = make_url(str(settings.db_url.with_path('/postgres')))
+    db_url = _postgres_admin_url()
     engine = create_engine(db_url, isolation_level="AUTOCOMMIT")
 
     with engine.connect() as conn:
@@ -31,7 +42,7 @@ def create_database() -> None:
 
 def drop_database() -> None:
     """Drop current database."""
-    db_url = make_url(str(settings.db_url.with_path('/postgres')))
+    db_url = _postgres_admin_url()
     engine = create_engine(db_url, isolation_level="AUTOCOMMIT")
     with engine.connect() as conn:
         disc_users = (

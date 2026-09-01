@@ -84,7 +84,7 @@ class Settings(BaseSettings):
     {%- if cookiecutter.orm == "sqlalchemy" %}
     users_secret: str = os.getenv(
         "{{cookiecutter.project_name | upper}}_USERS_SECRET",
-        "",
+        os.getenv("USERS_SECRET", ""),
     )
     {%- endif %}
     {%- endif %}
@@ -99,6 +99,8 @@ class Settings(BaseSettings):
     db_user: str = "{{cookiecutter.project_name}}"
     db_pass: str = "{{cookiecutter.project_name}}"  # noqa: S105
     db_base: str = "{{cookiecutter.project_name}}"
+    db_admin_user: str | None = None
+    db_admin_password: str | None = None
     {%- endif %}
     db_echo: bool = False
 

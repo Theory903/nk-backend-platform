@@ -156,7 +156,11 @@ dependencies = [
 {%- endif %}
 
 {%- if cookiecutter.enable_taskiq in [True, "True", "true", 1, "1"] %}
+  {%- if cookiecutter.otlp_enabled in [True, "True", "true", 1, "1"] %}
+  "taskiq[opentelemetry] >=0.12.0,<1",
+  {%- else %}
   "taskiq >=0.12.0,<1",
+  {%- endif %}
   "taskiq-fastapi >=0.3.6,<1",
 {%- if cookiecutter.otlp_enabled in [True, "True", "true", 1, "1"] %}
   "psutil >=7.0.0,<8",
@@ -258,6 +262,7 @@ filterwarnings = [
     "ignore::pytest.PytestConfigWarning",
     "ignore:The 'config' parameter should be typed:UserWarning",
     "ignore::pytest.PytestUnraisableExceptionWarning",
+    "ignore:.*protected namespace \"model_\".*:UserWarning",
 ]
 markers = [
     "asyncio: mark test as asyncio (pytest-asyncio)",
@@ -271,9 +276,16 @@ env = [
     "{{cookiecutter.project_name | upper}}_DB_BASE=admin",
     {%- else %}
     "{{cookiecutter.project_name | upper}}_DB_BASE={{cookiecutter.project_name}}_test",
+    "{{cookiecutter.project_name | upper}}_DB_HOST=db",
+    {%- endif %}
+    {%- if cookiecutter.db_info.name == "postgresql" %}
+    "{{cookiecutter.project_name | upper}}_DB_USER={{cookiecutter.project_name}}_admin",
+    "{{cookiecutter.project_name | upper}}_DB_PASS={{cookiecutter.project_name}}_admin",
+    "{{cookiecutter.project_name | upper}}_DB_ADMIN_USER={{cookiecutter.project_name}}_admin",
+    "{{cookiecutter.project_name | upper}}_DB_ADMIN_PASSWORD={{cookiecutter.project_name}}_admin",
     {%- endif %}
     {%- if cookiecutter.db_info.name == "mysql" %}
-    "{{cookiecutter.project_name | upper}}_DB_USER=root"
+    "{{cookiecutter.project_name | upper}}_DB_USER=root",
     {%- endif %}
     {%- if cookiecutter.orm == "piccolo" %}
     "PICCOLO_CONF={{cookiecutter.project_name}}.piccolo_conf",
@@ -340,6 +352,7 @@ lint.ignore = [
     "D102",    # Missing docstring in public method
     "D103",    # Missing docstring in public function
     "UP043",   # Unnecessary default argument specified (conflicts with mypy).
+    "N818",    # RFC 9457 Problem types keep domain names without Error suffix.
 ]
 exclude = [
     {%- if cookiecutter.orm in ["ormar", "sqlalchemy", "piccolo", "tortoise"] %}

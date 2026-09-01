@@ -17,6 +17,9 @@ services:
       {{cookiecutter.project_name | upper}}_RELOAD: "True"
       {{cookiecutter.project_name | upper}}_ENVIRONMENT: "dev"
       {{cookiecutter.project_name | upper}}_PORT: "8000"
+      # Browser / LAN Host headers during local Docker Desktop testing.
+      {{cookiecutter.project_name | upper}}_ALLOWED_HOSTS: ${ALLOWED_HOSTS:-["localhost","127.0.0.1","testserver","test","host.docker.internal"]}
+      {{cookiecutter.project_name | upper}}_SECURE_COOKIES: "False"
     ports:
       - "${NK_API_PORT:-8000}:8000"
     volumes:
@@ -38,6 +41,7 @@ services:
     environment:
       {{cookiecutter.project_name | upper}}_RELOAD: "True"
       {{cookiecutter.project_name | upper}}_ENVIRONMENT: "dev"
+      {{cookiecutter.project_name | upper}}_ALLOWED_HOSTS: ${ALLOWED_HOSTS:-["localhost","127.0.0.1","testserver","test","host.docker.internal"]}
     volumes:
       - .:/app/src/
     command:

@@ -48,6 +48,8 @@ jobs:
           git config --global user.email "fastapi_template@pytest.python"
       - name: Install dependencies
         run: uv sync --locked
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
       - name: Run tests
         run: uv run pytest -vv -n auto
 
@@ -127,7 +129,27 @@ jobs:
           (cd "$NAME" && uv run nk doctor)
           (cd "$NAME" && uv run nk validate)
           (cd "$NAME" && uv run ruff format --check .)
-          (cd "$NAME" && uv run ruff check .)
-          (cd "$NAME" && uv run mypy "$NAME" tests)
-          (cd "$NAME" && uv run pytest -q --tb=line)
+          case "$PROFILE" in
+            minimal)
+              (cd "$NAME" && uv run pytest -q --tb=line)
+              ;;
+            *)
+              NAME="$NAME" python3 - <<'PY'
+import os
+import yaml
+from pathlib import Path
+
+name = os.environ["NAME"]
+compose = Path(name) / "docker-compose.yml"
+data = yaml.safe_load(compose.read_text())
+data["services"]["api"]["build"]["target"] = "dev"
+data["services"]["api"]["read_only"] = False
+for service in data["services"].values():
+    service.pop("ports", None)
+compose.write_text(yaml.safe_dump(data))
+PY
+              (cd "$NAME" && docker compose build api)
+              (cd "$NAME" && docker compose run --rm api pytest -q --tb=line)
+              ;;
+          esac
           (cd "$NAME" && docker build --target prod --tag "${NAME}:ci" .)

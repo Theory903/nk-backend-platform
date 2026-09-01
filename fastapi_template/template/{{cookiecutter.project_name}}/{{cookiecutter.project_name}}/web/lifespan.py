@@ -48,8 +48,6 @@ from {{cookiecutter.project_name}}.services.nats.lifespan import (init_nats,
 
 {%- if cookiecutter.enable_taskiq in [True, "True", "true", 1, "1"] %}
 from {{cookiecutter.project_name}}.tkq import broker
-from taskiq.instrumentation import TaskiqInstrumentor
-
 {%- endif %}
 {%- if cookiecutter.enable_rag_traditional in [True, "True", "true", 1, "1"] %}
 from {{cookiecutter.project_name}}.ai.embeddings import get_embedding_provider
@@ -311,6 +309,8 @@ def setup_opentelemetry(app: FastAPI) -> None:  # pragma: no cover
     )
     {%- endif %}
     {%- if cookiecutter.enable_taskiq in [True, "True", "true", 1, "1"] %}
+    from taskiq.instrumentation import TaskiqInstrumentor
+
     TaskiqInstrumentor().instrument_broker(
         broker,
         tracer_provider=tracer_provider,
@@ -342,6 +342,8 @@ def stop_opentelemetry(app: FastAPI) -> None:  # pragma: no cover
     AioPikaInstrumentor().uninstrument()
     {%- endif %}
     {%- if cookiecutter.enable_taskiq in [True, "True", "true", 1, "1"] %}
+    from taskiq.instrumentation import TaskiqInstrumentor
+
     TaskiqInstrumentor().uninstrument_broker(broker)
     {%- endif %}
     for provider_name in ("logger_provider", "meter_provider", "tracer_provider"):

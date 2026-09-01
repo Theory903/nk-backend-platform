@@ -7,7 +7,7 @@ import json
 from datetime import datetime, timezone
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from {{cookiecutter.project_name}}.platform.contracts import (
     CacheKey,
@@ -36,6 +36,8 @@ class Citation(BaseModel):
 class AnswerRequest(BaseModel):
     """RAG request with explicit tenant scope and context budget."""
 
+    model_config = ConfigDict(protected_namespaces=())
+
     query: str = Field(min_length=1)
     scope: Scope
     top_k: int = Field(default=5, ge=1, le=20)
@@ -49,6 +51,8 @@ class AnswerRequest(BaseModel):
 
 class AnswerResponse(BaseModel):
     """Stable answer envelope for HTTP, agents, and evaluation."""
+
+    model_config = ConfigDict(protected_namespaces=())
 
     answer: str = ""
     citations: list[Citation] = Field(default_factory=list)

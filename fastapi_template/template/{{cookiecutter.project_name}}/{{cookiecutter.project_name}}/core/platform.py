@@ -61,6 +61,8 @@ class ObservabilityConfig(BaseModel):
 class StackLayersConfig(BaseModel):
     """Six-layer AI Stack capability map."""
 
+    model_config = ConfigDict(protected_namespaces=())
+
     compute: str = "external"
     model_development: str = "external"
     inference_serving: bool = False
@@ -148,6 +150,8 @@ class EvaluationConfig(BaseModel):
 class ReproducibilityConfig(BaseModel):
     """Versioning inputs needed to reproduce a generated runtime."""
 
+    model_config = ConfigDict(protected_namespaces=())
+
     config_version: str = "1"
     lockfile: bool = True
     model_versions: bool = False
@@ -161,6 +165,7 @@ class PlatformConfig(BaseModel):
     model_config = ConfigDict(
         extra="allow",
         validate_assignment=True,
+        protected_namespaces=(),
     )
 
     project: str

@@ -29,7 +29,8 @@ def init_context(
         context.api_type = api
 
     context.enable_migrations = db != "none"
-    context.add_dummy = db != "none"
+    # Dummy HTTP routes are mounted only when identity is enabled.
+    context.add_dummy = db != "none" and context.add_users
 
     return context
 

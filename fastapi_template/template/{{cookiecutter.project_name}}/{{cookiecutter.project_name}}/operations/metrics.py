@@ -970,8 +970,16 @@ def set_worker_heartbeat(
 
 def mark_worker_process_dead(pid: int | None = None) -> None:
     """Remove this process from live multiprocess gauges on graceful exit."""
-    if HAS_PROMETHEUS and multiprocess is not None:
-        multiprocess.mark_process_dead(pid or os.getpid())
+    if not HAS_PROMETHEUS or multiprocess is None:
+        return
+    # Taskiq workers do not go through __main__ multiproc setup; skip cleanup
+    # when the shared metrics directory is unset to avoid PathLike TypeError.
+    if not (
+        os.getenv("PROMETHEUS_MULTIPROC_DIR")
+        or os.getenv("prometheus_multiproc_dir")  # noqa: SIM112
+    ):
+        return
+    multiprocess.mark_process_dead(pid or os.getpid())
 
 
 __all__ = [

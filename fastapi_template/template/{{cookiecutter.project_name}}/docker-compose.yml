@@ -26,7 +26,9 @@ x-app-common: &app-common
   security_opt:
     - no-new-privileges:true
   tmpfs:
-    - /tmp:rw,noexec,nosuid,size=64m
+    # Embedding model downloads (fastembed / HF) need >64MiB under /tmp when
+    # the rootfs is read-only; 512m covers bge-small-en (~66MiB) with headroom.
+    - /tmp:rw,noexec,nosuid,size=512m
   pids_limit: 256
   networks:
     - app
@@ -35,6 +37,14 @@ x-app-environment: &app-environment
   {{cookiecutter.project_name | upper }}_HOST: 0.0.0.0
   {{cookiecutter.project_name | upper }}_PORT: 8000
   {{cookiecutter.project_name | upper }}_SERVICE_ROLE: api
+  # Keep Hugging Face / fastembed caches on writable tmpfs (rootfs is read_only).
+  HF_HOME: /tmp/huggingface
+  HF_HUB_CACHE: /tmp/huggingface
+  FASTEMBED_CACHE_PATH: /tmp/fastembed_cache
+  {%- if cookiecutter.add_users in [True, "True", "true", 1, "1"] and cookiecutter.orm == "sqlalchemy" %}
+  # Map host/project .env USERS_SECRET → app settings ({{cookiecutter.project_name | upper}}_USERS_SECRET).
+  {{cookiecutter.project_name | upper}}_USERS_SECRET: ${USERS_SECRET:-}
+  {%- endif %}
   {%- if cookiecutter.db_info.name != "none" %}
   {%- if cookiecutter.db_info.name == "sqlite" %}
   {{cookiecutter.project_name | upper }}_DB_FILE: /db_data/db.sqlite3
@@ -43,6 +53,10 @@ x-app-environment: &app-environment
   {{cookiecutter.project_name | upper}}_DB_PORT: {{cookiecutter.db_info.port}}
   {{cookiecutter.project_name | upper}}_DB_USER: ${DB_USER:-{{cookiecutter.project_name}}}
   {{cookiecutter.project_name | upper}}_DB_PASS: ${DB_PASSWORD:-{{cookiecutter.project_name}}}
+  {%- if cookiecutter.db_info.name == "postgresql" %}
+  {{cookiecutter.project_name | upper}}_DB_ADMIN_USER: ${DB_ADMIN_USER:-{{cookiecutter.project_name}}_admin}
+  {{cookiecutter.project_name | upper}}_DB_ADMIN_PASSWORD: ${DB_ADMIN_PASSWORD:-{{cookiecutter.project_name}}_admin}
+  {%- endif %}
   {%- if cookiecutter.db_info.name == "mongodb" %}
   {{cookiecutter.project_name | upper}}_DB_BASE: ${DB_NAME:-admin}
   {%- else %}

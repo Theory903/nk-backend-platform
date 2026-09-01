@@ -235,12 +235,24 @@ resources = [
 name = "Transactional outbox"
 enabled = "{{cookiecutter.orm in ['sqlalchemy', 'beanie']}}"
 resources = [
-  "{{cookiecutter.project_name}}/data/adapters/sqlalchemy/outbox.py",
-  "{{cookiecutter.project_name}}/data/adapters/mongo/outbox.py",
-  "{{cookiecutter.project_name}}/core/event_emitter.py",
   "tests/test_outbox_relay.py",
+]
+
+[[features]]
+name = "Transactional outbox SQLAlchemy"
+enabled = "{{cookiecutter.orm == 'sqlalchemy'}}"
+resources = [
+  "{{cookiecutter.project_name}}/data/adapters/sqlalchemy/outbox.py",
+  "{{cookiecutter.project_name}}/core/event_emitter.py",
+  "tests/test_events_emit.py",
+]
+
+[[features]]
+name = "Transactional outbox Mongo"
+enabled = "{{cookiecutter.orm == 'beanie'}}"
+resources = [
+  "{{cookiecutter.project_name}}/data/adapters/mongo/outbox.py",
   "tests/test_mongo_outbox.py",
-  "tests/test_events_emit.py"
 ]
 
 [[features]]

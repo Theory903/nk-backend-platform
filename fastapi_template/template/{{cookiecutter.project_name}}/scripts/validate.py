@@ -18,7 +18,22 @@ def run_validate(project_root: Path | None = None) -> bool:
     if not pkg_dirs:
         _issues.append("no package directory found")
         return False
-    pkg = pkg_dirs[0]  # assume single top-level package
+    pkg = pkg_dirs[0]
+
+    import yaml
+    manifest_path = root / "platform.yaml"
+    manifest = {}
+    if manifest_path.exists():
+        loaded = yaml.safe_load(manifest_path.read_text())
+        if not isinstance(loaded, dict):
+            _issues.append("platform.yaml root must be a mapping")
+        else:
+            manifest = loaded
+            project_name = manifest.get("project")
+            if isinstance(project_name, str):
+                named_pkg = root / project_name
+                if named_pkg.is_dir():
+                    pkg = named_pkg
 
     # Check all .py files parse as valid Python
     for py_file in sorted(pkg.rglob("*.py")):
@@ -27,15 +42,7 @@ def run_validate(project_root: Path | None = None) -> bool:
         except SyntaxError as exc:
             _issues.append(f"syntax error in {py_file.relative_to(root)}: {exc}")
 
-    # Check platform.yaml modules match actual directories
-    import yaml
-    manifest_path = root / "platform.yaml"
-    manifest = {}
-    if manifest_path.exists():
-        manifest = yaml.safe_load(manifest_path.read_text())
-        if not isinstance(manifest, dict):
-            _issues.append("platform.yaml root must be a mapping")
-            manifest = {}
+    if manifest:
         modules = manifest.get("modules", {})
         module_map = {
             "redis": "services/redis",
@@ -47,9 +54,11 @@ def run_validate(project_root: Path | None = None) -> bool:
         for mod_name, enabled in modules.items():
             dir_path = module_map.get(mod_name)
             if dir_path is not None:
-                full_path = root / dir_path.split("/")[0]
-                if enabled and not full_path.exists():
-                    _issues.append(f"module '{mod_name}' enabled but '{dir_path.split('/')[0]}/' missing")
+                full_path = pkg / dir_path
+                if str(enabled).lower() in {"true", "1"} and not full_path.exists():
+                    _issues.append(
+                        f"module '{mod_name}' enabled but '{dir_path}' missing",
+                    )
 
     # Validate the same typed architecture contract used by the application.
     project_name = manifest.get("project")
