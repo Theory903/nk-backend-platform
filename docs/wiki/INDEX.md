@@ -19,7 +19,7 @@ Single entry point for curated docs.
 | [AI, knowledge, and agents](references/ai-knowledge-agents.md) | Retrieval and bounded agent runtime |
 | [Platform services](references/platform-services.md) | Data, queues, files, and integrations |
 | [Production readiness](references/production-readiness.md) | Deployment and operational checks |
-| [Security architecture](../../SECURITY-ARCHITECTURE.md) | End-to-end security control plane and checklist |
+| [Security architecture](references/security-architecture.md) | End-to-end security control plane and checklist |
 | [Documentation reliability](references/documentation-reliability.md) | Keeping docs aligned with code |
 
 `sessions/` is append-only and not linked from the curated body.

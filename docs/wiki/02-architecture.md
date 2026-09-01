@@ -43,4 +43,4 @@ cloud IAM, secret managers, and edge WAFs remain deployment integrations and
 must be configured outside the generated application.
 
 The full security architecture reference lives at
-[`SECURITY-ARCHITECTURE.md`](../../SECURITY-ARCHITECTURE.md).
+[`references/security-architecture.md`](references/security-architecture.md).

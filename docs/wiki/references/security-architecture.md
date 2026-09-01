@@ -1,6 +1,6 @@
-# Production Security Architecture
+<!-- Security architecture · updated 2026-09-01 · status: active -->
 
-> Canonical wiki copy: [`docs/wiki/references/security-architecture.md`](docs/wiki/references/security-architecture.md)
+# Production Security Architecture
 
 > A production security system is not a collection of security features.
 > It is an architecture that controls identity, access, data, execution,
