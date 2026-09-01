@@ -292,11 +292,16 @@ def ensure_lockfile() -> None:
             "uv is required to generate the locked dependency graph",
         )
     cprint("🔒 Creating uv.lock for reproducible environments", "green")
-    result = run_cmd("uv lock --offline", ignore_error=True, timeout=30)
+    result = run_cmd("uv lock --offline", ignore_error=True, timeout=60)
+    if result.returncode != 0:
+        cprint(
+            "[WARN] Offline lock failed; retrying uv lock with network access.",
+            "yellow",
+        )
+        result = run_cmd("uv lock", ignore_error=True, timeout=180)
     if result.returncode != 0:
         raise RuntimeError(
-            "could not create uv.lock offline; rerun generation with "
-            "dependencies available",
+            "could not create uv.lock; ensure uv can resolve dependencies",
         )
 
 
