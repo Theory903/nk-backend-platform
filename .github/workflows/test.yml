@@ -134,20 +134,7 @@ jobs:
               (cd "$NAME" && uv run pytest -q --tb=line)
               ;;
             *)
-              NAME="$NAME" python3 - <<'PY'
-import os
-import yaml
-from pathlib import Path
-
-name = os.environ["NAME"]
-compose = Path(name) / "docker-compose.yml"
-data = yaml.safe_load(compose.read_text())
-data["services"]["api"]["build"]["target"] = "dev"
-data["services"]["api"]["read_only"] = False
-for service in data["services"].values():
-    service.pop("ports", None)
-compose.write_text(yaml.safe_dump(data))
-PY
+              NAME="$NAME" python3 -c 'import os,yaml;from pathlib import Path;p=Path(os.environ["NAME"])/"docker-compose.yml";d=yaml.safe_load(p.read_text());d["services"]["api"]["build"]["target"]="dev";d["services"]["api"]["read_only"]=False;[s.pop("ports",None) for s in d["services"].values()];p.write_text(yaml.safe_dump(d))'
               (cd "$NAME" && docker compose build api)
               (cd "$NAME" && docker compose run --rm api pytest -q --tb=line)
               ;;
